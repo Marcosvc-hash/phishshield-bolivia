@@ -1,0 +1,50 @@
+# =====================================================================
+# PhishShield Bolivia — Entorno local de base de datos
+# PostgreSQL 18 (última versión estable) + pgAdmin 4
+# Uso:  docker compose up -d
+# =====================================================================
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: phishshield-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-phishshield}
+      POSTGRES_USER: ${POSTGRES_USER:-phishshield}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-phishshield123}
+      TZ: America/La_Paz
+      PGTZ: America/La_Paz
+    ports:
+      - "5432:5432"
+    volumes:
+      # Datos persistentes: aunque borres el contenedor, la data sigue viva
+      - pgdata:/var/lib/postgresql
+      # Los .sql de esta carpeta se ejecutan SOLO la primera vez, en orden alfabético
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-phishshield} -d ${POSTGRES_DB:-phishshield}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: phishshield-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@phishshield.bo}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  pgdata:
+  pgadmin_data:

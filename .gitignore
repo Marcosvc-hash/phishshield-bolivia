@@ -1,0 +1,63 @@
+# =====================================================================
+# PhishShield Bolivia — archivos que NO deben subirse al repositorio
+# =====================================================================
+
+# --- Secretos: lo más importante de esta lista ---
+.env
+.env.local
+*.env
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Java / Spring Boot ---
+target/
+build/
+!**/src/main/**/target/
+*.class
+*.jar
+*.war
+.gradle/
+
+# --- Python / IA ---
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+# Modelos entrenados: pesan demasiado para Git
+*.h5
+*.pkl
+*.onnx
+*.pt
+
+# --- Node / Angular ---
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+
+# --- IDEs ---
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+
+# --- Sistema operativo ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Base de datos ---
+*.dump
+backup*.sql
+pgdata/
+
+# --- Logs y temporales ---
+*.log
+logs/
+tmp/
