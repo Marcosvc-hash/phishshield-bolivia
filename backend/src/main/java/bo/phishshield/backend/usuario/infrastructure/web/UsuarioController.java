@@ -1,7 +1,7 @@
 package bo.phishshield.backend.usuario.infrastructure.web;
 
-import bo.phishshield.backend.usuario.domain.model.Usuario;
 import bo.phishshield.backend.usuario.domain.port.out.UsuarioRepositoryPort;
+import bo.phishshield.backend.usuario.infrastructure.web.dto.UsuarioResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,22 +22,28 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<Usuario> listar(@RequestParam(required = false) Long empresa) {
-        return empresa == null
+    public List<UsuarioResponse> listar(@RequestParam(required = false) Long empresa) {
+        var usuarios = empresa == null
                 ? usuarioRepository.listarTodos()
                 : usuarioRepository.listarPorEmpresa(empresa);
+
+        return usuarios.stream()
+                .map(UsuarioResponse::desde)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtener(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponse> obtener(@PathVariable Long id) {
         return usuarioRepository.buscarPorId(id)
+                .map(UsuarioResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/buscar")
-    public ResponseEntity<Usuario> buscarPorEmail(@RequestParam String email) {
+    public ResponseEntity<UsuarioResponse> buscarPorEmail(@RequestParam String email) {
         return usuarioRepository.buscarPorEmail(email)
+                .map(UsuarioResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

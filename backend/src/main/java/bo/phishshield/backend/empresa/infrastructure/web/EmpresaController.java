@@ -1,7 +1,7 @@
 package bo.phishshield.backend.empresa.infrastructure.web;
 
-import bo.phishshield.backend.empresa.domain.model.Empresa;
 import bo.phishshield.backend.empresa.domain.port.out.EmpresaRepositoryPort;
+import bo.phishshield.backend.empresa.infrastructure.web.dto.EmpresaResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,13 +21,17 @@ public class EmpresaController {
     }
 
     @GetMapping
-    public List<Empresa> listar() {
-        return empresaRepository.listarTodas();
+    public List<EmpresaResponse> listar() {
+        return empresaRepository.listarTodas()
+                .stream()
+                .map(EmpresaResponse::desde)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Empresa> obtener(@PathVariable Long id) {
+    public ResponseEntity<EmpresaResponse> obtener(@PathVariable Long id) {
         return empresaRepository.buscarPorId(id)
+                .map(EmpresaResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
