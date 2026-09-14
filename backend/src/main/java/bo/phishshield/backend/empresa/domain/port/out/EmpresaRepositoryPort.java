@@ -10,4 +10,8 @@ public interface EmpresaRepositoryPort {
     List<Empresa> listarTodas();
 
     Optional<Empresa> buscarPorId(Long id);
+
+    Empresa guardar(Empresa empresa);
+
+    boolean existeNit(String nit);
 }

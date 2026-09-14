@@ -34,6 +34,20 @@ public class Empresa {
         this.activa = activa;
         this.creadoEn = creadoEn;
     }
+    public static Empresa nueva(String nombre, String nit, String sector,
+                                String ciudad, String plan) {
+        return new Empresa(
+                null,
+                null,
+                nombre,
+                nit,
+                sector,
+                ciudad,
+                plan == null ? "basico" : plan,
+                true,
+                null
+        );
+    }
 
     public Long getId() { return id; }
     public UUID getUuidPublico() { return uuidPublico; }

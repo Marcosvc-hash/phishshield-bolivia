@@ -1,0 +1,54 @@
+### Listar todas las empresas
+GET http://localhost:8080/api/empresas
+
+### Crear una empresa valida
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nombre": "Ferreteria El Alto S.R.L.",
+  "nit": "3045678912",
+  "sector": "Comercio",
+  "ciudad": "El Alto",
+  "plan": "basico"
+}
+
+### Nombre vacio: deberia dar 400
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "nit": "4055678912",
+  "plan": "basico"
+}
+
+### Plan invalido: deberia dar 400
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nombre": "Empresa de Prueba",
+  "nit": "5065678912",
+  "plan": "premium"
+}
+
+### NIT con letras: deberia dar 400
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nombre": "Otra Empresa",
+  "nit": "ABC123",
+  "plan": "basico"
+}
+
+### NIT duplicado: deberia dar 409
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nombre": "Clon de Importadora",
+  "nit": "1023456789",
+  "plan": "basico"
+}

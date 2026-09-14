@@ -1,12 +1,14 @@
 package bo.phishshield.backend.empresa.infrastructure.web;
 
+import bo.phishshield.backend.empresa.domain.model.Empresa;
 import bo.phishshield.backend.empresa.domain.port.out.EmpresaRepositoryPort;
+import bo.phishshield.backend.empresa.infrastructure.web.dto.CrearEmpresaRequest;
 import bo.phishshield.backend.empresa.infrastructure.web.dto.EmpresaResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -34,5 +36,26 @@ public class EmpresaController {
                 .map(EmpresaResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public EmpresaResponse crear(@Valid @RequestBody CrearEmpresaRequest request) {
+
+        if (empresaRepository.existeNit(request.nit())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ya existe una empresa registrada con el NIT " + request.nit());
+        }
+
+        Empresa nueva = Empresa.nueva(
+                request.nombre(),
+                request.nit(),
+                request.sector(),
+                request.ciudad(),
+                request.plan()
+        );
+
+        return EmpresaResponse.desde(empresaRepository.guardar(nueva));
     }
 }
