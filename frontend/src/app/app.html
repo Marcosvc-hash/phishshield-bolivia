@@ -1,0 +1,56 @@
+<div class="contenedor">
+
+  <header>
+    <h1>PhishShield Bolivia</h1>
+    <p class="subtitulo">Panel de empresas registradas</p>
+  </header>
+
+  @if (cargando()) {
+    <p class="aviso">Cargando empresas...</p>
+  }
+
+  @if (error()) {
+    <p class="aviso error">{{ error() }}</p>
+  }
+
+  @if (!cargando() && !error()) {
+
+    <p class="conteo">{{ empresas().length }} empresa(s) registrada(s)</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>NIT</th>
+          <th>Sector</th>
+          <th>Ciudad</th>
+          <th>Plan</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (empresa of empresas(); track empresa.id) {
+          <tr>
+            <td>{{ empresa.nombre }}</td>
+            <td>{{ empresa.nit }}</td>
+            <td>{{ empresa.sector }}</td>
+            <td>{{ empresa.ciudad }}</td>
+            <td><span class="plan">{{ empresa.plan }}</span></td>
+            <td>
+              @if (empresa.activa) {
+                <span class="activa">Activa</span>
+              } @else {
+                <span class="inactiva">Inactiva</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (empresas().length === 0) {
+      <p class="aviso">No hay empresas registradas todavia.</p>
+    }
+  }
+
+</div>
