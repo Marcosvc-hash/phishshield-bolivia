@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EmpresaService } from './empresa.service';
 import { Empresa } from './empresa.model';
+import { Analizador } from './analizador/analizador';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule],
+  imports: [CommonModule, Analizador],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

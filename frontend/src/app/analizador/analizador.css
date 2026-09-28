@@ -1,0 +1,172 @@
+.analizador {
+  margin-bottom: 3rem;
+}
+
+h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  color: #1d4ed8;
+}
+
+h3 {
+  font-size: 0.95rem;
+  margin: 1.25rem 0 0.5rem;
+  color: #334155;
+}
+
+.titulo-historial {
+  margin-top: 2.5rem;
+}
+
+.ayuda {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.formulario {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.formulario input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.formulario input:focus {
+  outline: 2px solid #93c5fd;
+  border-color: #1d4ed8;
+}
+
+.formulario button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: white;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.formulario button:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.formulario button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.formulario button.secundario {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.formulario button.secundario:hover {
+  background: #f1f5f9;
+}
+
+.tarjeta {
+  border: 1px solid #e2e8f0;
+  border-left-width: 5px;
+  border-radius: 8px;
+  padding: 1.25rem;
+  background: #ffffff;
+}
+
+.tarjeta.veredicto-seguro     { border-left-color: #15803d; }
+.tarjeta.veredicto-sospechoso { border-left-color: #b45309; }
+.tarjeta.veredicto-phishing   { border-left-color: #b91c1c; }
+
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.etiqueta {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.veredicto-seguro .etiqueta     { color: #15803d; }
+.veredicto-sospechoso .etiqueta { color: #b45309; }
+.veredicto-phishing .etiqueta   { color: #b91c1c; }
+
+.puntaje {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.barra {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.relleno {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.veredicto-seguro .relleno     { background: #16a34a; }
+.veredicto-sospechoso .relleno { background: #d97706; }
+.veredicto-phishing .relleno   { background: #dc2626; }
+
+.datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.datos dt { color: #64748b; }
+.datos dd { margin: 0; }
+
+.indicadores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.indicadores li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.indicadores li:last-child { border-bottom: none; }
+
+.detalle { color: #334155; }
+
+.aporte {
+  color: #b91c1c;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pastilla {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.pastilla.veredicto-seguro     { background: #dcfce7; color: #15803d; }
+.pastilla.veredicto-sospechoso { background: #fef3c7; color: #b45309; }
+.pastilla.veredicto-phishing   { background: #fee2e2; color: #b91c1c; }

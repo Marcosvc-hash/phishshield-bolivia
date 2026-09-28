@@ -76,3 +76,10 @@ tbody tr:hover {
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
+.titulo-seccion {
+  font-size: 1.25rem;
+  color: #1d4ed8;
+  margin: 0 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}

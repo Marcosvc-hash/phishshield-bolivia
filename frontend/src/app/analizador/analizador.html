@@ -1,0 +1,87 @@
+<section class="analizador">
+
+  <h2>Analizar una URL</h2>
+  <p class="ayuda">Pegue un enlace sospechoso y PhishShield le dira por que es o no es peligroso.</p>
+
+  <div class="formulario">
+    <input
+      type="text"
+      [(ngModel)]="url"
+      (keyup.enter)="analizar()"
+      placeholder="https://ejemplo.com/login"
+      [disabled]="analizando()" />
+
+    <button (click)="analizar()" [disabled]="analizando()">
+      @if (analizando()) { Analizando... } @else { Analizar }
+    </button>
+
+    @if (resultado() || error()) {
+      <button class="secundario" (click)="limpiar()">Limpiar</button>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="aviso error">{{ error() }}</p>
+  }
+
+  @if (resultado(); as r) {
+    <article class="tarjeta" [class]="claseDe(r.resultado)">
+
+      <div class="encabezado">
+               <span class="etiqueta">{{ etiquetaDe(r.resultado, r.indicadores.length) }}</span>
+        <span class="puntaje">{{ r.nivelRiesgo }} / 100</span>
+      </div>
+
+      <div class="barra">
+        <div class="relleno" [style.width.%]="r.nivelRiesgo"></div>
+      </div>
+
+      <dl class="datos">
+        <dt>Dominio</dt>
+        <dd>{{ r.dominio || 'No identificado' }}</dd>
+        <dt>Analizado en</dt>
+        <dd>{{ r.tiempoMs }} ms</dd>
+      </dl>
+
+      @if (r.indicadores.length > 0) {
+        <h3>Por que se marco asi</h3>
+        <ul class="indicadores">
+          @for (i of r.indicadores; track i.codigo) {
+            <li>
+              <span class="detalle">{{ i.detalle || i.codigo }}</span>
+              <span class="aporte">+{{ i.aporte }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="ayuda">Ninguna regla heuristica se activo para esta direccion.</p>
+      }
+
+    </article>
+  }
+
+  @if (historial().length > 0) {
+    <h3 class="titulo-historial">Ultimos analisis</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Dominio</th>
+          <th>Veredicto</th>
+          <th>Riesgo</th>
+          <th>Indicadores</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of historial(); track a.id) {
+          <tr>
+            <td>{{ a.dominio || a.url }}</td>
+            <td><span class="pastilla" [class]="claseDe(a.resultado)">{{ a.resultado }}</span></td>
+            <td>{{ a.nivelRiesgo }}</td>
+            <td>{{ a.indicadores.length }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+</section>
