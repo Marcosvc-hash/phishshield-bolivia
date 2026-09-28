@@ -1,0 +1,79 @@
+### Sitio legitimo: deberia dar seguro
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://www.bnb.com.bo/",
+  "origen": "web",
+  "idUsuario": 3,
+  "idEmpresa": 1
+}
+
+### Phishing que imita al BNB
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "http://bnb-bo-seguro.com/login/verificar-cuenta",
+  "origen": "extension",
+  "idUsuario": 3,
+  "idEmpresa": 1
+}
+
+### Dominio con TLD sospechoso
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://premios-tigo-bo.xyz/sorteo",
+  "origen": "web"
+}
+
+### URL con IP literal y sin HTTPS
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "http://192.168.1.50/banca/login",
+  "origen": "api"
+}
+
+### Suplantacion de Impuestos Nacionales
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://impuestos-gob-bo.info/verificar-nit",
+  "origen": "plugin_correo"
+}
+
+### URL mal formada: deberia dar 400
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "esto-no-es-una-url"
+}
+
+### URL vacia: deberia dar 400
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": ""
+}
+
+### Origen invalido: deberia dar 400
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://ejemplo.com",
+  "origen": "telepatia"
+}
+
+### Listar los ultimos analisis
+GET http://localhost:8080/api/analisis
+
+### Listar solo 5
+GET http://localhost:8080/api/analisis?limite=5
