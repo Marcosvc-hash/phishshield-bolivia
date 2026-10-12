@@ -1,6 +1,14 @@
 ### Listar todas las empresas
 GET http://localhost:8080/api/empresas
 
+### Obtener una empresa por su id publico (UUID).
+### Copie un "id" de la respuesta anterior y reemplace el valor.
+@uuidEmpresa = 00000000-0000-0000-0000-000000000000
+GET http://localhost:8080/api/empresas/{{uuidEmpresa}}
+
+### El id interno numerico ya no es valido: deberia dar 400
+GET http://localhost:8080/api/empresas/1
+
 ### Crear una empresa valida
 POST http://localhost:8080/api/empresas
 Content-Type: application/json

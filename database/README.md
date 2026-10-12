@@ -22,7 +22,7 @@ docker compose version
 ## 2. Levantar la base de datos
 
 ```bash
-cd phishshield-db
+cd database
 cp .env.example .env      # en Windows PowerShell: copy .env.example .env
 # editá .env y poné tus propias contraseñas
 docker compose up -d
@@ -140,6 +140,45 @@ está vacío**. Si modificás el esquema y querés recargarlo desde cero:
 docker compose down -v && docker compose up -d
 ```
 
+### Migraciones
+
+Los scripts de `initdb/` solo corren con el volumen vacío, así que un cambio en
+`02_seed.sql` **no** llega a una base que ya existe. Para eso está la carpeta
+`migraciones/`: cada archivo `V<n>__descripcion.sql` aplica un cambio puntual
+sobre una base existente, **sin borrar datos**, y es idempotente (se puede
+ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
+`initdb/` para las bases nuevas y en `migraciones/` para las existentes.
+
+| Migración | Qué hace |
+|---|---|
+| `V2__regla_lista_negra.sql` | Registra la regla `URL_LISTA_NEGRA` (peso 70) |
+
+Aplicarlas en orden, desde la raíz del repositorio:
+
+```powershell
+# PowerShell (no admite "<")
+Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+```
+
+```bash
+# Git Bash / Linux / macOS
+docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V2__regla_lista_negra.sql
+```
+
+Los archivos de migración se escriben solo en ASCII (sin tildes ni eñes): Windows
+PowerShell 5.1 cambia esos caracteres por `?` al pasarlos por la tubería.
+
+### Sobre los datos de ejemplo
+
+`02_seed.sql` tiene datos **ilustrativos** para desarrollo y demo:
+
+- Las filas de `modelos_ia` tienen métricas y fechas inventadas; todavía no hay
+  ningún modelo entrenado real.
+- Los análisis de ejemplo (`analisis` y `analisis_indicadores`) tienen puntajes
+  escritos a mano, no calculados por el motor de reglas. El backend solo
+  reutiliza un análisis durante 24 horas, así que estas filas no se devuelven
+  como resultado de un análisis nuevo.
+
 ### Respaldo y restauración
 
 ```bash
@@ -149,7 +188,7 @@ cat backup.sql | docker exec -i phishshield-db psql -U phishshield -d phishshiel
 
 ---
 
-## 7. Estructura del esquema (14 tablas)
+## 7. Estructura del esquema (15 tablas)
 
 | Bloque | Tablas |
 |---|---|
