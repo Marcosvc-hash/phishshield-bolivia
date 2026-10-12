@@ -144,6 +144,29 @@ umbral, y muestran el rendimiento sin ese efecto:
 la mitad o algo más (recall de 0,48 a 0,62) y se equivoca poco cuando avisa (precisión de
 0,86 a 0,91). Es un apoyo a las reglas, no un reemplazo.
 
+### Exactitud frente a la meta del documento ("no inferior al 85 %")
+
+Se recalculó el 2026-10-12 cargando `modelos/1.0.0/modelo.joblib`, **sin reentrenar**, sobre
+el mismo conjunto de prueba (misma limpieza, semilla 42 y división por dominio) y con el umbral
+0,5527. Coincide hasta el cuarto decimal con `metadata.json`.
+
+| Exactitud en prueba | Modelo | Línea base "todo es legítimo" | ¿Cumple ≥ 85 %? |
+|---|---|---|---|
+| Por fila (32 856 hosts) | **89,55 %** | 53,97 % | Sí |
+| Por dominio (22 708 dominios, cada uno pesa lo mismo) | **85,39 %** | 75,51 % | Sí, con 0,39 puntos de margen |
+
+**Cómo leerla:**
+- La meta se cumple en las dos mediciones, pero **por dominio queda justo en el límite**.
+- La exactitud depende mucho de cuántas legítimas hay. Por dominio, el 75,5 % de los dominios
+  de prueba son legítimos, así que un "modelo" que dijera siempre "legítimo" ya tendría 75,5 %
+  sin detectar nada. Por eso la exactitud sola no alcanza: el modelo aporta 10 puntos sobre
+  esa línea base, y su recall por dominio es 0,48.
+- En el conjunto boliviano hecho a mano (44 URL, abajo), la exactitud del modelo solo es
+  **84,09 %, por debajo del 85 %**. Es un conjunto pequeño (un acierto más o menos mueve 2,3
+  puntos) y no es una estimación estadística, pero hay que decirlo.
+- Para el documento se recomienda informar la exactitud **junto con** precisión, recall y la
+  línea base, y aclarar que el 85 % se refiere al modelo de IA solo, sobre dominios no vistos.
+
 ## Evaluación boliviana (aparte)
 
 `datos_evaluacion/bolivia.csv`: 44 URL etiquetadas a mano. Son 26 legítimas (los 9 dominios
