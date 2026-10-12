@@ -32,7 +32,7 @@ class VerificacionReglasAlArrancarTest {
     void el_caso_de_uso_incluye_las_reglas_dinamicas() {
         AnalizarUrlUseCase casoDeUso = new AnalizarUrlUseCase(
                 List.of(new ReglaIpLiteral(), new ReglaSinHttps()),
-                null, null, null, null, Clock.systemDefaultZone());
+                null, null, null, null, null, Clock.systemDefaultZone());
 
         assertEquals(
                 List.of("URL_IP_LITERAL", "URL_SIN_HTTPS", "URL_TYPOSQUATTING", "URL_LISTA_NEGRA"),

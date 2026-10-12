@@ -37,6 +37,11 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
         'analista', 'Suplanta al SIN pidiendo datos de NIT'),
     ('premios-tigo-bo.xyz',      'gris', NULL, 'automatico', 'Dominio recién registrado, sin reputación');
 
+-- Sitios legítimos que el typosquatting confundiría con una entidad local.
+-- ReglaTyposquatting nunca reporta un dominio de la lista blanca.
+INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
+    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)');
+
 -- ---------------------------------------------------------------------
 -- Reglas heurísticas
 -- ---------------------------------------------------------------------

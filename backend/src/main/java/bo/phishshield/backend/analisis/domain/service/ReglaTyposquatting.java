@@ -6,12 +6,17 @@ import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
  * URL_TYPOSQUATTING: detecta dominios que imitan a entidades bolivianas conocidas,
  * ya sea por similitud ortografica del dominio completo o porque la marca
  * aparece como palabra dentro de un dominio ajeno.
+ *
+ * Los dominios de la lista blanca nunca se reportan: es la forma de corregir
+ * un falso positivo puntual (visa.com se parece a bisa.com) sin aflojar la
+ * tolerancia para todos los demas.
  */
 public class ReglaTyposquatting implements ReglaUrl {
 
@@ -20,9 +25,16 @@ public class ReglaTyposquatting implements ReglaUrl {
     private static final Pattern SEPARADORES = Pattern.compile("[.\\-_]");
 
     private final List<DominioOficial> dominiosOficiales;
+    private final Set<String> listaBlanca;
 
     public ReglaTyposquatting(List<DominioOficial> dominiosOficiales) {
+        this(dominiosOficiales, Set.of());
+    }
+
+    /** @param listaBlanca dominios registrables verificados como legitimos */
+    public ReglaTyposquatting(List<DominioOficial> dominiosOficiales, Set<String> listaBlanca) {
         this.dominiosOficiales = List.copyOf(dominiosOficiales);
+        this.listaBlanca = Set.copyOf(listaBlanca);
     }
 
     @Override
@@ -33,6 +45,11 @@ public class ReglaTyposquatting implements ReglaUrl {
     @Override
     public Optional<String> evaluar(UrlAnalizada url) {
         String candidato = url.getDominioRegistrable();
+
+        // Dominio verificado como legitimo: no hay nada que reportar
+        if (listaBlanca.contains(candidato)) {
+            return Optional.empty();
+        }
 
         // Primera pasada: si el dominio es oficial, no hay nada que reportar
         for (DominioOficial oficial : dominiosOficiales) {

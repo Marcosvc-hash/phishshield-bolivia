@@ -10,6 +10,7 @@ import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.MotorReglasUrl;
@@ -25,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Caso de uso: analizar una URL y dejar el resultado persistido.
@@ -49,6 +52,7 @@ public class AnalizarUrlUseCase {
     private final ReglaDeteccionRepositoryPort reglaRepository;
     private final DominioOficialRepositoryPort dominioRepository;
     private final ListaNegraRepositoryPort listaNegraRepository;
+    private final ListaBlancaRepositoryPort listaBlancaRepository;
     private final Clock reloj;
 
     public AnalizarUrlUseCase(List<ReglaUrl> reglasBase,
@@ -56,12 +60,14 @@ public class AnalizarUrlUseCase {
                               ReglaDeteccionRepositoryPort reglaRepository,
                               DominioOficialRepositoryPort dominioRepository,
                               ListaNegraRepositoryPort listaNegraRepository,
+                              ListaBlancaRepositoryPort listaBlancaRepository,
                               Clock reloj) {
         this.reglasBase = List.copyOf(reglasBase);
         this.analisisRepository = analisisRepository;
         this.reglaRepository = reglaRepository;
         this.dominioRepository = dominioRepository;
         this.listaNegraRepository = listaNegraRepository;
+        this.listaBlancaRepository = listaBlancaRepository;
         this.reloj = reloj;
     }
 
@@ -81,7 +87,9 @@ public class AnalizarUrlUseCase {
         // 3. Armar el motor con los datos de referencia de la base
         List<DominioOficial> oficiales = dominioRepository.listarActivos();
         List<DominioListado> listaNegra = listaNegraRepository.listarActivos();
-        MotorReglasUrl motor = new MotorReglasUrl(reglasConDinamicas(oficiales, listaNegra));
+        Set<String> listaBlanca = dominiosDe(listaBlancaRepository.listarActivos());
+        MotorReglasUrl motor = new MotorReglasUrl(
+                reglasConDinamicas(oficiales, listaNegra, listaBlanca));
 
         // 4. Aplicar las reglas con los pesos vigentes
         Map<String, BigDecimal> pesos = reglaRepository.pesosActivosPorCategoria(CATEGORIA_URL);
@@ -109,7 +117,8 @@ public class AnalizarUrlUseCase {
         List<String> codigos = new ArrayList<>();
         for (ReglaUrl regla : reglasConDinamicas(
                 List.of(new DominioOficial("referencia", "referencia.bo")),
-                List.of(new DominioListado("referencia.bo", null)))) {
+                List.of(new DominioListado("referencia.bo", null)),
+                Set.of())) {
             codigos.add(regla.codigo());
         }
         return List.copyOf(codigos);
@@ -134,14 +143,19 @@ public class AnalizarUrlUseCase {
      * estado y se reutilizan.
      */
     private List<ReglaUrl> reglasConDinamicas(List<DominioOficial> oficiales,
-                                              List<DominioListado> listaNegra) {
+                                              List<DominioListado> listaNegra,
+                                              Set<String> listaBlanca) {
         List<ReglaUrl> todas = new ArrayList<>(reglasBase);
         if (!oficiales.isEmpty()) {
-            todas.add(new ReglaTyposquatting(oficiales));
+            todas.add(new ReglaTyposquatting(oficiales, listaBlanca));
         }
         if (!listaNegra.isEmpty()) {
             todas.add(new ReglaListaNegra(listaNegra));
         }
         return todas;
+    }
+
+    private static Set<String> dominiosDe(List<DominioListado> listados) {
+        return listados.stream().map(DominioListado::dominio).collect(Collectors.toSet());
     }
 }

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,8 +20,11 @@ class MotorReglasUrlTest {
             new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
             new DominioOficial("Banco Union", "bancounion.com.bo"),
             new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
-            new DominioOficial("Tigo Bolivia", "tigo.com.bo")
+            new DominioOficial("Tigo Bolivia", "tigo.com.bo"),
+            new DominioOficial("Banco BISA", "bisa.com")
     );
+
+    private static final Set<String> LISTA_BLANCA = Set.of("visa.com");
 
     private static final Map<String, BigDecimal> PESOS = Map.of(
             "URL_IP_LITERAL", new BigDecimal("30.00"),
@@ -37,7 +41,7 @@ class MotorReglasUrlTest {
                 new ReglaSinHttps(),
                 new ReglaTldSospechoso(),
                 new ReglaSubdominios(),
-                new ReglaTyposquatting(OFICIALES)
+                new ReglaTyposquatting(OFICIALES, LISTA_BLANCA)
         ));
     }
 
@@ -127,6 +131,25 @@ class MotorReglasUrlTest {
                 .contains("URL_TYPOSQUATTING"));
         assertTrue(codigosDisparados("https://impuestos-gob-bo.info/nit")
                 .contains("URL_TYPOSQUATTING"));
+    }
+
+    // ---- Lista blanca ----
+
+    @Test
+    void la_lista_blanca_evita_el_falso_positivo_de_visa() {
+        assertFalse(codigosDisparados("https://www.visa.com").contains("URL_TYPOSQUATTING"));
+
+        // Sin lista blanca, el mismo dominio si se reporta (distancia 1 con bisa.com)
+        List<Indicador> sinListaBlanca = new MotorReglasUrl(List.of(new ReglaTyposquatting(OFICIALES)))
+                .evaluar(UrlAnalizada.de("https://www.visa.com"), PESOS);
+        assertEquals(1, sinListaBlanca.size());
+    }
+
+    /** La tolerancia no cambio: las imitaciones de una letra en marcas cortas se siguen detectando. */
+    @Test
+    void la_lista_blanca_no_afloja_la_deteccion_de_marcas_cortas() {
+        assertTrue(codigosDisparados("http://bnv.com.bo").contains("URL_TYPOSQUATTING"));
+        assertTrue(codigosDisparados("https://tiqo.com.bo").contains("URL_TYPOSQUATTING"));
     }
 
     // ---- Lista negra ----

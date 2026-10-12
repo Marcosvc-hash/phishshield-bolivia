@@ -14,6 +14,7 @@ import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlInvalidaException;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
@@ -117,8 +118,21 @@ class AnalizarUrlUseCaseTest {
             return List.of(
                     new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
                     new DominioOficial("Banco Union", "bancounion.com.bo"),
-                    new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo")
+                    new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
+                    new DominioOficial("Banco BISA", "bisa.com")
             );
+        }
+    }
+
+    /** Arranca con visa.com; cada prueba puede vaciarla. */
+    static class ListaBlancaEnMemoria implements ListaBlancaRepositoryPort {
+        final List<DominioListado> dominios = new ArrayList<>(List.of(
+                new DominioListado("visa.com", "Se parece a bisa.com, pero es legitimo")
+        ));
+
+        @Override
+        public List<DominioListado> listarActivos() {
+            return List.copyOf(dominios);
         }
     }
 
@@ -140,6 +154,7 @@ class AnalizarUrlUseCaseTest {
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
     private final ListaNegraEnMemoria listaNegra = new ListaNegraEnMemoria();
+    private final ListaBlancaEnMemoria listaBlanca = new ListaBlancaEnMemoria();
 
     private AnalizarUrlUseCase casoDeUso() {
         List<ReglaUrl> base = List.of(
@@ -149,7 +164,7 @@ class AnalizarUrlUseCaseTest {
                 new ReglaSubdominios()
         );
         return new AnalizarUrlUseCase(base, repositorio, new PesosFijos(),
-                new DominiosFijos(), listaNegra, RELOJ);
+                new DominiosFijos(), listaNegra, listaBlanca, RELOJ);
     }
 
     private Analisis analizar(String url) {
@@ -257,6 +272,28 @@ class AnalizarUrlUseCaseTest {
 
         assertEquals(1, repositorio.guardados.size());
         assertSame(reciente, resultado);
+    }
+
+    // ---- Lista blanca ----
+
+    @Test
+    void un_dominio_en_lista_blanca_queda_como_seguro() {
+        Analisis resultado = analizar("https://www.visa.com");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().isEmpty(), "Indicadores: " + detalle(resultado));
+    }
+
+    /** Sin la lista blanca, visa.com se confunde con bisa.com: es el falso positivo original. */
+    @Test
+    void sin_lista_blanca_visa_se_confunde_con_bisa() {
+        listaBlanca.dominios.clear();
+
+        Analisis resultado = analizar("https://www.visa.com");
+
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
+                "Indicadores: " + detalle(resultado));
     }
 
     // ---- Alertas ----
