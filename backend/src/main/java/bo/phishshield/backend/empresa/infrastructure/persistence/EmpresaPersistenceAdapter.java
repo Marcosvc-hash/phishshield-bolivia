@@ -32,6 +32,11 @@ public class EmpresaPersistenceAdapter implements EmpresaRepositoryPort {
     }
 
     @Override
+    public Optional<Empresa> buscarPorUuid(UUID uuidPublico) {
+        return jpaRepository.findByUuidPublico(uuidPublico).map(this::aDominio);
+    }
+
+    @Override
     public Empresa guardar(Empresa empresa) {
         EmpresaEntity entidad = aEntidad(empresa);
         EmpresaEntity guardada = jpaRepository.save(entidad);
