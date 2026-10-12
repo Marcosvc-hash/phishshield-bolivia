@@ -96,7 +96,7 @@ class AnalizarUrlUseCaseTest {
         @Override
         public Map<String, BigDecimal> pesosActivosPorCategoria(String categoria) {
             Map<String, BigDecimal> pesos = new HashMap<>();
-            pesos.put("URL_IP_LITERAL", new BigDecimal("18.00"));
+            pesos.put("URL_IP_LITERAL", new BigDecimal("30.00"));
             pesos.put("URL_SIN_HTTPS", new BigDecimal("8.00"));
             pesos.put("URL_TYPOSQUATTING", new BigDecimal("45.00"));
             pesos.put("URL_TLD_SOSPECHOSO", new BigDecimal("12.00"));

@@ -23,7 +23,7 @@ class MotorReglasUrlTest {
     );
 
     private static final Map<String, BigDecimal> PESOS = Map.of(
-            "URL_IP_LITERAL", new BigDecimal("18.00"),
+            "URL_IP_LITERAL", new BigDecimal("30.00"),
             "URL_SIN_HTTPS", new BigDecimal("8.00"),
             "URL_TYPOSQUATTING", new BigDecimal("45.00"),
             "URL_TLD_SOSPECHOSO", new BigDecimal("12.00"),
