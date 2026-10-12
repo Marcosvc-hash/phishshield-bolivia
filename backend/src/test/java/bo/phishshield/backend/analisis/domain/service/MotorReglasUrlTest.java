@@ -32,7 +32,8 @@ class MotorReglasUrlTest {
             "URL_TYPOSQUATTING", new BigDecimal("45.00"),
             "URL_TLD_SOSPECHOSO", new BigDecimal("12.00"),
             "URL_SUBDOMINIOS", new BigDecimal("10.00"),
-            "URL_LISTA_NEGRA", new BigDecimal("70.00")
+            "URL_LISTA_NEGRA", new BigDecimal("70.00"),
+            "URL_RUTA_SENSIBLE", new BigDecimal("10.00")
     );
 
     private MotorReglasUrl motor() {
@@ -41,6 +42,7 @@ class MotorReglasUrlTest {
                 new ReglaSinHttps(),
                 new ReglaTldSospechoso(),
                 new ReglaSubdominios(),
+                new ReglaRutaSensible(),
                 new ReglaTyposquatting(OFICIALES, LISTA_BLANCA)
         ));
     }

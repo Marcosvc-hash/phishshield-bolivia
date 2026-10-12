@@ -53,6 +53,7 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
     ('URL_DOMINIO_NUEVO',   'Dominio registrado hace menos de 30 días',                      'url',        15.00),
     ('URL_SUBDOMINIOS',     'Cantidad anómala de subdominios',                               'url',        10.00),
     ('URL_LISTA_NEGRA',     'El dominio figura en la lista negra de PhishShield',            'url',        70.00),
+    ('URL_RUTA_SENSIBLE',   'La ruta contiene palabras sensibles (login, cuenta, clave, pin...)', 'url',   10.00),
     ('TXT_URGENCIA',        'Lenguaje de urgencia o amenaza de bloqueo de cuenta',           'contenido',  14.00),
     ('TXT_PIDE_CREDENCIAL', 'Solicita contraseña, PIN o código de verificación',             'contenido',  30.00),
     ('TXT_PREMIO',          'Promete premios, bonos o sorteos',                              'contenido',  12.00),

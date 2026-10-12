@@ -7,6 +7,7 @@ import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
+import bo.phishshield.backend.analisis.domain.service.ReglaRutaSensible;
 import bo.phishshield.backend.analisis.domain.service.ReglaSinHttps;
 import bo.phishshield.backend.analisis.domain.service.ReglaSubdominios;
 import bo.phishshield.backend.analisis.domain.service.ReglaTldSospechoso;
@@ -35,7 +36,8 @@ public class AnalisisConfig {
                 new ReglaIpLiteral(),
                 new ReglaSinHttps(),
                 new ReglaTldSospechoso(),
-                new ReglaSubdominios()
+                new ReglaSubdominios(),
+                new ReglaRutaSensible()
         );
     }
 
