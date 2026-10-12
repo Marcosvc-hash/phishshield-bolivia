@@ -1,18 +1,25 @@
 package bo.phishshield.backend.analisis.application;
 
 import bo.phishshield.backend.analisis.domain.model.Analisis;
+import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
 import bo.phishshield.backend.analisis.domain.model.Sha256;
+import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.MotorReglasUrl;
+import bo.phishshield.backend.analisis.domain.service.ReglaListaNegra;
 import bo.phishshield.backend.analisis.domain.service.ReglaTyposquatting;
 import bo.phishshield.backend.analisis.domain.service.ReglaUrl;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,21 +34,34 @@ import java.util.Optional;
  */
 public class AnalizarUrlUseCase {
 
+    /**
+     * Cuanto tiempo se reutiliza un analisis previo de la misma URL.
+     * Pasado ese plazo se recalcula: la lista negra y los pesos pueden
+     * haber cambiado, y un sitio puede pasar de legitimo a malicioso.
+     */
+    public static final Duration VIGENCIA_CACHE = Duration.ofHours(24);
+
     private static final String CATEGORIA_URL = "url";
 
     private final List<ReglaUrl> reglasBase;
     private final AnalisisRepositoryPort analisisRepository;
     private final ReglaDeteccionRepositoryPort reglaRepository;
     private final DominioOficialRepositoryPort dominioRepository;
+    private final ListaNegraRepositoryPort listaNegraRepository;
+    private final Clock reloj;
 
     public AnalizarUrlUseCase(List<ReglaUrl> reglasBase,
                               AnalisisRepositoryPort analisisRepository,
                               ReglaDeteccionRepositoryPort reglaRepository,
-                              DominioOficialRepositoryPort dominioRepository) {
+                              DominioOficialRepositoryPort dominioRepository,
+                              ListaNegraRepositoryPort listaNegraRepository,
+                              Clock reloj) {
         this.reglasBase = List.copyOf(reglasBase);
         this.analisisRepository = analisisRepository;
         this.reglaRepository = reglaRepository;
         this.dominioRepository = dominioRepository;
+        this.listaNegraRepository = listaNegraRepository;
+        this.reloj = reloj;
     }
 
     public Analisis ejecutar(ComandoAnalizarUrl comando) {
@@ -50,16 +70,17 @@ public class AnalizarUrlUseCase {
         // 1. Parsear y normalizar. Si la URL es invalida, revienta aca.
         UrlAnalizada url = UrlAnalizada.de(comando.url());
 
-        // 2. Cache por hash: si ya analizamos este contenido, lo devolvemos
+        // 2. Cache por hash: si ya analizamos esta URL hace poco, lo devolvemos
         String hash = Sha256.de(url.getOriginal());
         Optional<Analisis> previo = analisisRepository.buscarPorHash(hash);
-        if (previo.isPresent()) {
+        if (previo.isPresent() && sigueVigente(previo.get())) {
             return previo.get();
         }
 
-        // 3. Armar el motor con los dominios oficiales de la base
+        // 3. Armar el motor con los datos de referencia de la base
         List<DominioOficial> oficiales = dominioRepository.listarActivos();
-        MotorReglasUrl motor = new MotorReglasUrl(reglasConTyposquatting(oficiales));
+        List<DominioListado> listaNegra = listaNegraRepository.listarActivos();
+        MotorReglasUrl motor = new MotorReglasUrl(reglasConDinamicas(oficiales, listaNegra));
 
         // 4. Aplicar las reglas con los pesos vigentes
         Map<String, BigDecimal> pesos = reglaRepository.pesosActivosPorCategoria(CATEGORIA_URL);
@@ -75,14 +96,31 @@ public class AnalizarUrlUseCase {
     }
 
     /**
-     * La regla de typosquatting necesita la lista de dominios oficiales,
-     * que cambia con el tiempo. Se construye en cada ejecucion; las demas
-     * reglas son sin estado y se reutilizan.
+     * Solo se reutiliza un analisis de URL con fecha conocida y dentro de la
+     * vigencia. Asi las filas viejas (por ejemplo, las del seed) no se
+     * devuelven para siempre.
      */
-    private List<ReglaUrl> reglasConTyposquatting(List<DominioOficial> oficiales) {
+    private boolean sigueVigente(Analisis previo) {
+        if (previo.getTipo() != TipoAnalisis.URL || previo.getFechaAnalisis() == null) {
+            return false;
+        }
+        OffsetDateTime limite = OffsetDateTime.now(reloj).minus(VIGENCIA_CACHE);
+        return previo.getFechaAnalisis().isAfter(limite);
+    }
+
+    /**
+     * Typosquatting y lista negra dependen de datos que cambian con el tiempo,
+     * asi que se construyen en cada ejecucion; las demas reglas son sin
+     * estado y se reutilizan.
+     */
+    private List<ReglaUrl> reglasConDinamicas(List<DominioOficial> oficiales,
+                                              List<DominioListado> listaNegra) {
         List<ReglaUrl> todas = new ArrayList<>(reglasBase);
         if (!oficiales.isEmpty()) {
             todas.add(new ReglaTyposquatting(oficiales));
+        }
+        if (!listaNegra.isEmpty()) {
+            todas.add(new ReglaListaNegra(listaNegra));
         }
         return todas;
     }

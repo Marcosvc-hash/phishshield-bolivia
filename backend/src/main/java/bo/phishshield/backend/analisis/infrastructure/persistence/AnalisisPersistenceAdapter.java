@@ -74,7 +74,9 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
     @Override
     @Transactional(readOnly = true)
     public Optional<Analisis> buscarPorHash(String contenidoHash) {
-        return analisisRepository.findByContenidoHash(contenidoHash).map(this::aDominio);
+        return analisisRepository
+                .findFirstByContenidoHashOrderByFechaAnalisisDesc(contenidoHash)
+                .map(this::aDominio);
     }
 
     @Override

@@ -15,7 +15,7 @@ public interface AnalisisRepositoryPort {
 
     Analisis guardar(Analisis analisis);
 
-    /** Busca un analisis previo del mismo contenido, para no recalcular. */
+    /** Busca el analisis mas reciente del mismo contenido, para no recalcular. */
     Optional<Analisis> buscarPorHash(String contenidoHash);
 
     Optional<Analisis> buscarPorUuid(UUID uuidPublico);

@@ -1,5 +1,6 @@
 package bo.phishshield.backend.analisis.domain.service;
 
+import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
 import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +27,8 @@ class MotorReglasUrlTest {
             "URL_SIN_HTTPS", new BigDecimal("8.00"),
             "URL_TYPOSQUATTING", new BigDecimal("25.00"),
             "URL_TLD_SOSPECHOSO", new BigDecimal("12.00"),
-            "URL_SUBDOMINIOS", new BigDecimal("10.00")
+            "URL_SUBDOMINIOS", new BigDecimal("10.00"),
+            "URL_LISTA_NEGRA", new BigDecimal("70.00")
     );
 
     private MotorReglasUrl motor() {
@@ -124,5 +127,47 @@ class MotorReglasUrlTest {
                 .contains("URL_TYPOSQUATTING"));
         assertTrue(codigosDisparados("https://impuestos-gob-bo.info/nit")
                 .contains("URL_TYPOSQUATTING"));
+    }
+
+    // ---- Lista negra ----
+
+    private static final List<DominioListado> LISTA_NEGRA = List.of(
+            new DominioListado("bnb-bo-seguro.com", "Clon de la banca en linea del BNB"),
+            new DominioListado("impuestos-gob-bo.info", null)
+    );
+
+    private List<Indicador> evaluarConListaNegra(String url) {
+        MotorReglasUrl conListaNegra = new MotorReglasUrl(List.of(
+                new ReglaSinHttps(),
+                new ReglaListaNegra(LISTA_NEGRA)
+        ));
+        return conListaNegra.evaluar(UrlAnalizada.de(url), PESOS);
+    }
+
+    private Optional<Indicador> indicadorListaNegra(String url) {
+        return evaluarConListaNegra(url).stream()
+                .filter(i -> i.codigoRegla().equals("URL_LISTA_NEGRA"))
+                .findFirst();
+    }
+
+    @Test
+    void lista_negra_detecta_el_dominio_y_sus_subdominios() {
+        Indicador exacto = indicadorListaNegra("http://bnb-bo-seguro.com/login").orElseThrow();
+        assertEquals("bnb-bo-seguro.com figura en la lista negra de PhishShield: "
+                + "Clon de la banca en linea del BNB", exacto.valor());
+        assertEquals(new BigDecimal("70.00"), exacto.aporte());
+
+        assertTrue(indicadorListaNegra("https://login.bnb-bo-seguro.com/x").isPresent());
+
+        // Sin motivo registrado, la evidencia no lleva ": ..."
+        assertEquals("impuestos-gob-bo.info figura en la lista negra de PhishShield",
+                indicadorListaNegra("https://impuestos-gob-bo.info/nit").orElseThrow().valor());
+    }
+
+    @Test
+    void lista_negra_no_confunde_dominios_que_solo_terminan_igual() {
+        assertTrue(indicadorListaNegra("http://otrobnb-bo-seguro.com/login").isEmpty());
+        assertTrue(indicadorListaNegra("https://bnb-bo-seguro.com.ejemplo.net").isEmpty());
+        assertTrue(indicadorListaNegra("https://www.bnb.com.bo/").isEmpty());
     }
 }
