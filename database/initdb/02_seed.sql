@@ -43,7 +43,7 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
 INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
     ('URL_IP_LITERAL',      'La URL usa una dirección IP en lugar de un dominio',            'url',        18.00),
     ('URL_SIN_HTTPS',       'El sitio no utiliza HTTPS',                                     'url',         8.00),
-    ('URL_TYPOSQUATTING',   'El dominio se parece a una entidad conocida (distancia ≤ 2)',   'url',        25.00),
+    ('URL_TYPOSQUATTING',   'El dominio se parece a una entidad conocida (distancia ≤ 2)',   'url',        45.00),
     ('URL_TLD_SOSPECHOSO',  'Extensión de dominio asociada a abuso (.xyz, .top, .info)',     'url',        12.00),
     ('URL_DOMINIO_NUEVO',   'Dominio registrado hace menos de 30 días',                      'url',        15.00),
     ('URL_SUBDOMINIOS',     'Cantidad anómala de subdominios',                               'url',        10.00),

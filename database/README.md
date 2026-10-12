@@ -152,17 +152,20 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | Migración | Qué hace |
 |---|---|
 | `V2__regla_lista_negra.sql` | Registra la regla `URL_LISTA_NEGRA` (peso 70) |
+| `V3__ajustar_peso_typosquatting.sql` | Sube el peso de `URL_TYPOSQUATTING` de 25 a 45 |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
 ```powershell
 # PowerShell (no admite "<")
 Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
 ```bash
 # Git Bash / Linux / macOS
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V2__regla_lista_negra.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V3__ajustar_peso_typosquatting.sql
 ```
 
 Los archivos de migración se escriben solo en ASCII (sin tildes ni eñes): Windows

@@ -98,7 +98,7 @@ class AnalizarUrlUseCaseTest {
             Map<String, BigDecimal> pesos = new HashMap<>();
             pesos.put("URL_IP_LITERAL", new BigDecimal("18.00"));
             pesos.put("URL_SIN_HTTPS", new BigDecimal("8.00"));
-            pesos.put("URL_TYPOSQUATTING", new BigDecimal("25.00"));
+            pesos.put("URL_TYPOSQUATTING", new BigDecimal("45.00"));
             pesos.put("URL_TLD_SOSPECHOSO", new BigDecimal("12.00"));
             pesos.put("URL_SUBDOMINIOS", new BigDecimal("10.00"));
             pesos.put("URL_LISTA_NEGRA", new BigDecimal("70.00"));
@@ -215,7 +215,8 @@ class AnalizarUrlUseCaseTest {
 
     /**
      * Documenta una limitacion conocida: sin la lista negra, imitar a un banco
-     * solo suma typosquatting (25 puntos) y el veredicto queda en seguro.
+     * solo suma typosquatting (45 puntos desde la migracion V3; antes 25, que
+     * daba seguro). Queda en sospechoso, nunca en phishing.
      * Si se recalibran los pesos, esta prueba debe cambiar a proposito.
      */
     @Test
@@ -227,7 +228,8 @@ class AnalizarUrlUseCaseTest {
         assertTrue(resultado.getIndicadores().stream()
                         .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
                 "Indicadores: " + detalle(resultado));
-        assertEquals(Resultado.SEGURO, resultado.getResultado(),
+        assertEquals(new BigDecimal("45.00"), resultado.getNivelRiesgo());
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado(),
                 "Riesgo=" + resultado.getNivelRiesgo() + " Indicadores: " + detalle(resultado));
     }
 
