@@ -1,7 +1,7 @@
 -- =====================================================================
 -- PhishShield Bolivia — Esquema de base de datos
 -- Motor: PostgreSQL 18
--- Nivel: intermedio (14 tablas, vistas, triggers, índices parciales)
+-- Nivel: intermedio (15 tablas, vistas, triggers, índices parciales)
 -- =====================================================================
 -- Bloques:
 --   A. Organización y acceso ...... empresas, usuarios, sesiones

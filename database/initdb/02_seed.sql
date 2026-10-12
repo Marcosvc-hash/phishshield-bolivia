@@ -47,6 +47,7 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
     ('URL_TLD_SOSPECHOSO',  'Extensión de dominio asociada a abuso (.xyz, .top, .info)',     'url',        12.00),
     ('URL_DOMINIO_NUEVO',   'Dominio registrado hace menos de 30 días',                      'url',        15.00),
     ('URL_SUBDOMINIOS',     'Cantidad anómala de subdominios',                               'url',        10.00),
+    ('URL_LISTA_NEGRA',     'El dominio figura en la lista negra de PhishShield',            'url',        70.00),
     ('TXT_URGENCIA',        'Lenguaje de urgencia o amenaza de bloqueo de cuenta',           'contenido',  14.00),
     ('TXT_PIDE_CREDENCIAL', 'Solicita contraseña, PIN o código de verificación',             'contenido',  30.00),
     ('TXT_PREMIO',          'Promete premios, bonos o sorteos',                              'contenido',  12.00),
@@ -57,6 +58,9 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
 -- ---------------------------------------------------------------------
 -- Modelos de IA registrados
 -- ---------------------------------------------------------------------
+-- ATENCIÓN: son filas de EJEMPLO. Las métricas (exactitud, precisión,
+-- recall, F1) y las fechas de entrenamiento son ilustrativas: todavía no
+-- existe ningún modelo entrenado real detrás de estos registros.
 INSERT INTO modelos_ia (nombre, version, tipo, algoritmo, exactitud, precision_val, recall_val, f1_val, umbral_phishing, activo, entrenado_en) VALUES
     ('phishshield-url',   '0.1.0', 'url',    'Random Forest',      88.40, 86.10, 84.70, 85.39, 70.00, FALSE, DATE '2026-10-05'),
     ('phishshield-url',   '0.2.0', 'url',    'XGBoost + features', 93.20, 92.00, 90.80, 91.40, 70.00, TRUE,  DATE '2026-10-20'),
@@ -88,6 +92,10 @@ INSERT INTO usuarios (id_empresa, nombres, apellidos, email, password_hash, rol,
 -- ---------------------------------------------------------------------
 -- Análisis de ejemplo (el hash SHA-256 se calcula solo)
 -- ---------------------------------------------------------------------
+-- ATENCIÓN: los puntajes, veredictos, tiempos e indicadores de estas filas
+-- están escritos a mano para la demo; NO los calculó el motor de reglas.
+-- El backend solo reutiliza un análisis durante 24 horas, así que estas
+-- filas no se devuelven como resultado de un análisis nuevo.
 INSERT INTO analisis (id_usuario, id_empresa, id_modelo, tipo, origen, contenido, contenido_hash, dominio, resultado, nivel_riesgo, tiempo_ms)
 VALUES
     ((SELECT id_usuario FROM usuarios WHERE email = 'carlos.mamani@andina.bo'),
