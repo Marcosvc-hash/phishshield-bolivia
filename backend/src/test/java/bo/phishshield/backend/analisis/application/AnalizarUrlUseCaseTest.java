@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -102,6 +103,11 @@ class AnalizarUrlUseCaseTest {
             pesos.put("URL_SUBDOMINIOS", new BigDecimal("10.00"));
             pesos.put("URL_LISTA_NEGRA", new BigDecimal("70.00"));
             return pesos;
+        }
+
+        @Override
+        public Set<String> codigosRegistrados() {
+            return pesosActivosPorCategoria("url").keySet();
         }
     }
 

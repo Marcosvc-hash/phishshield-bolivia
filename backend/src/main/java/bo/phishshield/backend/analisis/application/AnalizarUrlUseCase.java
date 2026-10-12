@@ -101,6 +101,21 @@ public class AnalizarUrlUseCase {
     }
 
     /**
+     * Codigos de todas las reglas que este caso de uso puede aplicar,
+     * incluidas las dinamicas. Sirve para verificar al arrancar que cada
+     * una tenga su fila en reglas_deteccion.
+     */
+    public List<String> codigosDeReglas() {
+        List<String> codigos = new ArrayList<>();
+        for (ReglaUrl regla : reglasConDinamicas(
+                List.of(new DominioOficial("referencia", "referencia.bo")),
+                List.of(new DominioListado("referencia.bo", null)))) {
+            codigos.add(regla.codigo());
+        }
+        return List.copyOf(codigos);
+    }
+
+    /**
      * Solo se reutiliza un analisis de URL con fecha conocida y dentro de la
      * vigencia. Asi las filas viejas (por ejemplo, las del seed) no se
      * devuelven para siempre.
