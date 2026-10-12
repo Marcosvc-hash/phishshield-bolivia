@@ -52,6 +52,26 @@ misma Regresión Logística con la URL completa:
 
 Las métricas casi perfectas del control vienen del sesgo, no de que el modelo funcione.
 
+**Por qué se eligió el modelo solo con el dominio, aunque su F1 en validación sea menor:**
+
+1. **El F1 de 0,982 del control no mide lo que creemos.** En validación, las legítimas
+   tampoco tienen ruta, así que el control acierta usando la regla "con ruta → phishing",
+   que solo vale dentro de este dataset. Cualquier métrica sobre datos con el mismo sesgo
+   va a premiar ese atajo.
+2. **Fuera del dataset, el atajo falla siempre.** Las 10 URL bolivianas legítimas con ruta
+   real (por ejemplo `https://www.bancounion.com.bo/BancaDigital/UninetPlus`) son 10
+   falsos positivos para el control. Con el modelo elegido son 2, y ambos vienen de
+   `bg.com.bo`, que falla igual con o sin ruta. En PhishShield casi todas las URL que llegan
+   (de correos, SMS o la extensión) tienen ruta, así que el control marcaría como phishing
+   casi cualquier enlace legítimo.
+3. **El conjunto boliviano completo lo confirma:** el control tiene precisión 0,615 y
+   F1 0,727; el modelo solo con dominio, precisión 0,824 y F1 0,800.
+4. **No se pierde la información de la ruta:** las reglas `URL_RUTA_SENSIBLE` y
+   `URL_SIN_HTTPS` del backend ya la evalúan, con pesos que se pueden auditar.
+
+Conclusión: entre una cifra alta que no se sostiene fuera del dataset y una más baja que
+sí se sostiene, se eligió la segunda.
+
 ## División sin fuga de datos
 
 - Se agrupa por **dominio registrable** (`tldextract`, lista de sufijos públicos incluida,

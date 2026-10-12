@@ -5,6 +5,7 @@ import bo.phishshield.backend.analisis.domain.model.Analisis;
 import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
+import bo.phishshield.backend.analisis.domain.model.PrediccionIa;
 import bo.phishshield.backend.analisis.domain.model.Sha256;
 import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
@@ -12,7 +13,10 @@ import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
+import bo.phishshield.backend.analisis.domain.service.IndicadorIa;
 import bo.phishshield.backend.analisis.domain.service.MotorReglasUrl;
 import bo.phishshield.backend.analisis.domain.service.ReglaListaNegra;
 import bo.phishshield.backend.analisis.domain.service.ReglaTyposquatting;
@@ -53,6 +57,8 @@ public class AnalizarUrlUseCase {
     private final DominioOficialRepositoryPort dominioRepository;
     private final ListaNegraRepositoryPort listaNegraRepository;
     private final ListaBlancaRepositoryPort listaBlancaRepository;
+    private final ModeloIaPort modeloIa;
+    private final ModeloIaRepositoryPort modeloIaRepository;
     private final Clock reloj;
 
     public AnalizarUrlUseCase(List<ReglaUrl> reglasBase,
@@ -61,6 +67,8 @@ public class AnalizarUrlUseCase {
                               DominioOficialRepositoryPort dominioRepository,
                               ListaNegraRepositoryPort listaNegraRepository,
                               ListaBlancaRepositoryPort listaBlancaRepository,
+                              ModeloIaPort modeloIa,
+                              ModeloIaRepositoryPort modeloIaRepository,
                               Clock reloj) {
         this.reglasBase = List.copyOf(reglasBase);
         this.analisisRepository = analisisRepository;
@@ -68,6 +76,8 @@ public class AnalizarUrlUseCase {
         this.dominioRepository = dominioRepository;
         this.listaNegraRepository = listaNegraRepository;
         this.listaBlancaRepository = listaBlancaRepository;
+        this.modeloIa = modeloIa;
+        this.modeloIaRepository = modeloIaRepository;
         this.reloj = reloj;
     }
 
@@ -93,11 +103,20 @@ public class AnalizarUrlUseCase {
 
         // 4. Aplicar las reglas con los pesos vigentes
         Map<String, BigDecimal> pesos = reglaRepository.pesosActivosPorCategoria(CATEGORIA_URL);
-        List<Indicador> indicadores = motor.evaluar(url, pesos);
+        List<Indicador> indicadores = new ArrayList<>(motor.evaluar(url, pesos));
+
+        // 4b. Modelo de IA: una senal mas, que se suma solo si supera su umbral.
+        //     Si el servicio no responde, el puerto devuelve vacio y quedan las reglas.
+        Optional<PrediccionIa> prediccion = consultarIa(url, listaBlanca);
+        prediccion.flatMap(p -> IndicadorIa.desde(p, pesos.get(IndicadorIa.CODIGO)))
+                .ifPresent(indicadores::add);
+        Long idModelo = prediccion
+                .flatMap(p -> modeloIaRepository.buscarId(p.modelo(), p.version()))
+                .orElse(null);
 
         // 5. Construir el agregado: el veredicto sale solo del puntaje
         Analisis analisis = Analisis.deUrl(url, comando.origen(), indicadores);
-        analisis.asignarContexto(comando.idUsuario(), comando.idEmpresa(), null);
+        analisis.asignarContexto(comando.idUsuario(), comando.idEmpresa(), idModelo);
         analisis.registrarTiempo((int) ((System.nanoTime() - inicio) / 1_000_000));
 
         // 6. Persistir analisis + indicadores, y la alerta si no es seguro.
@@ -121,7 +140,22 @@ public class AnalizarUrlUseCase {
                 Set.of())) {
             codigos.add(regla.codigo());
         }
+        codigos.add(IndicadorIa.CODIGO);
         return List.copyOf(codigos);
+    }
+
+    /**
+     * Los dominios de la lista blanca no se consultan: ya estan verificados, y
+     * el modelo conoce pocos dominios .bo (ver ia/FICHA_MODELO.md). La
+     * comparacion es exacta por dominio registrable, asi que
+     * bnb.com.bo.verificar.segura-login.xyz (registrable segura-login.xyz)
+     * si se consulta aunque bnb.com.bo este en la lista blanca.
+     */
+    private Optional<PrediccionIa> consultarIa(UrlAnalizada url, Set<String> listaBlanca) {
+        if (listaBlanca.contains(url.getDominioRegistrable())) {
+            return Optional.empty();
+        }
+        return modeloIa.predecir(url.getOriginal());
     }
 
     /**

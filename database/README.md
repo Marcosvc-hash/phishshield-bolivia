@@ -154,6 +154,7 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V2__regla_lista_negra.sql` | Registra la regla `URL_LISTA_NEGRA` (peso 70) |
 | `V3__ajustar_peso_typosquatting.sql` | Sube el peso de `URL_TYPOSQUATTING` de 25 a 45 |
 | `V4__ajuste_reglas_y_lista_blanca.sql` | `URL_IP_LITERAL` a 30, registra `URL_RUTA_SENSIBLE` (peso 10) y agrega `visa.com` a la lista blanca |
+| `V5__modelo_ia_url.sql` | Registra la regla `IA_MODELO_URL` (peso 40) y el modelo real `phishshield-url-ia` 1.0.0 con sus métricas de prueba, como único modelo de URL activo |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -162,6 +163,7 @@ Aplicarlas en orden, desde la raíz del repositorio:
 Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+Get-Content database\migraciones\V5__modelo_ia_url.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
 ```bash
@@ -169,6 +171,7 @@ Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker e
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V2__regla_lista_negra.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V3__ajustar_peso_typosquatting.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V4__ajuste_reglas_y_lista_blanca.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V5__modelo_ia_url.sql
 ```
 
 Si una migración falta, el backend lo avisa al arrancar con un `WARN` del tipo
@@ -181,8 +184,8 @@ PowerShell 5.1 cambia esos caracteres por `?` al pasarlos por la tubería.
 
 `02_seed.sql` tiene datos **ilustrativos** para desarrollo y demo:
 
-- Las filas de `modelos_ia` tienen métricas y fechas inventadas; todavía no hay
-  ningún modelo entrenado real.
+- Las filas `phishshield-url` y `phishshield-texto` de `modelos_ia` tienen métricas y
+  fechas inventadas. La única fila real es `phishshield-url-ia` 1.0.0 (ver `ia/`).
 - Los análisis de ejemplo (`analisis` y `analisis_indicadores`) tienen puntajes
   escritos a mano, no calculados por el motor de reglas. El backend solo
   reutiliza un análisis durante 24 horas, así que estas filas no se devuelven

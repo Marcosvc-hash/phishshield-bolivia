@@ -5,6 +5,8 @@ import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
 import bo.phishshield.backend.analisis.domain.service.ReglaRutaSensible;
@@ -48,7 +50,9 @@ public class AnalisisConfig {
             ReglaDeteccionRepositoryPort reglaRepository,
             DominioOficialRepositoryPort dominioRepository,
             ListaNegraRepositoryPort listaNegraRepository,
-            ListaBlancaRepositoryPort listaBlancaRepository) {
+            ListaBlancaRepositoryPort listaBlancaRepository,
+            ModeloIaPort modeloIa,
+            ModeloIaRepositoryPort modeloIaRepository) {
 
         return new AnalizarUrlUseCase(
                 reglasUrlBase,
@@ -57,6 +61,8 @@ public class AnalisisConfig {
                 dominioRepository,
                 listaNegraRepository,
                 listaBlancaRepository,
+                modeloIa,
+                modeloIaRepository,
                 Clock.systemDefaultZone());
     }
 }

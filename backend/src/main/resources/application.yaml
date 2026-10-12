@@ -16,3 +16,11 @@ spring:
 
 server:
   port: 8080
+
+phishshield:
+  ia:
+    # Servicio de prediccion (ia/servicio.py). Si no responde, el analisis
+    # sigue solo con las reglas.
+    url: ${IA_URL:http://localhost:8000}
+    timeout: 2s
+    habilitada: ${IA_HABILITADA:true}
