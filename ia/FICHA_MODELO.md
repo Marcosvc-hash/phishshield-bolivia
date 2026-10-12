@@ -207,3 +207,12 @@ contexto local, no como estimación estadística.
 
 Ver [README.md](README.md): `descargar_datos.py` y luego `entrenar.py`, con semilla 42 y
 versiones fijas en `requirements.txt`.
+
+**Qué se reproduce y qué no.** Al volver a ejecutar `entrenar.py` salen idénticos el modelo
+(mismo SHA-256 de `modelo.joblib`), todas las métricas, el umbral y la calibración. Esto se
+verificó el 2026-10-12 comparando `metadata.json` valor por valor. Lo que **no** se repite son
+los tiempos: los segundos de entrenamiento, `segundos_totales` y la latencia por URL dependen
+de la carga de la máquina. La ejecución que dejó los valores actuales de
+`reporte_metricas.md` y `metadata.json` (625 s en total, 23,20 ms por URL) corrió con Maven en
+paralelo. Una ejecución anterior, sin esa carga, tardó 444 s y midió 16,11 ms por URL. Los
+tiempos sirven como orden de magnitud, no como medición.

@@ -93,7 +93,7 @@
         "vp": 5847
       },
       "n": 32897,
-      "segundos_entrenamiento": 93.4062
+      "segundos_entrenamiento": 142.6033
     },
     "RegresionLogistica(lexicas+ngramas, C=1.0)": {
       "exactitud": 0.8622,
@@ -109,7 +109,7 @@
         "vp": 6177
       },
       "n": 32897,
-      "segundos_entrenamiento": 79.4886
+      "segundos_entrenamiento": 125.6466
     },
     "RegresionLogistica(lexicas+ngramas, C=3.0)": {
       "exactitud": 0.8605,
@@ -125,7 +125,7 @@
         "vp": 6338
       },
       "n": 32897,
-      "segundos_entrenamiento": 80.8762
+      "segundos_entrenamiento": 126.492
     },
     "HistGradientBoosting(lexicas)": {
       "exactitud": 0.8297,
@@ -141,7 +141,7 @@
         "vp": 5093
       },
       "n": 32897,
-      "segundos_entrenamiento": 35.4621
+      "segundos_entrenamiento": 58.0273
     }
   },
   "calibracion": {
@@ -300,12 +300,12 @@
       "n": 10
     }
   },
-  "latencia_ms_por_url": 16.1106,
+  "latencia_ms_por_url": 23.2037,
   "entorno": {
     "python": "3.14.3",
     "scikit_learn": "1.9.1",
     "numpy": "2.5.4",
     "pandas": "3.0.6"
   },
-  "segundos_totales": 444.0509
+  "segundos_totales": 625.063
 }

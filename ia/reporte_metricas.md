@@ -70,7 +70,7 @@ Ningun dominio registrable aparece en dos particiones (verificado con `assert`).
 
 ### Desgloses de las mismas predicciones de prueba
 
-Unas pocas plataformas de hosting aportan miles de hosts cada una (web.app: 5527, workers.dev: 1317, glitch.me: 468) y son faciles de reconocer, asi que inflan las metricas por fila. Estos desgloses no cambian el modelo ni el umbral; solo muestran el rendimiento sin ese efecto.
+Unas pocas plataformas de hosting concentran muchos hosts de prueba (las tres mayores: web.app: 5527, workers.dev: 1317, glitch.me: 468) y son faciles de reconocer, asi que inflan las metricas por fila. Estos desgloses no cambian el modelo ni el umbral; solo muestran el rendimiento sin ese efecto.
 
 | Conjunto | Exactitud | Precision | Recall | F1 | ROC-AUC | PR-AUC |
 |---|---|---|---|---|---|---|
@@ -161,4 +161,4 @@ No se usa en produccion. Mide cuanto se aprovecha un modelo del sesgo del datase
 - Legitimas bolivianas con ruta marcadas como phishing por el control: 10 de 10
 - Las mismas URL con el modelo elegido (solo host): 2 de 10
 
-Latencia media de prediccion (con explicacion): 16.11 ms por URL.
+Latencia media de prediccion (con explicacion): 23.20 ms por URL.

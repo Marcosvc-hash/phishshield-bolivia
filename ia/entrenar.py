@@ -304,7 +304,7 @@ def main() -> int:
     prueba = metricas(y_pru, prob_pru, det.umbral)
     log(f"PRUEBA: {redondear(prueba)}")
     # Desgloses de ESTAS MISMAS predicciones (no cambian el modelo ni el umbral).
-    # Unas pocas plataformas (web.app, workers.dev...) aportan miles de hosts y
+    # Unas pocas plataformas (web.app, workers.dev...) concentran muchos hosts y
     # dominan las metricas por fila; aqui cada dominio registrable pesa lo mismo.
     tam_grupo = pru["grupo"].map(pru["grupo"].value_counts()).to_numpy()
     grandes = list(pru["grupo"].value_counts().index[:3])
@@ -431,8 +431,8 @@ def reporte_markdown(md: dict, bo: pd.DataFrame) -> str:
           "## Evaluacion final en PRUEBA (una sola vez)", "", cab,
           _fila("prueba", md["metricas_prueba"]), "", _matriz(md["metricas_prueba"]), "",
           "### Desgloses de las mismas predicciones de prueba", "",
-          "Unas pocas plataformas de hosting aportan miles de hosts cada una "
-          f"({', '.join(f'{g}: {n}' for g, n in md['metricas_prueba_desgloses']['3_grupos_mas_grandes'].items())}) "
+          "Unas pocas plataformas de hosting concentran muchos hosts de prueba (las tres mayores: "
+          f"{', '.join(f'{g}: {n}' for g, n in md['metricas_prueba_desgloses']['3_grupos_mas_grandes'].items())}) "
           "y son faciles de reconocer, asi que inflan las metricas por fila. Estos desgloses "
           "no cambian el modelo ni el umbral; solo muestran el rendimiento sin ese efecto.", "", cab,
           _fila("ponderada por dominio", md["metricas_prueba_desgloses"]["ponderada_por_dominio"]),
