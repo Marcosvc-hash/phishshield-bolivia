@@ -127,7 +127,8 @@ class AnalizarUrlUseCaseTest {
                     new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
                     new DominioOficial("Banco BISA", "bisa.com"),
                     new DominioOficial("Banco Mercantil Santa Cruz", "bmsc.com.bo"),
-                    new DominioOficial("Entel", "entel.bo")
+                    new DominioOficial("Entel", "entel.bo"),
+                    new DominioOficial("Ende", "ende.bo")
             );
         }
     }
@@ -396,6 +397,45 @@ class AnalizarUrlUseCaseTest {
                 "Indicadores: " + detalle(resultado));
         assertEquals(new BigDecimal("45.00"), resultado.getNivelRiesgo(), detalle(resultado));
         assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
+    }
+
+    // ---- Ende como entidad oficial (V7) ----
+
+    /** El dominio oficial de una entidad nunca es typosquatting de esa entidad. */
+    @Test
+    void el_dominio_oficial_de_ende_queda_como_seguro() {
+        Analisis resultado = analizar("https://www.ende.bo/");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().isEmpty(), "Indicadores: " + detalle(resultado));
+    }
+
+    /** Solo con reglas: typosquatting 45 (marca 'ende') + TLD .xyz 12 = 57. */
+    @Test
+    void pagos_ende_xyz_sin_ia_queda_como_sospechoso() {
+        Analisis resultado = analizar("https://pagos-ende.xyz/");
+
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")
+                                && i.valor().contains("'ende' de Ende")),
+                "Indicadores: " + detalle(resultado));
+        assertEquals(new BigDecimal("57.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
+    }
+
+    /**
+     * Con la probabilidad real del modelo 1.0.0 para este host (0.9433):
+     * 57 + 0.9433 x 40 = 94.73, phishing.
+     */
+    @Test
+    void pagos_ende_xyz_con_ia_queda_como_phishing() {
+        modeloIa.responder("0.9433", "el dominio contiene 'pagos'");
+
+        Analisis resultado = analizar("https://pagos-ende.xyz/");
+
+        assertEquals(new BigDecimal("37.73"), indicadorIa(resultado).orElseThrow().aporte());
+        assertEquals(new BigDecimal("94.73"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.PHISHING, resultado.getResultado());
     }
 
     // ---- Alertas ----

@@ -15,7 +15,8 @@ INSERT INTO entidades_suplantadas (nombre, tipo, dominio_oficial) VALUES
     ('Tigo Money',                     'billetera', 'tigo.com.bo'),
     ('Impuestos Nacionales',           'gobierno',  'impuestos.gob.bo'),
     ('Entel',                          'telco',     'entel.bo'),
-    ('Segip',                          'gobierno',  'segip.gob.bo');
+    ('Segip',                          'gobierno',  'segip.gob.bo'),
+    ('Ende',                           'gobierno',  'ende.bo');
 
 -- ---------------------------------------------------------------------
 -- Listas de dominios
@@ -39,9 +40,10 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
 
 -- Sitios legítimos que el typosquatting confundiría con una entidad local.
 -- ReglaTyposquatting nunca reporta un dominio de la lista blanca.
+-- (ende.bo ya no va aquí: desde V7 Ende es una entidad y su dominio entra a la
+-- lista blanca con el INSERT ... SELECT de arriba.)
 INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
-    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)'),
-    ('ende.bo',  'blanca', NULL, 'manual', 'Sitio oficial de ENDE; typosquatting lo confundia con entel.bo (Entel)');
+    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)');
 
 -- ---------------------------------------------------------------------
 -- Reglas heurísticas

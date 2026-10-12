@@ -5,9 +5,10 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 
 ## Reglas de trabajo (permanentes)
 
-1. **Antes de modificar código, explica qué vas a hacer y por qué, y espera la aprobación.**
-   No hagas cambios fuera de lo acordado. Si encuentras un problema, repórtalo y propón la
-   solución, pero no la apliques sin preguntar.
+1. **Pedir aprobación solo antes de:** borrar datos, cambiar el esquema de la base, agregar o
+   actualizar dependencias, o cambiar algo fuera de lo acordado. Lo demás se hace de corrido,
+   con un resumen al final de cada commit. Si aparece un problema fuera de lo acordado, se
+   reporta y se propone la solución.
 2. **Equivalencias con C#:** cuando aparezca un concepto nuevo de Java o Spring, da su
    equivalente en C#/.NET en una línea (por ejemplo: `@Bean` ≈ registrar un servicio con
    `builder.Services.AddSingleton(...)`; `Optional<T>` ≈ un `T?` que obliga a revisar si viene vacío).
@@ -20,6 +21,15 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 5. **Código para revisar:** mostrar el archivo o el método completo, nunca fragmentos sueltos.
 6. **Secretos:** nunca subir contraseñas ni claves; van en `.env` (ignorado por git) o en
    variables de entorno.
+7. **Pruebas en vivo sin ensuciar la base real:** las mediciones y pruebas en vivo se hacen en
+   una base temporal (`CREATE DATABASE prueba_…` dentro del contenedor, con `01_schema.sql` +
+   `02_seed.sql` y las migraciones; se borra al terminar). Si es inevitable usar la base real:
+   - marcar todas las URL de la prueba con un parámetro propio y único, por ejemplo
+     `?m=<prueba>-<fecha>`, para poder encontrarlas después;
+   - al terminar, proponer un script de limpieza que filtre solo por esa marca, dentro de una
+     transacción y mostrando los conteos antes del `COMMIT`. No ejecutarlo sin aprobación.
+   Recordar que cada análisis no seguro crea una alerta (`alertas`), y que eso afecta a los
+   reportes y al dashboard.
 
 ## Estructura
 
