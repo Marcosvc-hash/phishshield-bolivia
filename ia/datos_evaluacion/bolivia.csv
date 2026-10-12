@@ -1,0 +1,45 @@
+url,etiqueta,tipo,nota
+https://www.bnb.com.bo/,0,oficial,portada BNB
+https://bnb.com.bo,0,oficial,sin www
+https://www.bnb.com.bo/PortalBNB/Principal/BancaPersonas,0,oficial,ruta real (redireccion de la portada)
+https://www.bancounion.com.bo/,0,oficial,portada Banco Union
+https://bancounion.com.bo,0,oficial,sin www
+https://www.bancounion.com.bo/BancaDigital/UninetPlus,0,oficial,ruta real enlazada en la portada
+https://www.bancounion.com.bo/AgenciasAtm/AgenciasAtms,0,oficial,ruta real enlazada en la portada
+https://www.bmsc.com.bo/,0,oficial,portada Mercantil Santa Cruz
+https://bmsc.com.bo,0,oficial,sin www
+https://www.bmsc.com.bo/help/questions,0,oficial,ruta real enlazada en la portada
+https://www.bisa.com/home,0,oficial,ruta real (redireccion de la portada)
+https://bisa.com,0,oficial,sin www
+https://www.bisa.com/empresas/comercio-exterior,0,oficial,ruta real enlazada en la portada
+https://www.bg.com.bo/personas/,0,oficial,ruta real (redireccion de la portada)
+https://bg.com.bo,0,oficial,sin www
+https://www.bg.com.bo/canales-digitales/cajeros-automaticos/,0,oficial,ruta real enlazada en la portada
+https://www.tigo.com.bo/,0,oficial,portada Tigo
+https://tigo.com.bo,0,oficial,sin www
+https://www.impuestos.gob.bo/,0,oficial,portada SIN
+https://impuestos.gob.bo,0,oficial,sin www
+https://www.impuestos.gob.bo/index.php/memoria-intitucional/,0,oficial,ruta real enlazada en la portada
+https://www.entel.bo/,0,oficial,portada Entel
+https://entel.bo,0,oficial,sin www
+https://www.segip.gob.bo/,0,oficial,portada Segip
+https://segip.gob.bo,0,oficial,sin www
+https://www.segip.gob.bo/comunicados/,0,oficial,ruta real enlazada en la portada
+http://bnb-bo-seguro.com/login/verificar-cuenta,1,lista_negra,dominio de la lista negra
+https://bancounion-verificacion.net/,1,lista_negra,dominio de la lista negra
+https://impuestos-gob-bo.info/verificar-nit,1,lista_negra,dominio de la lista negra
+https://premios-tigo-bo.xyz/sorteo,1,variante,dominio de la lista gris
+http://bnb-banca-segura.com/ingresar,1,variante,marca + palabra de seguridad
+https://bancounion-bo-actualizacion.com/datos,1,variante,marca + actualizacion
+https://bmsc-verificar-cuenta.online/,1,variante,marca + verificar + TLD abusado
+https://tigo-money-bolivia.top/premio,1,variante,marca + TLD abusado
+https://segip-gob-bo.site/cedula,1,variante,imita dominio gubernamental
+http://bnbb.com.bo/login,1,typosquatting,letra duplicada
+https://bancounlon.com.bo/,1,typosquatting,i cambiada por l
+https://www.bmcs.com.bo/,1,typosquatting,letras invertidas
+https://blsa.com/banca,1,typosquatting,i cambiada por l
+https://entel-bo.com/recarga,1,typosquatting,guion en lugar de punto
+http://bnb.com.bo.verificar.cuenta.segura-login.xyz/,1,subdominio_enganoso,oficial como subdominio
+https://bancounion.com.bo.validacion-clientes.com/,1,subdominio_enganoso,oficial como subdominio
+https://impuestos.gob.bo.pagos-nit.net/,1,subdominio_enganoso,oficial como subdominio
+https://www.tigo.com.bo.billetera-movil.club/,1,subdominio_enganoso,oficial como subdominio

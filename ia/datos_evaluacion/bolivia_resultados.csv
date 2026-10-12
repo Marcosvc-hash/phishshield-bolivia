@@ -1,0 +1,45 @@
+url,etiqueta,tipo,nota,probabilidad,prediccion,senales
+https://www.bnb.com.bo/,0,oficial,portada BNB,0.5318,0,"no tiene subdominios | el dominio contiene 'nb.', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://bnb.com.bo,0,oficial,sin www,0.5318,0,"no tiene subdominios | el dominio contiene 'nb.', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://www.bnb.com.bo/PortalBNB/Principal/BancaPersonas,0,oficial,ruta real (redireccion de la portada),0.5318,0,"no tiene subdominios | el dominio contiene 'nb.', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://www.bancounion.com.bo/,0,oficial,portada Banco Union,0.2871,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio no tiene digitos
+https://bancounion.com.bo,0,oficial,sin www,0.2871,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio no tiene digitos
+https://www.bancounion.com.bo/BancaDigital/UninetPlus,0,oficial,ruta real enlazada en la portada,0.2871,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio no tiene digitos
+https://www.bancounion.com.bo/AgenciasAtm/AgenciasAtms,0,oficial,ruta real enlazada en la portada,0.2871,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio no tiene digitos
+https://www.bmsc.com.bo/,0,oficial,portada Mercantil Santa Cruz,0.4873,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio es corto (11 caracteres)
+https://bmsc.com.bo,0,oficial,sin www,0.4873,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio es corto (11 caracteres)
+https://www.bmsc.com.bo/help/questions,0,oficial,ruta real enlazada en la portada,0.4873,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio es corto (11 caracteres)
+https://www.bisa.com/home,0,oficial,ruta real (redireccion de la portada),0.1915,0,no tiene subdominios | el dominio es corto (8 caracteres) | el dominio no tiene digitos
+https://bisa.com,0,oficial,sin www,0.1915,0,no tiene subdominios | el dominio es corto (8 caracteres) | el dominio no tiene digitos
+https://www.bisa.com/empresas/comercio-exterior,0,oficial,ruta real enlazada en la portada,0.1915,0,no tiene subdominios | el dominio es corto (8 caracteres) | el dominio no tiene digitos
+https://www.bg.com.bo/personas/,0,oficial,ruta real (redireccion de la portada),0.6287,1,"el dominio contiene '.bo', secuencia frecuente en phishing | el dominio contiene '.com.', secuencia frecuente en phishing | el dominio contiene 'bg', secuencia frecuente en phishing"
+https://bg.com.bo,0,oficial,sin www,0.6287,1,"el dominio contiene '.bo', secuencia frecuente en phishing | el dominio contiene '.com.', secuencia frecuente en phishing | el dominio contiene 'bg', secuencia frecuente en phishing"
+https://www.bg.com.bo/canales-digitales/cajeros-automaticos/,0,oficial,ruta real enlazada en la portada,0.6287,1,"el dominio contiene '.bo', secuencia frecuente en phishing | el dominio contiene '.com.', secuencia frecuente en phishing | el dominio contiene 'bg', secuencia frecuente en phishing"
+https://www.tigo.com.bo/,0,oficial,portada Tigo,0.2965,0,"no tiene subdominios | el dominio tiene 2 puntos | el dominio contiene 'ti', secuencia propia de sitios legitimos"
+https://tigo.com.bo,0,oficial,sin www,0.2965,0,"no tiene subdominios | el dominio tiene 2 puntos | el dominio contiene 'ti', secuencia propia de sitios legitimos"
+https://www.impuestos.gob.bo/,0,oficial,portada SIN,0.0236,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://impuestos.gob.bo,0,oficial,sin www,0.0236,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://www.impuestos.gob.bo/index.php/memoria-intitucional/,0,oficial,ruta real enlazada en la portada,0.0236,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://www.entel.bo/,0,oficial,portada Entel,0.2191,0,no tiene subdominios | el dominio es corto (8 caracteres) | el dominio no tiene digitos
+https://entel.bo,0,oficial,sin www,0.2191,0,no tiene subdominios | el dominio es corto (8 caracteres) | el dominio no tiene digitos
+https://www.segip.gob.bo/,0,oficial,portada Segip,0.129,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://segip.gob.bo,0,oficial,sin www,0.129,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+https://www.segip.gob.bo/comunicados/,0,oficial,ruta real enlazada en la portada,0.129,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos"
+http://bnb-bo-seguro.com/login/verificar-cuenta,1,lista_negra,dominio de la lista negra,0.8468,1,el dominio contiene 'seguro' | el dominio tiene 2 guiones | el dominio tiene 1 punto
+https://bancounion-verificacion.net/,1,lista_negra,dominio de la lista negra,0.9575,1,el dominio contiene 'verificacion' | el dominio es largo (27 caracteres) | el dominio tiene 1 punto
+https://impuestos-gob-bo.info/verificar-nit,1,lista_negra,dominio de la lista negra,0.8733,1,"la extension .info se usa mucho en phishing | el dominio tiene 2 guiones | el dominio contiene '-go', secuencia frecuente en phishing"
+https://premios-tigo-bo.xyz/sorteo,1,variante,dominio de la lista gris,0.9701,1,la extension .xyz se usa mucho en phishing | el dominio tiene 2 guiones | el dominio tiene 1 punto
+http://bnb-banca-segura.com/ingresar,1,variante,marca + palabra de seguridad,0.965,1,el dominio contiene 'banca' | el dominio tiene 2 guiones | el dominio tiene 1 punto
+https://bancounion-bo-actualizacion.com/datos,1,variante,marca + actualizacion,0.7653,1,el dominio es largo (31 caracteres) | el dominio tiene 2 guiones | el dominio tiene 1 punto
+https://bmsc-verificar-cuenta.online/,1,variante,marca + verificar + TLD abusado,0.9995,1,"la extension .online se usa mucho en phishing | el dominio contiene 'verificar', 'cuenta' | el dominio es largo (28 caracteres)"
+https://tigo-money-bolivia.top/premio,1,variante,marca + TLD abusado,0.9892,1,"la extension .top se usa mucho en phishing | el dominio tiene 2 guiones | el dominio contiene '.to', secuencia frecuente en phishing"
+https://segip-gob-bo.site/cedula,1,variante,imita dominio gubernamental,0.9952,1,"la extension .site se usa mucho en phishing | el dominio tiene 2 guiones | el dominio contiene '-go', secuencia frecuente en phishing"
+http://bnbb.com.bo/login,1,typosquatting,letra duplicada,0.701,1,"el dominio contiene '.bo', secuencia frecuente en phishing | el dominio contiene '.com.', secuencia frecuente en phishing | el dominio contiene 'b.com', secuencia frecuente en phishing"
+https://bancounlon.com.bo/,1,typosquatting,i cambiada por l,0.3605,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio no tiene digitos
+https://www.bmcs.com.bo/,1,typosquatting,letras invertidas,0.3657,0,no tiene subdominios | el dominio tiene 2 puntos | el dominio es corto (11 caracteres)
+https://blsa.com/banca,1,typosquatting,i cambiada por l,0.1868,0,"no tiene subdominios | el dominio es corto (8 caracteres) | el dominio contiene 'sa.c', secuencia propia de sitios legitimos"
+https://entel-bo.com/recarga,1,typosquatting,guion en lugar de punto,0.1951,0,"no tiene subdominios | el dominio contiene 'el-', secuencia propia de sitios legitimos | el dominio es corto (12 caracteres)"
+http://bnb.com.bo.verificar.cuenta.segura-login.xyz/,1,subdominio_enganoso,oficial como subdominio,1.0,1,"tiene 5 subdominios (bnb.com.bo.verificar.cuenta) | la extension .xyz se usa mucho en phishing | el dominio contiene 'login', 'verificar', 'cuenta'"
+https://bancounion.com.bo.validacion-clientes.com/,1,subdominio_enganoso,oficial como subdominio,1.0,1,"tiene 3 subdominios (bancounion.com.bo) | el dominio es largo (41 caracteres) | el dominio contiene '.bo', secuencia frecuente en phishing"
+https://impuestos.gob.bo.pagos-nit.net/,1,subdominio_enganoso,oficial como subdominio,0.9987,1,"tiene 3 subdominios (impuestos.gob.bo) | el dominio es largo (30 caracteres) | el dominio contiene '.bo', secuencia frecuente en phishing"
+https://www.tigo.com.bo.billetera-movil.club/,1,subdominio_enganoso,oficial como subdominio,1.0,1,tiene 3 subdominios (tigo.com.bo) | la extension .club se usa mucho en phishing | el dominio es largo (32 caracteres)

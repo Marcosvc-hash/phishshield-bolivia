@@ -32,6 +32,10 @@ env/
 *.h5
 *.pkl
 *.onnx
+*.joblib
+# Datasets descargados: se regeneran con ia/descargar_datos.py
+ia/datos/
+.pytest_cache/
 *.pt
 
 # --- Node / Angular ---
