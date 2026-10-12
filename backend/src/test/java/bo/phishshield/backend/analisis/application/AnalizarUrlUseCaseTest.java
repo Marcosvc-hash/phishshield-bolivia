@@ -14,9 +14,11 @@ import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlInvalidaException;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
+import bo.phishshield.backend.analisis.domain.service.ReglaRutaSensible;
 import bo.phishshield.backend.analisis.domain.service.ReglaSinHttps;
 import bo.phishshield.backend.analisis.domain.service.ReglaSubdominios;
 import bo.phishshield.backend.analisis.domain.service.ReglaTldSospechoso;
@@ -96,12 +98,13 @@ class AnalizarUrlUseCaseTest {
         @Override
         public Map<String, BigDecimal> pesosActivosPorCategoria(String categoria) {
             Map<String, BigDecimal> pesos = new HashMap<>();
-            pesos.put("URL_IP_LITERAL", new BigDecimal("18.00"));
+            pesos.put("URL_IP_LITERAL", new BigDecimal("30.00"));
             pesos.put("URL_SIN_HTTPS", new BigDecimal("8.00"));
             pesos.put("URL_TYPOSQUATTING", new BigDecimal("45.00"));
             pesos.put("URL_TLD_SOSPECHOSO", new BigDecimal("12.00"));
             pesos.put("URL_SUBDOMINIOS", new BigDecimal("10.00"));
             pesos.put("URL_LISTA_NEGRA", new BigDecimal("70.00"));
+            pesos.put("URL_RUTA_SENSIBLE", new BigDecimal("10.00"));
             return pesos;
         }
 
@@ -117,8 +120,21 @@ class AnalizarUrlUseCaseTest {
             return List.of(
                     new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
                     new DominioOficial("Banco Union", "bancounion.com.bo"),
-                    new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo")
+                    new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
+                    new DominioOficial("Banco BISA", "bisa.com")
             );
+        }
+    }
+
+    /** Arranca con visa.com; cada prueba puede vaciarla. */
+    static class ListaBlancaEnMemoria implements ListaBlancaRepositoryPort {
+        final List<DominioListado> dominios = new ArrayList<>(List.of(
+                new DominioListado("visa.com", "Se parece a bisa.com, pero es legitimo")
+        ));
+
+        @Override
+        public List<DominioListado> listarActivos() {
+            return List.copyOf(dominios);
         }
     }
 
@@ -140,16 +156,18 @@ class AnalizarUrlUseCaseTest {
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
     private final ListaNegraEnMemoria listaNegra = new ListaNegraEnMemoria();
+    private final ListaBlancaEnMemoria listaBlanca = new ListaBlancaEnMemoria();
 
     private AnalizarUrlUseCase casoDeUso() {
         List<ReglaUrl> base = List.of(
                 new ReglaIpLiteral(),
                 new ReglaSinHttps(),
                 new ReglaTldSospechoso(),
-                new ReglaSubdominios()
+                new ReglaSubdominios(),
+                new ReglaRutaSensible()
         );
         return new AnalizarUrlUseCase(base, repositorio, new PesosFijos(),
-                new DominiosFijos(), listaNegra, RELOJ);
+                new DominiosFijos(), listaNegra, listaBlanca, RELOJ);
     }
 
     private Analisis analizar(String url) {
@@ -223,7 +241,8 @@ class AnalizarUrlUseCaseTest {
     void sin_lista_negra_un_typosquatting_aislado_no_llega_a_phishing() {
         listaNegra.dominios.clear();
 
-        Analisis resultado = analizar("https://bancounion-verificacion.net/login");
+        // Sin "/login": se mide el typosquatting aislado, sin URL_RUTA_SENSIBLE
+        Analisis resultado = analizar("https://bancounion-verificacion.net/");
 
         assertTrue(resultado.getIndicadores().stream()
                         .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
@@ -259,6 +278,54 @@ class AnalizarUrlUseCaseTest {
         assertSame(reciente, resultado);
     }
 
+    // ---- Ruta sensible ----
+
+    @Test
+    void una_ip_con_ruta_de_banca_queda_como_sospechosa() {
+        Analisis resultado = analizar("http://192.168.1.50/banca/login");
+
+        assertEquals(new BigDecimal("48.00"), resultado.getNivelRiesgo(), "Indicadores: " + detalle(resultado));
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
+    }
+
+    @Test
+    void el_panel_de_un_router_sigue_siendo_seguro() {
+        Analisis resultado = analizar("http://192.168.1.1");
+
+        assertEquals(new BigDecimal("38.00"), resultado.getNivelRiesgo(), "Indicadores: " + detalle(resultado));
+        assertEquals(Resultado.SEGURO, resultado.getResultado());
+    }
+
+    @Test
+    void el_login_del_sitio_oficial_sigue_siendo_seguro() {
+        Analisis resultado = analizar("https://www.bnb.com.bo/login");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertEquals(new BigDecimal("10.00"), resultado.getNivelRiesgo());
+    }
+
+    // ---- Lista blanca ----
+
+    @Test
+    void un_dominio_en_lista_blanca_queda_como_seguro() {
+        Analisis resultado = analizar("https://www.visa.com");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().isEmpty(), "Indicadores: " + detalle(resultado));
+    }
+
+    /** Sin la lista blanca, visa.com se confunde con bisa.com: es el falso positivo original. */
+    @Test
+    void sin_lista_blanca_visa_se_confunde_con_bisa() {
+        listaBlanca.dominios.clear();
+
+        Analisis resultado = analizar("https://www.visa.com");
+
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
+                "Indicadores: " + detalle(resultado));
+    }
+
     // ---- Alertas ----
 
     @Test
@@ -271,10 +338,10 @@ class AnalizarUrlUseCaseTest {
         assertEquals(CanalAlerta.EXTENSION, alerta.canal());
     }
 
-    /** Typosquatting + sin HTTPS + TLD .xyz, fuera de la lista negra: sospechoso. */
+    /** Typosquatting + sin HTTPS + TLD .xyz (45 + 8 + 12 = 65), fuera de la lista negra: sospechoso. */
     @Test
     void un_sospechoso_crea_una_alerta_media() {
-        Analisis resultado = analizar("http://bnb-bo-seguro.xyz/login");
+        Analisis resultado = analizar("http://bnb-bo-seguro.xyz/promo");
 
         assertEquals(Resultado.SOSPECHOSO, resultado.getResultado(),
                 "Riesgo=" + resultado.getNivelRiesgo() + " Indicadores: " + detalle(resultado));

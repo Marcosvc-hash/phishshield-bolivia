@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,16 +20,20 @@ class MotorReglasUrlTest {
             new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
             new DominioOficial("Banco Union", "bancounion.com.bo"),
             new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
-            new DominioOficial("Tigo Bolivia", "tigo.com.bo")
+            new DominioOficial("Tigo Bolivia", "tigo.com.bo"),
+            new DominioOficial("Banco BISA", "bisa.com")
     );
 
+    private static final Set<String> LISTA_BLANCA = Set.of("visa.com");
+
     private static final Map<String, BigDecimal> PESOS = Map.of(
-            "URL_IP_LITERAL", new BigDecimal("18.00"),
+            "URL_IP_LITERAL", new BigDecimal("30.00"),
             "URL_SIN_HTTPS", new BigDecimal("8.00"),
             "URL_TYPOSQUATTING", new BigDecimal("45.00"),
             "URL_TLD_SOSPECHOSO", new BigDecimal("12.00"),
             "URL_SUBDOMINIOS", new BigDecimal("10.00"),
-            "URL_LISTA_NEGRA", new BigDecimal("70.00")
+            "URL_LISTA_NEGRA", new BigDecimal("70.00"),
+            "URL_RUTA_SENSIBLE", new BigDecimal("10.00")
     );
 
     private MotorReglasUrl motor() {
@@ -37,7 +42,8 @@ class MotorReglasUrlTest {
                 new ReglaSinHttps(),
                 new ReglaTldSospechoso(),
                 new ReglaSubdominios(),
-                new ReglaTyposquatting(OFICIALES)
+                new ReglaRutaSensible(),
+                new ReglaTyposquatting(OFICIALES, LISTA_BLANCA)
         ));
     }
 
@@ -127,6 +133,53 @@ class MotorReglasUrlTest {
                 .contains("URL_TYPOSQUATTING"));
         assertTrue(codigosDisparados("https://impuestos-gob-bo.info/nit")
                 .contains("URL_TYPOSQUATTING"));
+    }
+
+    // ---- Lista blanca ----
+
+    @Test
+    void la_lista_blanca_evita_el_falso_positivo_de_visa() {
+        assertFalse(codigosDisparados("https://www.visa.com").contains("URL_TYPOSQUATTING"));
+
+        // Sin lista blanca, el mismo dominio si se reporta (distancia 1 con bisa.com)
+        List<Indicador> sinListaBlanca = new MotorReglasUrl(List.of(new ReglaTyposquatting(OFICIALES)))
+                .evaluar(UrlAnalizada.de("https://www.visa.com"), PESOS);
+        assertEquals(1, sinListaBlanca.size());
+    }
+
+    /** La tolerancia no cambio: las imitaciones de una letra en marcas cortas se siguen detectando. */
+    @Test
+    void la_lista_blanca_no_afloja_la_deteccion_de_marcas_cortas() {
+        assertTrue(codigosDisparados("http://bnv.com.bo").contains("URL_TYPOSQUATTING"));
+        assertTrue(codigosDisparados("https://tiqo.com.bo").contains("URL_TYPOSQUATTING"));
+    }
+
+    // ---- Dominio oficial escondido en los subdominios ----
+
+    private Optional<Indicador> indicadorTyposquatting(String url) {
+        return motor().evaluar(UrlAnalizada.de(url), PESOS).stream()
+                .filter(i -> i.codigoRegla().equals("URL_TYPOSQUATTING"))
+                .findFirst();
+    }
+
+    @Test
+    void detecta_un_dominio_oficial_usado_como_subdominio() {
+        Indicador indicador = indicadorTyposquatting(
+                "http://bnb.com.bo.verificar.cuenta.segura-login.xyz/").orElseThrow();
+
+        assertEquals("Usa 'bnb.com.bo' como subdominio, pero el dominio real es segura-login.xyz",
+                indicador.valor());
+    }
+
+    @Test
+    void un_subdominio_del_dominio_oficial_no_dispara_la_regla() {
+        assertTrue(indicadorTyposquatting("https://banca.bnb.com.bo/").isEmpty());
+    }
+
+    @Test
+    void el_dominio_oficial_debe_aparecer_como_etiquetas_completas() {
+        // "mibnb.com.bo" no es "bnb.com.bo": no debe disparar el caso de subdominio
+        assertTrue(indicadorTyposquatting("https://mibnb.com.bo.ejemplo.net/").isEmpty());
     }
 
     // ---- Lista negra ----

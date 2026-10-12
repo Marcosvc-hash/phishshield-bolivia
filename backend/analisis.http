@@ -1,6 +1,7 @@
-### Puntajes de referencia con los pesos de 02_seed.sql + migraciones V2 y V3:
-### IP literal 18, sin HTTPS 8, typosquatting 45, TLD sospechoso 12,
-### subdominios 10, lista negra 70. El total tiene tope de 100.
+### Puntajes de referencia con los pesos de 02_seed.sql + migraciones V2 a V4:
+### IP literal 30, sin HTTPS 8, typosquatting 45, TLD sospechoso 12,
+### subdominios 10, lista negra 70, ruta sensible 10. El total tiene tope de 100.
+### Typosquatting no se dispara para dominios de la lista blanca (por ejemplo visa.com).
 ### Umbrales: sospechoso >= 40, phishing >= 70. Sospechoso y phishing crean una alerta.
 ### Una misma URL se reutiliza durante 24 horas (mismo id en la respuesta).
 
@@ -15,7 +16,7 @@ Content-Type: application/json
   "idEmpresa": 1
 }
 
-### Phishing que imita al BNB: phishing, 100 (lista negra 70 + typosquatting 45 + sin HTTPS 8 = 123)
+### Phishing que imita al BNB: phishing, 100 (lista negra 70 + typosquatting 45 + sin HTTPS 8 + ruta 10 = 133)
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -36,8 +37,7 @@ Content-Type: application/json
   "origen": "web"
 }
 
-### URL con IP literal y sin HTTPS: seguro (18 + 8 = 26 puntos)
-### Ojo: si su base tiene URL_IP_LITERAL en 30 (cambio manual), da 38: sigue seguro.
+### IP literal, sin HTTPS y ruta de banca: sospechoso (30 + 8 + 10 = 48 puntos)
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -46,7 +46,44 @@ Content-Type: application/json
   "origen": "api"
 }
 
-### Suplantacion de Impuestos Nacionales: phishing, 100 (lista negra 70 + typosquatting 45 + TLD .info 12)
+### Panel de un router: seguro (IP 30 + sin HTTPS 8 = 38 puntos)
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "http://192.168.1.1",
+  "origen": "web"
+}
+
+### Dominio oficial escondido en los subdominios: phishing
+### (typosquatting 45 + sin HTTPS 8 + TLD 12 + subdominios 10 = 75)
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "http://bnb.com.bo.verificar.cuenta.segura-login.xyz/",
+  "origen": "web"
+}
+
+### Sitio legitimo parecido a una marca local (bisa.com), en la lista blanca: seguro
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://www.visa.com",
+  "origen": "web"
+}
+
+### Login del sitio oficial: seguro (solo ruta sensible, 10 puntos)
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://www.bnb.com.bo/login",
+  "origen": "web"
+}
+
+### Suplantacion de Impuestos Nacionales: phishing, 100 (lista negra 70 + typosquatting 45 + TLD .info 12 + ruta 10)
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 

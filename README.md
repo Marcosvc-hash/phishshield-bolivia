@@ -75,6 +75,7 @@ PowerShell (que no admite `<`):
 ```powershell
 Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
 Se aplican en orden y son idempotentes: ejecutarlas dos veces no hace daño.

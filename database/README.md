@@ -153,6 +153,7 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 |---|---|
 | `V2__regla_lista_negra.sql` | Registra la regla `URL_LISTA_NEGRA` (peso 70) |
 | `V3__ajustar_peso_typosquatting.sql` | Sube el peso de `URL_TYPOSQUATTING` de 25 a 45 |
+| `V4__ajuste_reglas_y_lista_blanca.sql` | `URL_IP_LITERAL` a 30, registra `URL_RUTA_SENSIBLE` (peso 10) y agrega `visa.com` a la lista blanca |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -160,13 +161,18 @@ Aplicarlas en orden, desde la raíz del repositorio:
 # PowerShell (no admite "<")
 Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
 ```bash
 # Git Bash / Linux / macOS
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V2__regla_lista_negra.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V3__ajustar_peso_typosquatting.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V4__ajuste_reglas_y_lista_blanca.sql
 ```
+
+Si una migración falta, el backend lo avisa al arrancar con un `WARN` del tipo
+"La regla URL_... existe en Java pero no en reglas_deteccion".
 
 Los archivos de migración se escriben solo en ASCII (sin tildes ni eñes): Windows
 PowerShell 5.1 cambia esos caracteres por `?` al pasarlos por la tubería.

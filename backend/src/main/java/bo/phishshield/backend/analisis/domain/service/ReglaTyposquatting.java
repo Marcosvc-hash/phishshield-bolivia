@@ -6,12 +6,17 @@ import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
  * URL_TYPOSQUATTING: detecta dominios que imitan a entidades bolivianas conocidas,
  * ya sea por similitud ortografica del dominio completo o porque la marca
  * aparece como palabra dentro de un dominio ajeno.
+ *
+ * Los dominios de la lista blanca nunca se reportan: es la forma de corregir
+ * un falso positivo puntual (visa.com se parece a bisa.com) sin aflojar la
+ * tolerancia para todos los demas.
  */
 public class ReglaTyposquatting implements ReglaUrl {
 
@@ -20,9 +25,16 @@ public class ReglaTyposquatting implements ReglaUrl {
     private static final Pattern SEPARADORES = Pattern.compile("[.\\-_]");
 
     private final List<DominioOficial> dominiosOficiales;
+    private final Set<String> listaBlanca;
 
     public ReglaTyposquatting(List<DominioOficial> dominiosOficiales) {
+        this(dominiosOficiales, Set.of());
+    }
+
+    /** @param listaBlanca dominios registrables verificados como legitimos */
+    public ReglaTyposquatting(List<DominioOficial> dominiosOficiales, Set<String> listaBlanca) {
         this.dominiosOficiales = List.copyOf(dominiosOficiales);
+        this.listaBlanca = Set.copyOf(listaBlanca);
     }
 
     @Override
@@ -34,10 +46,31 @@ public class ReglaTyposquatting implements ReglaUrl {
     public Optional<String> evaluar(UrlAnalizada url) {
         String candidato = url.getDominioRegistrable();
 
+        // Dominio verificado como legitimo: no hay nada que reportar
+        if (listaBlanca.contains(candidato)) {
+            return Optional.empty();
+        }
+
         // Primera pasada: si el dominio es oficial, no hay nada que reportar
         for (DominioOficial oficial : dominiosOficiales) {
             if (candidato.equals(oficial.dominio())) {
                 return Optional.empty();
+            }
+        }
+
+        // Caso 0: el dominio oficial completo aparece entre los subdominios,
+        // pero el dominio que se registro es otro. Es la trampa clasica:
+        // bnb.com.bo.verificar.cuenta.segura-login.xyz parece del BNB a simple
+        // vista, y el dominio real es segura-login.xyz. Se compara por etiquetas
+        // completas, asi que "mibnb.com.bo.x.xyz" no cuenta.
+        String subdominios = subdominiosDe(url.getHost(), candidato);
+        if (!subdominios.isEmpty()) {
+            String rodeado = "." + subdominios + ".";
+            for (DominioOficial oficial : dominiosOficiales) {
+                if (rodeado.contains("." + oficial.dominio() + ".")) {
+                    return Optional.of("Usa '" + oficial.dominio()
+                            + "' como subdominio, pero el dominio real es " + candidato);
+                }
             }
         }
 
@@ -84,6 +117,18 @@ public class ReglaTyposquatting implements ReglaUrl {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Lo que va por delante del dominio registrable.
+     * "bnb.com.bo.verificar.segura-login.xyz" con registrable "segura-login.xyz"
+     * devuelve "bnb.com.bo.verificar"; "bnb.com.bo" devuelve "".
+     */
+    private String subdominiosDe(String host, String registrable) {
+        if (host.length() > registrable.length() && host.endsWith("." + registrable)) {
+            return host.substring(0, host.length() - registrable.length() - 1);
+        }
+        return "";
     }
 
     /** "bnb.com.bo" devuelve "bnb"; "impuestos.gob.bo" devuelve "impuestos" */
