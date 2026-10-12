@@ -33,5 +33,5 @@ https://www.fidalga.com/,0,comercio,Supermercados Fidalga (verificado 200),fidal
 https://www.fidalga.com/login,0,comercio,con ruta sensible (caso extremo),fidalga.com,0.0877,0,"no tiene subdominios | el dominio es corto (11 caracteres) | el dominio contiene 'lga', secuencia propia de sitios legitimos",0
 https://www.ypfb.gob.bo/,0,comercio,YPFB empresa estatal (verificado 200),ypfb.gob.bo,0.0381,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos",0
 https://www.ypfb.gob.bo/login,0,comercio,con ruta sensible (caso extremo),ypfb.gob.bo,0.0381,0,"no tiene subdominios | el dominio contiene '.go', secuencia propia de sitios legitimos | el dominio tiene 2 puntos",0
-https://www.ende.bo/,0,comercio,ENDE empresa estatal (verificado 200),ende.bo,0.4808,0,no tiene subdominios | el dominio es corto (7 caracteres) | el dominio no tiene digitos,0
-https://www.ende.bo/login,0,comercio,con ruta sensible (caso extremo),ende.bo,0.4808,0,no tiene subdominios | el dominio es corto (7 caracteres) | el dominio no tiene digitos,0
+https://www.dismac.com.bo/,0,comercio,Dismac comercio privado (verificado 200 el 2026-10-12; reemplaza a ende.bo),dismac.com.bo,0.4516,0,"no tiene subdominios | el dominio tiene 2 puntos | el dominio contiene 'ac.', secuencia propia de sitios legitimos",0
+https://www.dismac.com.bo/login,0,comercio,con ruta sensible (caso extremo),dismac.com.bo,0.4516,0,"no tiene subdominios | el dominio tiene 2 puntos | el dominio contiene 'ac.', secuencia propia de sitios legitimos",0

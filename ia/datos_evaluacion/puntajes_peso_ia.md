@@ -1,13 +1,19 @@
 # Puntaje final con el indicador IA_MODELO_URL: peso 40, 30 y 0
 
-Calculado el 2026-10-12 con el motor real del backend (AnalizarUrlUseCase, reglas y pesos
-leidos de la base: IP 30, sin HTTPS 8, typosquatting 45, TLD 12, subdominios 10,
-lista negra 70, ruta sensible 10) y con las probabilidades reales del servicio de IA 1.0.0
-(umbral 0.5527). Lista blanca y lista negra iguales a la base. Se uso una prueba temporal
-que no se commitea (regla del proyecto). Los dominios de la lista blanca no consultan la IA.
+Calculado el 2026-10-12 con el motor real del backend. Se usaron:
+- `AnalizarUrlUseCase`, con las reglas y los pesos leídos de la base: IP 30, sin HTTPS 8,
+  typosquatting 45, TLD 12, subdominios 10, lista negra 70, ruta sensible 10.
+- Las probabilidades reales del servicio de IA 1.0.0 (umbral 0.5527).
+- Las mismas listas que tiene la base después de V6 (la lista blanca incluye `ende.bo`).
+
+Se usó una prueba temporal que no se commitea (regla del proyecto). La IA no se consulta para
+dominios de la lista blanca ni para IP literales.
 
 Columnas: p40/v40 = puntaje y veredicto con peso 40; p30/v30 con peso 30; p0/v0 sin IA.
-Las URL con /login son un caso extremo: activan URL_RUTA_SENSIBLE aunque la pagina no exista.
+Las URL con /login son un caso extremo: activan URL_RUTA_SENSIBLE aunque la página no exista.
+
+Versión 2 de esta tabla: en el conjunto de medición se reemplazó `ende.bo` por `dismac.com.bo`
+(ver `CAMBIOS_CONJUNTO_MEDICION.md`).
 
 ## bolivia_legitimos_fuera_lista_blanca.csv
 
@@ -47,8 +53,8 @@ Las URL con /login son un caso extremo: activan URL_RUTA_SENSIBLE aunque la pagi
 | `https://www.fidalga.com/login` | 0 | 0.0877 | si | 10.00 | seguro | 10.00 | seguro | 10.00 | seguro | [RUTA_SENSIBLE=10] |
 | `https://www.ypfb.gob.bo/` | 0 | 0.0381 | si | 0.00 | seguro | 0.00 | seguro | 0.00 | seguro | [] |
 | `https://www.ypfb.gob.bo/login` | 0 | 0.0381 | si | 10.00 | seguro | 10.00 | seguro | 10.00 | seguro | [RUTA_SENSIBLE=10] |
-| `https://www.ende.bo/` | 0 | 0.4808 | si | 45.00 | sospechoso | 45.00 | sospechoso | 45.00 | sospechoso | [TYPOSQUATTING=45] |
-| `https://www.ende.bo/login` | 0 | 0.4808 | si | 55.00 | sospechoso | 55.00 | sospechoso | 55.00 | sospechoso | [RUTA_SENSIBLE=10, TYPOSQUATTING=45] |
+| `https://www.dismac.com.bo/` | 0 | 0.4516 | si | 0.00 | seguro | 0.00 | seguro | 0.00 | seguro | [] |
+| `https://www.dismac.com.bo/login` | 0 | 0.4516 | si | 10.00 | seguro | 10.00 | seguro | 10.00 | seguro | [RUTA_SENSIBLE=10] |
 
 ## bolivia.csv
 
@@ -101,14 +107,16 @@ Las URL con /login son un caso extremo: activan URL_RUTA_SENSIBLE aunque la pagi
 
 ## Conclusiones
 
-- **Legitimos fuera de la lista blanca (18 sitios, 36 URL):** ninguna probabilidad llega al
-  umbral (la mas alta es `umsa.bo`, 0.5463), asi que la IA aporta 0 con peso 40 y con peso 30.
-  Ningun sitio cambia de veredicto por la IA.
-- **`ende.bo` sale "sospechoso" (45 y 55 con /login) con cualquier peso, incluso sin IA:** lo
-  marca `URL_TYPOSQUATTING` porque `ende.bo` esta a distancia 2 de `entel.bo`. Es un falso
-  positivo de las reglas, no de la IA.
-- **Phishing (bolivia.csv, 18 URL):** veredicto "phishing" en 4 sin IA, 13 con peso 30 y 14 con
-  peso 40. La diferencia entre 30 y 40 es `bancounion-bo-actualizacion.com` (67.96 vs 75.61).
-- **Margen teorico:** si un sitio legitimo superara el umbral, la IA sumaria al menos
-  0.5527 x 40 = 22.11 (16.58 con peso 30). Junto con ruta sensible (10) y sin HTTPS (8) daria
-  40.11, que es "sospechoso" con peso 40 y "seguro" con peso 30. No ocurrio en este conjunto.
+- **Legítimos fuera de la lista blanca (18 sitios, 36 URL):** ninguna probabilidad llega al
+  umbral (la más alta es `umsa.bo`, 0.5463), así que la IA aporta 0 con peso 40 y con peso 30.
+  Las 36 URL quedan como "seguro" con cualquier peso.
+- **Phishing (bolivia.csv, 18 URL):** veredicto "phishing" en 4 sin IA, en 13 con peso 30 y en
+  14 con peso 40. La diferencia entre 30 y 40 es `bancounion-bo-actualizacion.com` (67.96 frente a 75.61).
+- **Legítimas de bolivia.csv (26 URL):** todas son "seguro", porque están en la lista blanca y
+  no consultan la IA.
+- **Margen teórico:** si un sitio legítimo superara el umbral, la IA sumaría al menos
+  0.5527 x 40 = 22.11 (16.58 con peso 30). Junto con ruta sensible (10) y sin HTTPS (8) daría
+  40.11, que es "sospechoso" con peso 40 y "seguro" con peso 30. No ocurrió en este conjunto.
+- **Versión 1 de la tabla (antes del cambio de conjunto):** `ende.bo` salía "sospechoso" (45 y
+  55 con /login) con cualquier peso, incluso sin IA, por `URL_TYPOSQUATTING` (distancia 2 a
+  `entel.bo`). Se corrigió con V6 (lista blanca), y por eso salió del conjunto.
