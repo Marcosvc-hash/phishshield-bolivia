@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
@@ -27,6 +28,11 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
     @Override
     public Optional<Usuario> buscarPorId(Long id) {
         return jpaRepository.findById(id).map(this::aDominio);
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorUuid(UUID uuidPublico) {
+        return jpaRepository.findByUuidPublico(uuidPublico).map(this::aDominio);
     }
 
     @Override
