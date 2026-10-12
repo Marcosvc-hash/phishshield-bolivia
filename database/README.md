@@ -155,6 +155,7 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V3__ajustar_peso_typosquatting.sql` | Sube el peso de `URL_TYPOSQUATTING` de 25 a 45 |
 | `V4__ajuste_reglas_y_lista_blanca.sql` | `URL_IP_LITERAL` a 30, registra `URL_RUTA_SENSIBLE` (peso 10) y agrega `visa.com` a la lista blanca |
 | `V5__modelo_ia_url.sql` | Registra la regla `IA_MODELO_URL` (peso 40) y el modelo real `phishshield-url-ia` 1.0.0 con sus métricas de prueba, como único modelo de URL activo |
+| `V6__lista_blanca_ende.sql` | Agrega `ende.bo` a la lista blanca (typosquatting lo confundía con `entel.bo`) |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -164,6 +165,7 @@ Get-Content database\migraciones\V2__regla_lista_negra.sql | docker exec -i phis
 Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V5__modelo_ia_url.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
+Get-Content database\migraciones\V6__lista_blanca_ende.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
 ```bash
@@ -172,6 +174,7 @@ docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migr
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V3__ajustar_peso_typosquatting.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V4__ajuste_reglas_y_lista_blanca.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V5__modelo_ia_url.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V6__lista_blanca_ende.sql
 ```
 
 Si una migración falta, el backend lo avisa al arrancar con un `WARN` del tipo

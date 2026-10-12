@@ -40,7 +40,8 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
 -- Sitios legítimos que el typosquatting confundiría con una entidad local.
 -- ReglaTyposquatting nunca reporta un dominio de la lista blanca.
 INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
-    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)');
+    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)'),
+    ('ende.bo',  'blanca', NULL, 'manual', 'Sitio oficial de ENDE; typosquatting lo confundia con entel.bo (Entel)');
 
 -- ---------------------------------------------------------------------
 -- Reglas heurísticas
