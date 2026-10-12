@@ -152,6 +152,34 @@ class MotorReglasUrlTest {
         assertTrue(codigosDisparados("https://tiqo.com.bo").contains("URL_TYPOSQUATTING"));
     }
 
+    // ---- Dominio oficial escondido en los subdominios ----
+
+    private Optional<Indicador> indicadorTyposquatting(String url) {
+        return motor().evaluar(UrlAnalizada.de(url), PESOS).stream()
+                .filter(i -> i.codigoRegla().equals("URL_TYPOSQUATTING"))
+                .findFirst();
+    }
+
+    @Test
+    void detecta_un_dominio_oficial_usado_como_subdominio() {
+        Indicador indicador = indicadorTyposquatting(
+                "http://bnb.com.bo.verificar.cuenta.segura-login.xyz/").orElseThrow();
+
+        assertEquals("Usa 'bnb.com.bo' como subdominio, pero el dominio real es segura-login.xyz",
+                indicador.valor());
+    }
+
+    @Test
+    void un_subdominio_del_dominio_oficial_no_dispara_la_regla() {
+        assertTrue(indicadorTyposquatting("https://banca.bnb.com.bo/").isEmpty());
+    }
+
+    @Test
+    void el_dominio_oficial_debe_aparecer_como_etiquetas_completas() {
+        // "mibnb.com.bo" no es "bnb.com.bo": no debe disparar el caso de subdominio
+        assertTrue(indicadorTyposquatting("https://mibnb.com.bo.ejemplo.net/").isEmpty());
+    }
+
     // ---- Lista negra ----
 
     private static final List<DominioListado> LISTA_NEGRA = List.of(

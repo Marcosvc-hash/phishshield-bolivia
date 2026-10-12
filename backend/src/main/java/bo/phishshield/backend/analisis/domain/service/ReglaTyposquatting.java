@@ -58,6 +58,22 @@ public class ReglaTyposquatting implements ReglaUrl {
             }
         }
 
+        // Caso 0: el dominio oficial completo aparece entre los subdominios,
+        // pero el dominio que se registro es otro. Es la trampa clasica:
+        // bnb.com.bo.verificar.cuenta.segura-login.xyz parece del BNB a simple
+        // vista, y el dominio real es segura-login.xyz. Se compara por etiquetas
+        // completas, asi que "mibnb.com.bo.x.xyz" no cuenta.
+        String subdominios = subdominiosDe(url.getHost(), candidato);
+        if (!subdominios.isEmpty()) {
+            String rodeado = "." + subdominios + ".";
+            for (DominioOficial oficial : dominiosOficiales) {
+                if (rodeado.contains("." + oficial.dominio() + ".")) {
+                    return Optional.of("Usa '" + oficial.dominio()
+                            + "' como subdominio, pero el dominio real es " + candidato);
+                }
+            }
+        }
+
         List<String> etiquetas = etiquetasDe(candidato);
 
         for (DominioOficial oficial : dominiosOficiales) {
@@ -101,6 +117,18 @@ public class ReglaTyposquatting implements ReglaUrl {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Lo que va por delante del dominio registrable.
+     * "bnb.com.bo.verificar.segura-login.xyz" con registrable "segura-login.xyz"
+     * devuelve "bnb.com.bo.verificar"; "bnb.com.bo" devuelve "".
+     */
+    private String subdominiosDe(String host, String registrable) {
+        if (host.length() > registrable.length() && host.endsWith("." + registrable)) {
+            return host.substring(0, host.length() - registrable.length() - 1);
+        }
+        return "";
     }
 
     /** "bnb.com.bo" devuelve "bnb"; "impuestos.gob.bo" devuelve "impuestos" */
