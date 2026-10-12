@@ -510,11 +510,12 @@ class AnalizarUrlUseCaseTest {
     /** El adaptador real devuelve vacio cuando el servicio falla o tarda mas de 2 s. */
     @Test
     void con_ia_caida_el_analisis_sigue_solo_con_las_reglas() {
-        // modeloIa no responde (Optional.empty)
-        Analisis resultado = analizar("http://192.168.1.50/banca/login");
+        // modeloIa no responde (Optional.empty). Typosquatting 45 + sin HTTPS 8 + ruta 10 = 63
+        listaNegra.dominios.clear();
+        Analisis resultado = analizar("http://bnb-bo-seguro.com/login");
 
         assertEquals(1, modeloIa.consultadas.size(), "Debio intentar consultar la IA");
-        assertEquals(new BigDecimal("48.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(new BigDecimal("63.00"), resultado.getNivelRiesgo(), detalle(resultado));
         assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
         assertTrue(indicadorIa(resultado).isEmpty());
         assertNull(resultado.getIdModelo());
@@ -543,6 +544,19 @@ class AnalizarUrlUseCaseTest {
                 new ComandoAnalizarUrl("https://pagos-cuenta-segura.com/", OrigenAnalisis.WEB, 1L, 1L));
 
         assertEquals(new BigDecimal("0.00"), indicadorIa(resultado).orElseThrow().aporte());
+    }
+
+    /** En el dataset todas las IP eran phishing: la IA no se consulta y decide URL_IP_LITERAL. */
+    @Test
+    void una_ip_literal_no_consulta_la_ia() {
+        modeloIa.responder("1.00", "usa una direccion IP en lugar de un dominio");
+
+        Analisis resultado = analizar("http://192.168.1.1");
+
+        assertTrue(modeloIa.consultadas.isEmpty(), "Consulto la IA para una IP literal");
+        assertEquals(new BigDecimal("38.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SEGURO, resultado.getResultado());
+        assertNull(resultado.getIdModelo());
     }
 
     @Test

@@ -167,6 +167,10 @@ contexto local, no como estimación estadística.
    n-grama `.com.` (típico de `paypal.com.seguro.xyz`) castiga a los `.com.bo` legítimos:
    `bnb.com.bo` da 0,53, cerca del umbral, y `bg.com.bo` lo supera.
 2. **No ve la ruta, los parámetros ni el https** (decisión por el sesgo del dataset).
+   **Tampoco sirve para IP literales:** las 608 URL con IP del dataset son todas phishing, así
+   que el modelo da ~1,0 a cualquier IP, incluso `192.168.1.1`. El backend no consulta la IA
+   para IP y deja ese caso a `URL_IP_LITERAL`. Tampoco la consulta para dominios de la lista
+   blanca.
 3. **No detecta typosquatting** de una o dos letras.
 4. Las legítimas del dataset son portadas de sitios populares. Un sitio legítimo pequeño
    con un dominio largo o con guiones puede parecer sospechoso.

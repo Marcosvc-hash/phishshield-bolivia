@@ -150,9 +150,13 @@ public class AnalizarUrlUseCase {
      * comparacion es exacta por dominio registrable, asi que
      * bnb.com.bo.verificar.segura-login.xyz (registrable segura-login.xyz)
      * si se consulta aunque bnb.com.bo este en la lista blanca.
+     *
+     * Las IP literales tampoco se consultan: en el dataset de entrenamiento
+     * las 608 URL con IP son phishing, asi que el modelo solo repetiria
+     * URL_IP_LITERAL (y marcaria como phishing el panel de un router).
      */
     private Optional<PrediccionIa> consultarIa(UrlAnalizada url, Set<String> listaBlanca) {
-        if (listaBlanca.contains(url.getDominioRegistrable())) {
+        if (url.hostEsIpLiteral() || listaBlanca.contains(url.getDominioRegistrable())) {
             return Optional.empty();
         }
         return modeloIa.predecir(url.getOriginal());

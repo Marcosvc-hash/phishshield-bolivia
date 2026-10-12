@@ -25,6 +25,7 @@ Cada vertical se divide así:
 | `infrastructure/config` | Clases `@Configuration` que crean los casos de uso con `@Bean` | |
 | `infrastructure/persistence` | `*Entity` (sin Lombok en `analisis`), `*JpaRepository`, `*PersistenceAdapter` | |
 | `infrastructure/web` | Controladores, DTOs y `*ExceptionHandler` | Los handlers llevan `@Order(HIGHEST_PRECEDENCE)` |
+| `infrastructure/ia` | Cliente HTTP (RestClient) hacia el servicio de IA | Si falla: `log.warn` y `Optional.empty()` |
 
 Otros puntos del diseño:
 - La API expone siempre `uuid_publico` como `id`, nunca el BIGINT interno.
@@ -34,6 +35,12 @@ Otros puntos del diseño:
   - Las reglas sin estado van en `AnalisisConfig.reglasUrlBase()`. Typosquatting y lista negra se arman en cada ejecución dentro de `AnalizarUrlUseCase`.
   - Umbrales: sospechoso desde 40, phishing desde 70.
   - La caché de análisis dura 24 h.
+- Modelo de IA (`ia/`, ver `ia/FICHA_MODELO.md`):
+  - Solo mira el host: PhiUSIIL tiene sesgos de ruta y https (las legítimas no tienen ruta) y de IP (todas phishing).
+  - Indicador `IA_MODELO_URL`: aporte = probabilidad × peso (40), solo si supera el umbral del modelo.
+  - No se consulta para IP literales ni para dominios de la lista blanca (comparación exacta por dominio registrable).
+  - Si el servicio no responde en 2 s, el análisis sigue solo con las reglas.
+  - El dataset y `modelo.joblib` no van a git; se regeneran con `descargar_datos.py` y `entrenar.py`.
 - Las pruebas de dominio y de casos de uso usan dobles en memoria, sin Spring.
 
 ## Ejecutar
