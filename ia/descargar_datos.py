@@ -2,7 +2,7 @@
 
 Fuente: https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset
 Cita: Prasad, A. & Chandra, S. (2024). PhiUSIIL Phishing URL (Website) [Dataset].
-      UCI Machine Learning Repository. https://doi.org/10.24432/C5Q90X
+      UCI Machine Learning Repository (sin DOI propio; articulo: https://doi.org/10.1016/j.cose.2023.103545)
 
 Segun la documentacion oficial: "Label 1 corresponds to a legitimate URL,
 label 0 to a phishing URL". El resto del proyecto usa 1 = phishing, asi que
