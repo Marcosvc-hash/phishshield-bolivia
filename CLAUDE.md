@@ -1,7 +1,25 @@
 # PhishShield Bolivia — notas para Claude
 
-Proyecto universitario de detección de phishing. El usuario es estudiante y viene de C#:
-respóndele en español sencillo.
+Proyecto universitario de detección de phishing. El usuario es estudiante, viene de C# básico
+y no tiene experiencia previa en Java: respóndele en español sencillo.
+
+## Reglas de trabajo (permanentes)
+
+1. **Antes de modificar código, explica qué vas a hacer y por qué, y espera la aprobación.**
+   No hagas cambios fuera de lo acordado. Si encuentras un problema, repórtalo y propón la
+   solución, pero no la apliques sin preguntar.
+2. **Equivalencias con C#:** cuando aparezca un concepto nuevo de Java o Spring, da su
+   equivalente en C#/.NET en una línea (por ejemplo: `@Bean` ≈ registrar un servicio con
+   `builder.Services.AddSingleton(...)`; `Optional<T>` ≈ un `T?` que obliga a revisar si viene vacío).
+3. **Ramas y commits:** trabajar en ramas `feature/nombre-corto`; `main` siempre debe levantar.
+   Commits en español y en imperativo.
+4. **Dominio limpio:** ningún archivo dentro de un paquete `domain/` puede importar
+   `org.springframework` ni `jakarta.persistence` (el docente lo verifica). Comprobarlo con
+   `git grep -nE "import (org\.springframework|jakarta\.persistence)" -- "backend/src/main/java/**/domain/**"`,
+   que no debe devolver nada.
+5. **Código para revisar:** mostrar el archivo o el método completo, nunca fragmentos sueltos.
+6. **Secretos:** nunca subir contraseñas ni claves; van en `.env` (ignorado por git) o en
+   variables de entorno.
 
 ## Estructura
 
@@ -18,13 +36,14 @@ Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
 |---|---|---|
-| `domain/model` | Entidades, records, enums y excepciones de negocio | Sin Spring ni JPA |
-| `domain/service` | Lógica pura, como las reglas `Regla*` del motor | Sin Spring ni JPA |
-| `domain/port/out` | Interfaces de salida (`*RepositoryPort`) | |
+| `domain/model` | Entidades, records, enums y excepciones de negocio | Sin Spring ni JPA (regla 4) |
+| `domain/service` | Lógica pura, como las reglas `Regla*` del motor | Sin Spring ni JPA (regla 4) |
+| `domain/port/out` | Interfaces de salida (`*RepositoryPort`) | Sin Spring ni JPA (regla 4) |
 | `application` | Casos de uso (`*UseCase`) y comandos (`Comando*`) | **Sin anotaciones de Spring** |
 | `infrastructure/config` | Clases `@Configuration` que crean los casos de uso con `@Bean` | |
 | `infrastructure/persistence` | `*Entity` (sin Lombok en `analisis`), `*JpaRepository`, `*PersistenceAdapter` | |
 | `infrastructure/web` | Controladores, DTOs y `*ExceptionHandler` | Los handlers llevan `@Order(HIGHEST_PRECEDENCE)` |
+| `infrastructure/ia` | Cliente HTTP (RestClient) hacia el servicio de IA | Si falla: `log.warn` y `Optional.empty()` |
 
 Otros puntos del diseño:
 - La API expone siempre `uuid_publico` como `id`, nunca el BIGINT interno.
@@ -34,6 +53,12 @@ Otros puntos del diseño:
   - Las reglas sin estado van en `AnalisisConfig.reglasUrlBase()`. Typosquatting y lista negra se arman en cada ejecución dentro de `AnalizarUrlUseCase`.
   - Umbrales: sospechoso desde 40, phishing desde 70.
   - La caché de análisis dura 24 h.
+- Modelo de IA (`ia/`, ver `ia/FICHA_MODELO.md`):
+  - Solo mira el host: PhiUSIIL tiene sesgos de ruta y https (las legítimas no tienen ruta) y de IP (todas phishing).
+  - Indicador `IA_MODELO_URL`: aporte = probabilidad × peso (40), solo si supera el umbral del modelo.
+  - No se consulta para IP literales ni para dominios de la lista blanca (comparación exacta por dominio registrable).
+  - Si el servicio no responde en 2 s, el análisis sigue solo con las reglas.
+  - El dataset y `modelo.joblib` no van a git; se regeneran con `descargar_datos.py` y `entrenar.py`.
 - Las pruebas de dominio y de casos de uso usan dobles en memoria, sin Spring.
 
 ## Ejecutar
@@ -64,7 +89,8 @@ Otros puntos del diseño:
 ## Convenciones
 
 - Commits en español y en imperativo, por ejemplo `Agregar validación de URL en el adaptador REST`.
-- Una rama por tarea; antes de empezar, revisar `git status` (si hay cambios sin commitear, preguntar).
+- Una rama `feature/nombre-corto` por tarea; antes de empezar, revisar `git status` (si hay cambios sin commitear, preguntar).
+- Antes de proponer un merge a `main`: `mvnw test`, `npm test` y `pytest` (en `ia/`) deben pasar.
 - **Nunca hacer push ni merge a `main` sin preguntar.**
 - **Nunca ejecutar `docker compose down -v`** ni nada que borre datos de la base.
 - No afirmar que algo funciona sin haberlo ejecutado.

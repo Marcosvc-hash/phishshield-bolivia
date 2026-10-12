@@ -8,6 +8,7 @@ import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
 import bo.phishshield.backend.analisis.domain.model.OrigenAnalisis;
+import bo.phishshield.backend.analisis.domain.model.PrediccionIa;
 import bo.phishshield.backend.analisis.domain.model.Resultado;
 import bo.phishshield.backend.analisis.domain.model.Sha256;
 import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
@@ -16,6 +17,8 @@ import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaPort;
+import bo.phishshield.backend.analisis.domain.port.out.ModeloIaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
 import bo.phishshield.backend.analisis.domain.service.ReglaRutaSensible;
@@ -105,6 +108,7 @@ class AnalizarUrlUseCaseTest {
             pesos.put("URL_SUBDOMINIOS", new BigDecimal("10.00"));
             pesos.put("URL_LISTA_NEGRA", new BigDecimal("70.00"));
             pesos.put("URL_RUTA_SENSIBLE", new BigDecimal("10.00"));
+            pesos.put("IA_MODELO_URL", new BigDecimal("40.00"));
             return pesos;
         }
 
@@ -121,15 +125,18 @@ class AnalizarUrlUseCaseTest {
                     new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
                     new DominioOficial("Banco Union", "bancounion.com.bo"),
                     new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
-                    new DominioOficial("Banco BISA", "bisa.com")
+                    new DominioOficial("Banco BISA", "bisa.com"),
+                    new DominioOficial("Banco Mercantil Santa Cruz", "bmsc.com.bo"),
+                    new DominioOficial("Entel", "entel.bo")
             );
         }
     }
 
-    /** Arranca con visa.com; cada prueba puede vaciarla. */
+    /** Arranca con visa.com y bnb.com.bo, como el seed; cada prueba puede vaciarla. */
     static class ListaBlancaEnMemoria implements ListaBlancaRepositoryPort {
         final List<DominioListado> dominios = new ArrayList<>(List.of(
-                new DominioListado("visa.com", "Se parece a bisa.com, pero es legitimo")
+                new DominioListado("visa.com", "Se parece a bisa.com, pero es legitimo"),
+                new DominioListado("bnb.com.bo", "Dominio oficial verificado")
         ));
 
         @Override
@@ -152,11 +159,44 @@ class AnalizarUrlUseCaseTest {
         }
     }
 
+    /**
+     * Doble del modelo de IA. Por defecto no responde, como si el servicio
+     * estuviera apagado: asi las pruebas de reglas no dependen de la IA.
+     */
+    static class ModeloIaFalso implements ModeloIaPort {
+        Optional<PrediccionIa> respuesta = Optional.empty();
+        final List<String> consultadas = new ArrayList<>();
+
+        @Override
+        public Optional<PrediccionIa> predecir(String url) {
+            consultadas.add(url);
+            return respuesta;
+        }
+
+        void responder(String probabilidad, String... senales) {
+            respuesta = Optional.of(new PrediccionIa(new BigDecimal(probabilidad), UMBRAL_IA,
+                    List.of(senales), "phishshield-url-ia", "1.0.0"));
+        }
+    }
+
+    static final BigDecimal UMBRAL_IA = new BigDecimal("0.5527");
+    static final long ID_MODELO_REAL = 4L;
+
+    /** modelos_ia con el modelo real registrado. */
+    static class ModelosRegistrados implements ModeloIaRepositoryPort {
+        @Override
+        public Optional<Long> buscarId(String nombre, String version) {
+            return "phishshield-url-ia".equals(nombre) && "1.0.0".equals(version)
+                    ? Optional.of(ID_MODELO_REAL) : Optional.empty();
+        }
+    }
+
     // ---- Montaje ----
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
     private final ListaNegraEnMemoria listaNegra = new ListaNegraEnMemoria();
     private final ListaBlancaEnMemoria listaBlanca = new ListaBlancaEnMemoria();
+    private final ModeloIaFalso modeloIa = new ModeloIaFalso();
 
     private AnalizarUrlUseCase casoDeUso() {
         List<ReglaUrl> base = List.of(
@@ -167,7 +207,8 @@ class AnalizarUrlUseCaseTest {
                 new ReglaRutaSensible()
         );
         return new AnalizarUrlUseCase(base, repositorio, new PesosFijos(),
-                new DominiosFijos(), listaNegra, listaBlanca, RELOJ);
+                new DominiosFijos(), listaNegra, listaBlanca,
+                modeloIa, new ModelosRegistrados(), RELOJ);
     }
 
     private Analisis analizar(String url) {
@@ -326,6 +367,37 @@ class AnalizarUrlUseCaseTest {
                 "Indicadores: " + detalle(resultado));
     }
 
+    /**
+     * ende.bo (ENDE) esta a distancia 2 de entel.bo: sin la lista blanca daba
+     * sospechoso (45). La migracion V6 lo agrega a la lista blanca.
+     */
+    @Test
+    void ende_en_la_lista_blanca_queda_como_seguro() {
+        listaBlanca.dominios.add(new DominioListado("ende.bo", "Sitio oficial de ENDE"));
+
+        Analisis resultado = analizar("https://www.ende.bo/");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().isEmpty(), "Indicadores: " + detalle(resultado));
+    }
+
+    /**
+     * bmcs.com.bo tambien esta a distancia 2 de un oficial (bmsc.com.bo), pero es
+     * un ataque: la lista blanca corrige ende.bo sin aflojar la regla para todos.
+     */
+    @Test
+    void bmcs_sigue_siendo_sospechoso_por_typosquatting() {
+        listaBlanca.dominios.add(new DominioListado("ende.bo", "Sitio oficial de ENDE"));
+
+        Analisis resultado = analizar("https://www.bmcs.com.bo/");
+
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
+                "Indicadores: " + detalle(resultado));
+        assertEquals(new BigDecimal("45.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
+    }
+
     // ---- Alertas ----
 
     @Test
@@ -419,5 +491,131 @@ class AnalizarUrlUseCaseTest {
     void comando_sin_url_es_rechazado() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ComandoAnalizarUrl("", OrigenAnalisis.WEB, 1L, 1L));
+    }
+
+    // ---- Modelo de IA ----
+
+    private static Optional<Indicador> indicadorIa(Analisis analisis) {
+        return analisis.getIndicadores().stream()
+                .filter(i -> i.codigoRegla().equals("IA_MODELO_URL"))
+                .findFirst();
+    }
+
+    /** Sin reglas activadas: el puntaje es solo el de la IA, 0.90 x 40 = 36. */
+    @Test
+    void con_ia_sobre_el_umbral_suma_probabilidad_por_peso() {
+        modeloIa.responder("0.90", "tiene 3 subdominios", "el dominio contiene 'login'", "el dominio es largo");
+
+        Analisis resultado = analizar("https://pagos-cuenta-segura.com/");
+
+        Indicador ia = indicadorIa(resultado).orElseThrow(() -> new AssertionError(detalle(resultado)));
+        assertEquals(new BigDecimal("36.00"), ia.aporte());
+        assertEquals(new BigDecimal("36.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertTrue(ia.valor().contains("90%"), ia.valor());
+        assertTrue(ia.valor().contains("tiene 3 subdominios"), ia.valor());
+        assertEquals(ID_MODELO_REAL, resultado.getIdModelo());
+    }
+
+    @Test
+    void la_ia_se_suma_a_las_reglas() {
+        modeloIa.responder("0.80", "el dominio tiene 2 guiones");
+
+        // Typosquatting 45 (bnb-bo-seguro.com fuera de la lista negra) + IA 0.80 x 40 = 77
+        listaNegra.dominios.clear();
+        Analisis resultado = analizar("https://bnb-bo-seguro.com/");
+
+        assertEquals(new BigDecimal("77.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.PHISHING, resultado.getResultado());
+    }
+
+    /** Bajo el umbral la IA no aporta, pero participo: el analisis guarda el modelo. */
+    @Test
+    void con_ia_bajo_el_umbral_no_suma_puntos() {
+        modeloIa.responder("0.40", "el dominio es largo");
+
+        Analisis resultado = analizar("https://pagos-cuenta-segura.com/");
+
+        assertTrue(indicadorIa(resultado).isEmpty(), detalle(resultado));
+        assertEquals(0, resultado.getNivelRiesgo().compareTo(BigDecimal.ZERO));
+        assertEquals(ID_MODELO_REAL, resultado.getIdModelo());
+    }
+
+    /** El adaptador real devuelve vacio cuando el servicio falla o tarda mas de 2 s. */
+    @Test
+    void con_ia_caida_el_analisis_sigue_solo_con_las_reglas() {
+        // modeloIa no responde (Optional.empty). Typosquatting 45 + sin HTTPS 8 + ruta 10 = 63
+        listaNegra.dominios.clear();
+        Analisis resultado = analizar("http://bnb-bo-seguro.com/login");
+
+        assertEquals(1, modeloIa.consultadas.size(), "Debio intentar consultar la IA");
+        assertEquals(new BigDecimal("63.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
+        assertTrue(indicadorIa(resultado).isEmpty());
+        assertNull(resultado.getIdModelo());
+        assertEquals(1, repositorio.guardados.size());
+    }
+
+    @Test
+    void sin_fila_en_reglas_deteccion_la_ia_aporta_cero() {
+        modeloIa.responder("0.95");
+        AnalizarUrlUseCase sinPesoIa = new AnalizarUrlUseCase(
+                List.of(new ReglaSinHttps()), repositorio,
+                new ReglaDeteccionRepositoryPort() {
+                    @Override
+                    public Map<String, BigDecimal> pesosActivosPorCategoria(String categoria) {
+                        return Map.of();
+                    }
+
+                    @Override
+                    public Set<String> codigosRegistrados() {
+                        return Set.of();
+                    }
+                },
+                new DominiosFijos(), listaNegra, listaBlanca, modeloIa, new ModelosRegistrados(), RELOJ);
+
+        Analisis resultado = sinPesoIa.ejecutar(
+                new ComandoAnalizarUrl("https://pagos-cuenta-segura.com/", OrigenAnalisis.WEB, 1L, 1L));
+
+        assertEquals(new BigDecimal("0.00"), indicadorIa(resultado).orElseThrow().aporte());
+    }
+
+    /** En el dataset todas las IP eran phishing: la IA no se consulta y decide URL_IP_LITERAL. */
+    @Test
+    void una_ip_literal_no_consulta_la_ia() {
+        modeloIa.responder("1.00", "usa una direccion IP en lugar de un dominio");
+
+        Analisis resultado = analizar("http://192.168.1.1");
+
+        assertTrue(modeloIa.consultadas.isEmpty(), "Consulto la IA para una IP literal");
+        assertEquals(new BigDecimal("38.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SEGURO, resultado.getResultado());
+        assertNull(resultado.getIdModelo());
+    }
+
+    @Test
+    void un_dominio_de_la_lista_blanca_no_consulta_la_ia() {
+        modeloIa.responder("0.99", "no deberia usarse");
+
+        Analisis resultado = analizar("https://www.bnb.com.bo/PortalBNB/Principal/BancaPersonas");
+
+        assertTrue(modeloIa.consultadas.isEmpty(), "Consulto la IA para un dominio de la lista blanca");
+        assertTrue(indicadorIa(resultado).isEmpty());
+        assertNull(resultado.getIdModelo());
+        assertEquals(Resultado.SEGURO, resultado.getResultado());
+    }
+
+    /**
+     * La lista blanca compara el dominio registrable exacto: que el host
+     * empiece con "bnb.com.bo." no lo hace oficial.
+     */
+    @Test
+    void un_dominio_oficial_usado_como_subdominio_si_consulta_la_ia() {
+        modeloIa.responder("1.00", "tiene 5 subdominios (bnb.com.bo.verificar.cuenta)");
+
+        Analisis resultado = analizar("http://bnb.com.bo.verificar.cuenta.segura-login.xyz/");
+
+        assertEquals(List.of("http://bnb.com.bo.verificar.cuenta.segura-login.xyz/"), modeloIa.consultadas);
+        assertEquals(new BigDecimal("40.00"), indicadorIa(resultado).orElseThrow().aporte());
+        assertEquals(ID_MODELO_REAL, resultado.getIdModelo());
     }
 }

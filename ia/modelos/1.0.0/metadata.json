@@ -1,0 +1,311 @@
+{
+  "nombre": "phishshield-url-ia",
+  "version": "1.0.0",
+  "fecha_entrenamiento": "2026-10-12",
+  "algoritmo": "Regresion Logistica + calibracion Platt",
+  "modelo_elegido": "RegresionLogistica(lexicas+ngramas, C=3.0)",
+  "motivo_eleccion": "RegresionLogistica(lexicas+ngramas, C=3.0) tiene el mejor F1 entre las regresiones logisticas; HistGradientBoosting queda a -0.0890 de F1 (regla: se prefiere la Regresion Logistica salvo que la otra gane por 0.02 o mas).",
+  "dataset": {
+    "nombre": "PhiUSIIL Phishing URL Dataset (UCI, CC BY 4.0)",
+    "fuente": "https://archive.ics.uci.edu/static/public/967/phiusiil+phishing+url+dataset.zip",
+    "sha256": "a236549cd369cd80bd478ff8e1779cbf44c58d5c3f79f7a51a1adbed7d06d1c6",
+    "etiqueta_original": "1 = legitima, 0 = phishing (se invierte: 1 = phishing)"
+  },
+  "entrada_del_modelo": "host normalizado (sin esquema, sin 'www.', sin puerto ni ruta)",
+  "caracteristicas": {
+    "lexicas": [
+      "largo_host",
+      "puntos_host",
+      "guiones_host",
+      "digitos_host",
+      "especiales_host",
+      "subdominios",
+      "usa_ip",
+      "tld_abusado",
+      "entropia_host",
+      "palabras_sensibles_host"
+    ],
+    "ngramas": "TF-IDF char_wb 3-5, maximo 20000, min_df 5",
+    "ngramas_en_vocabulario": 20000
+  },
+  "semilla": 42,
+  "limpieza": {
+    "filas_originales": 235795,
+    "balance_original": {
+      "0": 134850,
+      "1": 100945
+    },
+    "tras_quitar_url_duplicadas": 235370,
+    "tras_quitar_host_vacio": 235370,
+    "hosts_con_etiqueta_contradictoria": 58,
+    "tras_quitar_contradictorios": 235211,
+    "tras_un_registro_por_host": 219036,
+    "balance_final": {
+      "0": 134792,
+      "1": 84244
+    },
+    "dominios_registrables": 175451
+  },
+  "division": {
+    "entrenamiento": {
+      "filas": 153283,
+      "fraccion": 0.6998,
+      "phishing": 59088,
+      "dominios": 122807
+    },
+    "validacion": {
+      "filas": 32897,
+      "fraccion": 0.1502,
+      "phishing": 10033,
+      "dominios": 29936
+    },
+    "prueba": {
+      "filas": 32856,
+      "fraccion": 0.15,
+      "phishing": 15123,
+      "dominios": 22708
+    },
+    "validacion_calibracion": {
+      "filas": 16448,
+      "fraccion": 0.0751,
+      "phishing": 4977,
+      "dominios": 14980
+    },
+    "validacion_umbral": {
+      "filas": 16449,
+      "fraccion": 0.0751,
+      "phishing": 5056,
+      "dominios": 14956
+    }
+  },
+  "comparacion_validacion": {
+    "RegresionLogistica(lexicas+ngramas, C=0.3)": {
+      "exactitud": 0.8569,
+      "precision": 0.9182,
+      "recall": 0.5828,
+      "f1": 0.713,
+      "roc_auc": 0.8806,
+      "pr_auc": 0.8375,
+      "matriz_confusion": {
+        "vn": 22343,
+        "fp": 521,
+        "fn": 4186,
+        "vp": 5847
+      },
+      "n": 32897,
+      "segundos_entrenamiento": 142.6033
+    },
+    "RegresionLogistica(lexicas+ngramas, C=1.0)": {
+      "exactitud": 0.8622,
+      "precision": 0.9011,
+      "recall": 0.6157,
+      "f1": 0.7315,
+      "roc_auc": 0.8839,
+      "pr_auc": 0.8429,
+      "matriz_confusion": {
+        "vn": 22186,
+        "fp": 678,
+        "fn": 3856,
+        "vp": 6177
+      },
+      "n": 32897,
+      "segundos_entrenamiento": 125.6466
+    },
+    "RegresionLogistica(lexicas+ngramas, C=3.0)": {
+      "exactitud": 0.8605,
+      "precision": 0.8765,
+      "recall": 0.6317,
+      "f1": 0.7342,
+      "roc_auc": 0.883,
+      "pr_auc": 0.8426,
+      "matriz_confusion": {
+        "vn": 21971,
+        "fp": 893,
+        "fn": 3695,
+        "vp": 6338
+      },
+      "n": 32897,
+      "segundos_entrenamiento": 126.492
+    },
+    "HistGradientBoosting(lexicas)": {
+      "exactitud": 0.8297,
+      "precision": 0.8851,
+      "recall": 0.5076,
+      "f1": 0.6452,
+      "roc_auc": 0.7926,
+      "pr_auc": 0.75,
+      "matriz_confusion": {
+        "vn": 22203,
+        "fp": 661,
+        "fn": 4940,
+        "vp": 5093
+      },
+      "n": 32897,
+      "segundos_entrenamiento": 58.0273
+    }
+  },
+  "calibracion": {
+    "metodo": "Platt (sigmoide sobre el logit), ajustado en validacion_calibracion",
+    "a": 0.9464,
+    "b": -0.0181,
+    "brier_antes": 0.1074,
+    "brier_despues": 0.1074,
+    "ece_antes": 0.0168,
+    "ece_despues": 0.015
+  },
+  "umbral": 0.5527,
+  "umbral_detalle": {
+    "precision_en_validacion": 0.9001,
+    "recall_en_validacion": 0.6007,
+    "umbral": 0.5527,
+    "criterio": "mayor recall con precision >= 0.9 en validacion_umbral; en empate, el umbral mas alto"
+  },
+  "metricas_prueba": {
+    "exactitud": 0.8955,
+    "precision": 0.961,
+    "recall": 0.8057,
+    "f1": 0.8766,
+    "roc_auc": 0.9413,
+    "pr_auc": 0.9512,
+    "matriz_confusion": {
+      "vn": 17239,
+      "fp": 494,
+      "fn": 2938,
+      "vp": 12185
+    },
+    "n": 32856
+  },
+  "metricas_prueba_desgloses": {
+    "ponderada_por_dominio": {
+      "exactitud": 0.8539,
+      "precision": 0.857,
+      "recall": 0.4839,
+      "f1": 0.6186,
+      "roc_auc": 0.8418,
+      "pr_auc": 0.7424,
+      "matriz_confusion": {
+        "vn": 16698.3492,
+        "fp": 449.0529,
+        "fn": 2869.7133,
+        "vp": 2690.8847
+      },
+      "n": 32856
+    },
+    "sin_3_grupos_mas_grandes": {
+      "exactitud": 0.8657,
+      "precision": 0.908,
+      "recall": 0.624,
+      "f1": 0.7397,
+      "roc_auc": 0.8866,
+      "pr_auc": 0.8484,
+      "matriz_confusion": {
+        "vn": 17239,
+        "fp": 494,
+        "fn": 2937,
+        "vp": 4874
+      },
+      "n": 25544
+    },
+    "3_grupos_mas_grandes": {
+      "web.app": 5527,
+      "workers.dev": 1317,
+      "glitch.me": 468
+    }
+  },
+  "metricas_bolivia": {
+    "exactitud": 0.8409,
+    "precision": 0.8235,
+    "recall": 0.7778,
+    "f1": 0.8,
+    "roc_auc": 0.8825,
+    "pr_auc": 0.9021,
+    "matriz_confusion": {
+      "vn": 23,
+      "fp": 3,
+      "fn": 4,
+      "vp": 14
+    },
+    "n": 44
+  },
+  "bolivia_aciertos_por_tipo": {
+    "lista_negra": {
+      "sum": 3,
+      "count": 3
+    },
+    "oficial": {
+      "sum": 23,
+      "count": 26
+    },
+    "subdominio_enganoso": {
+      "sum": 4,
+      "count": 4
+    },
+    "typosquatting": {
+      "sum": 1,
+      "count": 5
+    },
+    "variante": {
+      "sum": 6,
+      "count": 6
+    }
+  },
+  "experimento_control_url_completa": {
+    "validacion": {
+      "exactitud": 0.9893,
+      "precision": 0.9975,
+      "recall": 0.9674,
+      "f1": 0.9822,
+      "roc_auc": 0.9962,
+      "pr_auc": 0.9953,
+      "matriz_confusion": {
+        "vn": 22840,
+        "fp": 24,
+        "fn": 327,
+        "vp": 9706
+      },
+      "n": 32897
+    },
+    "bolivia": {
+      "exactitud": 0.7273,
+      "precision": 0.6154,
+      "recall": 0.8889,
+      "f1": 0.7273,
+      "roc_auc": 0.7799,
+      "pr_auc": 0.6503,
+      "matriz_confusion": {
+        "vn": 16,
+        "fp": 10,
+        "fn": 2,
+        "vp": 16
+      },
+      "n": 44
+    },
+    "bolivia_solo_legitimas_con_ruta": {
+      "exactitud": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": NaN,
+      "pr_auc": NaN,
+      "matriz_confusion": {
+        "vn": 0,
+        "fp": 10,
+        "fn": 0,
+        "vp": 0
+      },
+      "n": 10
+    },
+    "modelo_elegido_en_legitimas_con_ruta": {
+      "falsos_positivos": 2,
+      "n": 10
+    }
+  },
+  "latencia_ms_por_url": 23.2037,
+  "entorno": {
+    "python": "3.14.3",
+    "scikit_learn": "1.9.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6"
+  },
+  "segundos_totales": 625.063
+}

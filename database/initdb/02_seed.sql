@@ -40,7 +40,8 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
 -- Sitios legítimos que el typosquatting confundiría con una entidad local.
 -- ReglaTyposquatting nunca reporta un dominio de la lista blanca.
 INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
-    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)');
+    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)'),
+    ('ende.bo',  'blanca', NULL, 'manual', 'Sitio oficial de ENDE; typosquatting lo confundia con entel.bo (Entel)');
 
 -- ---------------------------------------------------------------------
 -- Reglas heurísticas
@@ -54,6 +55,7 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
     ('URL_SUBDOMINIOS',     'Cantidad anómala de subdominios',                               'url',        10.00),
     ('URL_LISTA_NEGRA',     'El dominio figura en la lista negra de PhishShield',            'url',        70.00),
     ('URL_RUTA_SENSIBLE',   'La ruta contiene palabras sensibles (login, cuenta, clave, pin...)', 'url',   10.00),
+    ('IA_MODELO_URL',       'El modelo de IA estima phishing por el dominio (aporte = probabilidad x peso)', 'url', 40.00),
     ('TXT_URGENCIA',        'Lenguaje de urgencia o amenaza de bloqueo de cuenta',           'contenido',  14.00),
     ('TXT_PIDE_CREDENCIAL', 'Solicita contraseña, PIN o código de verificación',             'contenido',  30.00),
     ('TXT_PREMIO',          'Promete premios, bonos o sorteos',                              'contenido',  12.00),
@@ -64,13 +66,18 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
 -- ---------------------------------------------------------------------
 -- Modelos de IA registrados
 -- ---------------------------------------------------------------------
--- ATENCIÓN: son filas de EJEMPLO. Las métricas (exactitud, precisión,
--- recall, F1) y las fechas de entrenamiento son ilustrativas: todavía no
--- existe ningún modelo entrenado real detrás de estos registros.
+-- ATENCIÓN: las filas 'phishshield-url' y 'phishshield-texto' son de EJEMPLO.
+-- Sus métricas y fechas son ilustrativas: no hay ningún modelo entrenado
+-- detrás de ellas.
+--
+-- 'phishshield-url-ia' 1.0.0 SÍ es real (ia/): sus métricas son las de la
+-- evaluación única en prueba (ia/reporte_metricas.md); las columnas *_val
+-- guardan métricas de prueba. Es el único modelo de URL activo.
 INSERT INTO modelos_ia (nombre, version, tipo, algoritmo, exactitud, precision_val, recall_val, f1_val, umbral_phishing, activo, entrenado_en) VALUES
-    ('phishshield-url',   '0.1.0', 'url',    'Random Forest',      88.40, 86.10, 84.70, 85.39, 70.00, FALSE, DATE '2026-10-05'),
-    ('phishshield-url',   '0.2.0', 'url',    'XGBoost + features', 93.20, 92.00, 90.80, 91.40, 70.00, TRUE,  DATE '2026-10-20'),
-    ('phishshield-texto', '0.1.0', 'texto',  'BERT multilingüe',   91.70, 90.30, 89.10, 89.70, 70.00, TRUE,  DATE '2026-10-22');
+    ('phishshield-url',    '0.1.0', 'url',   'Random Forest',      88.40, 86.10, 84.70, 85.39, 70.00, FALSE, DATE '2026-10-05'),
+    ('phishshield-url',    '0.2.0', 'url',   'XGBoost + features', 93.20, 92.00, 90.80, 91.40, 70.00, FALSE, DATE '2026-10-20'),
+    ('phishshield-texto',  '0.1.0', 'texto', 'BERT multilingüe',   91.70, 90.30, 89.10, 89.70, 70.00, TRUE,  DATE '2026-10-22'),
+    ('phishshield-url-ia', '1.0.0', 'url',   'Regresion Logistica + Platt (solo host)', 89.55, 96.10, 80.57, 87.66, 55.27, TRUE, DATE '2026-10-12');
 
 -- ---------------------------------------------------------------------
 -- Empresa y usuarios de prueba
