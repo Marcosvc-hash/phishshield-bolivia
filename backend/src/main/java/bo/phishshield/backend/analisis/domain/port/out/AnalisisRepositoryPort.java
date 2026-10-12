@@ -1,5 +1,6 @@
 package bo.phishshield.backend.analisis.domain.port.out;
 
+import bo.phishshield.backend.analisis.domain.model.Alerta;
 import bo.phishshield.backend.analisis.domain.model.Analisis;
 
 import java.util.List;
@@ -14,6 +15,12 @@ import java.util.UUID;
 public interface AnalisisRepositoryPort {
 
     Analisis guardar(Analisis analisis);
+
+    /**
+     * Guarda un analisis nuevo junto con su alerta, en la misma transaccion:
+     * si falla la alerta, tampoco queda el analisis.
+     */
+    Analisis guardarConAlerta(Analisis analisis, Alerta alerta);
 
     /** Busca el analisis mas reciente del mismo contenido, para no recalcular. */
     Optional<Analisis> buscarPorHash(String contenidoHash);

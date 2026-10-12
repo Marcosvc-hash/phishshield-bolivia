@@ -1,5 +1,6 @@
 package bo.phishshield.backend.analisis.infrastructure.persistence;
 
+import bo.phishshield.backend.analisis.domain.model.Alerta;
 import bo.phishshield.backend.analisis.domain.model.Analisis;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
 import bo.phishshield.backend.analisis.domain.model.OrigenAnalisis;
@@ -19,21 +20,26 @@ import java.util.UUID;
 
 /**
  * Adaptador de salida: traduce entre el dominio y las tablas
- * analisis / analisis_indicadores.
+ * analisis / analisis_indicadores / alertas.
  */
 @Component
 public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
 
+    private static final String ESTADO_ALERTA_INICIAL = "pendiente";
+
     private final AnalisisJpaRepository analisisRepository;
     private final AnalisisIndicadorJpaRepository indicadorRepository;
     private final ReglaDeteccionJpaRepository reglaRepository;
+    private final AlertaJpaRepository alertaRepository;
 
     public AnalisisPersistenceAdapter(AnalisisJpaRepository analisisRepository,
                                       AnalisisIndicadorJpaRepository indicadorRepository,
-                                      ReglaDeteccionJpaRepository reglaRepository) {
+                                      ReglaDeteccionJpaRepository reglaRepository,
+                                      AlertaJpaRepository alertaRepository) {
         this.analisisRepository = analisisRepository;
         this.indicadorRepository = indicadorRepository;
         this.reglaRepository = reglaRepository;
+        this.alertaRepository = alertaRepository;
     }
 
     /**
@@ -69,6 +75,26 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
                 guardada.getFechaAnalisis());
 
         return analisis;
+    }
+
+    /**
+     * Tres tablas en una transaccion. La llamada interna a guardar() no abre
+     * otra transaccion (es una llamada dentro del mismo objeto): todo queda
+     * bajo la de este metodo.
+     */
+    @Override
+    @Transactional
+    public Analisis guardarConAlerta(Analisis analisis, Alerta alerta) {
+        Analisis guardado = guardar(analisis);
+
+        AlertaEntity fila = new AlertaEntity();
+        fila.setIdAnalisis(guardado.getId());
+        fila.setSeveridad(alerta.severidad().aValorBd());
+        fila.setEstado(ESTADO_ALERTA_INICIAL);
+        fila.setCanal(alerta.canal().aValorBd());
+        alertaRepository.save(fila);
+
+        return guardado;
     }
 
     @Override

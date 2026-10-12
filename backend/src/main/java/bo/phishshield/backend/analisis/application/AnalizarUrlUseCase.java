@@ -1,5 +1,6 @@
 package bo.phishshield.backend.analisis.application;
 
+import bo.phishshield.backend.analisis.domain.model.Alerta;
 import bo.phishshield.backend.analisis.domain.model.Analisis;
 import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
@@ -91,8 +92,12 @@ public class AnalizarUrlUseCase {
         analisis.asignarContexto(comando.idUsuario(), comando.idEmpresa(), null);
         analisis.registrarTiempo((int) ((System.nanoTime() - inicio) / 1_000_000));
 
-        // 6. Persistir analisis + indicadores
-        return analisisRepository.guardar(analisis);
+        // 6. Persistir analisis + indicadores, y la alerta si no es seguro.
+        //    Solo pasa con analisis nuevos: lo que sale de la cache ya
+        //    tiene su alerta (alertas.id_analisis es UNIQUE).
+        return Alerta.para(analisis)
+                .map(alerta -> analisisRepository.guardarConAlerta(analisis, alerta))
+                .orElseGet(() -> analisisRepository.guardar(analisis));
     }
 
     /**

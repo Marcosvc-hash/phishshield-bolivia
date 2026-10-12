@@ -1,6 +1,9 @@
 package bo.phishshield.backend.analisis.application;
 
+import bo.phishshield.backend.analisis.domain.model.Alerta;
 import bo.phishshield.backend.analisis.domain.model.Analisis;
+import bo.phishshield.backend.analisis.domain.model.CanalAlerta;
+import bo.phishshield.backend.analisis.domain.model.Severidad;
 import bo.phishshield.backend.analisis.domain.model.DominioListado;
 import bo.phishshield.backend.analisis.domain.model.DominioOficial;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
@@ -47,6 +50,8 @@ class AnalizarUrlUseCaseTest {
 
     static class RepositorioEnMemoria implements AnalisisRepositoryPort {
         final List<Analisis> guardados = new ArrayList<>();
+        /** Alertas por id de analisis, como alertas.id_analisis UNIQUE. */
+        final Map<Long, Alerta> alertas = new HashMap<>();
 
         @Override
         public Analisis guardar(Analisis analisis) {
@@ -54,6 +59,15 @@ class AnalizarUrlUseCaseTest {
                     UUID.randomUUID(), OffsetDateTime.now(RELOJ));
             guardados.add(analisis);
             return analisis;
+        }
+
+        @Override
+        public Analisis guardarConAlerta(Analisis analisis, Alerta alerta) {
+            Analisis guardado = guardar(analisis);
+            if (alertas.putIfAbsent(guardado.getId(), alerta) != null) {
+                throw new IllegalStateException("Alerta duplicada para el analisis " + guardado.getId());
+            }
+            return guardado;
         }
 
         /** Igual que el adaptador real: el mas reciente con ese hash. */
@@ -235,6 +249,55 @@ class AnalizarUrlUseCaseTest {
 
         assertEquals(1, repositorio.guardados.size());
         assertSame(reciente, resultado);
+    }
+
+    // ---- Alertas ----
+
+    @Test
+    void un_phishing_crea_una_alerta_critica() {
+        Analisis resultado = analizar(URL_BNB_FALSO);
+
+        Alerta alerta = repositorio.alertas.get(resultado.getId());
+        assertNotNull(alerta, "Riesgo=" + resultado.getNivelRiesgo());
+        assertEquals(Severidad.CRITICA, alerta.severidad());
+        assertEquals(CanalAlerta.EXTENSION, alerta.canal());
+    }
+
+    /** Typosquatting + sin HTTPS + TLD .xyz, fuera de la lista negra: sospechoso. */
+    @Test
+    void un_sospechoso_crea_una_alerta_media() {
+        Analisis resultado = analizar("http://bnb-bo-seguro.xyz/login");
+
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado(),
+                "Riesgo=" + resultado.getNivelRiesgo() + " Indicadores: " + detalle(resultado));
+        Alerta alerta = repositorio.alertas.get(resultado.getId());
+        assertNotNull(alerta);
+        assertEquals(Severidad.MEDIA, alerta.severidad());
+    }
+
+    @Test
+    void un_sitio_seguro_no_crea_alerta() {
+        analizar("https://www.bnb.com.bo/");
+
+        assertEquals(1, repositorio.guardados.size());
+        assertTrue(repositorio.alertas.isEmpty());
+    }
+
+    @Test
+    void un_analisis_de_la_cache_no_duplica_la_alerta() {
+        Analisis primero = analizar(URL_BNB_FALSO);
+        Analisis segundo = analizar(URL_BNB_FALSO);
+
+        assertSame(primero, segundo);
+        assertEquals(1, repositorio.alertas.size());
+    }
+
+    @Test
+    void lo_que_llega_por_el_plugin_de_correo_se_avisa_por_email() {
+        Analisis resultado = casoDeUso().ejecutar(new ComandoAnalizarUrl(
+                URL_BNB_FALSO, OrigenAnalisis.PLUGIN_CORREO, 1L, 1L));
+
+        assertEquals(CanalAlerta.EMAIL, repositorio.alertas.get(resultado.getId()).canal());
     }
 
     @Test
