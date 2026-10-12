@@ -4,6 +4,7 @@ import bo.phishshield.backend.analisis.domain.model.Analisis;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,14 @@ public record AnalisisResponse(
         List<IndicadorResponse> indicadores
 ) {
 
+    /**
+     * Zona en la que se muestran las fechas. El dominio y la base trabajan
+     * con instantes; la conversion es un asunto de presentacion y vive aca.
+     * Sin ella, un analisis nuevo salia con -04:00 y uno leido de la base en
+     * UTC (Z): el mismo instante con dos formatos distintos.
+     */
+    public static final ZoneId ZONA = ZoneId.of("America/La_Paz");
+
     public static AnalisisResponse desde(Analisis analisis) {
         return new AnalisisResponse(
                 analisis.getUuidPublico(),
@@ -35,9 +44,13 @@ public record AnalisisResponse(
                 analisis.getNivelRiesgo(),
                 analisis.requiereAlerta(),
                 analisis.getTiempoMs(),
-                analisis.getFechaAnalisis(),
+                enZonaLocal(analisis.getFechaAnalisis()),
                 analisis.getIndicadores().stream()
                         .map(IndicadorResponse::desde)
                         .toList());
+    }
+
+    private static OffsetDateTime enZonaLocal(OffsetDateTime fecha) {
+        return fecha == null ? null : fecha.atZoneSameInstant(ZONA).toOffsetDateTime();
     }
 }
