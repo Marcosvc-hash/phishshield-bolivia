@@ -77,4 +77,10 @@ positivos y negativos en `feedback_analisis`.
   el otro gane por 2 puntos de F1.
 - **Más variación en las métricas:** validación cruzada agrupada por dominio en entrenamiento.
 - **Caché:** que no se cachee un análisis hecho con la IA caída, o que dure menos.
-- **Lista blanca:** revisar `ende.bo`, que typosquatting confunde con `entel.bo`.
+- **Lista blanca ampliada (pospuesta):** cargar en la lista blanca sitios bolivianos legítimos
+  ya verificados (universidades, ministerios, medios, empresas estatales), para que
+  typosquatting no repita el caso de `ende.bo` (resuelto en V6).
+  **Advertencia:** los 18 sitios de `ia/datos_evaluacion/bolivia_legitimos_fuera_lista_blanca.csv`
+  son el conjunto que mide los falsos positivos. Si entran a la lista blanca, no pasan por las
+  reglas ni por la IA y la medición deja de servir. Si se hace, hay que usar sitios distintos o
+  armar antes otro conjunto de medición que quede fuera de la lista blanca.

@@ -125,7 +125,9 @@ class AnalizarUrlUseCaseTest {
                     new DominioOficial("Banco Nacional de Bolivia", "bnb.com.bo"),
                     new DominioOficial("Banco Union", "bancounion.com.bo"),
                     new DominioOficial("Impuestos Nacionales", "impuestos.gob.bo"),
-                    new DominioOficial("Banco BISA", "bisa.com")
+                    new DominioOficial("Banco BISA", "bisa.com"),
+                    new DominioOficial("Banco Mercantil Santa Cruz", "bmsc.com.bo"),
+                    new DominioOficial("Entel", "entel.bo")
             );
         }
     }
@@ -363,6 +365,37 @@ class AnalizarUrlUseCaseTest {
         assertTrue(resultado.getIndicadores().stream()
                         .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
                 "Indicadores: " + detalle(resultado));
+    }
+
+    /**
+     * ende.bo (ENDE) esta a distancia 2 de entel.bo: sin la lista blanca daba
+     * sospechoso (45). La migracion V6 lo agrega a la lista blanca.
+     */
+    @Test
+    void ende_en_la_lista_blanca_queda_como_seguro() {
+        listaBlanca.dominios.add(new DominioListado("ende.bo", "Sitio oficial de ENDE"));
+
+        Analisis resultado = analizar("https://www.ende.bo/");
+
+        assertEquals(Resultado.SEGURO, resultado.getResultado(), "Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().isEmpty(), "Indicadores: " + detalle(resultado));
+    }
+
+    /**
+     * bmcs.com.bo tambien esta a distancia 2 de un oficial (bmsc.com.bo), pero es
+     * un ataque: la lista blanca corrige ende.bo sin aflojar la regla para todos.
+     */
+    @Test
+    void bmcs_sigue_siendo_sospechoso_por_typosquatting() {
+        listaBlanca.dominios.add(new DominioListado("ende.bo", "Sitio oficial de ENDE"));
+
+        Analisis resultado = analizar("https://www.bmcs.com.bo/");
+
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_TYPOSQUATTING")),
+                "Indicadores: " + detalle(resultado));
+        assertEquals(new BigDecimal("45.00"), resultado.getNivelRiesgo(), detalle(resultado));
+        assertEquals(Resultado.SOSPECHOSO, resultado.getResultado());
     }
 
     // ---- Alertas ----
