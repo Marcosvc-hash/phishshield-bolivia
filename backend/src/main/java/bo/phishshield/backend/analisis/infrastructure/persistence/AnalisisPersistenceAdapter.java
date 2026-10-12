@@ -111,14 +111,16 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
         return analisisRepository.findByUuidPublico(uuidPublico).map(this::aDominio);
     }
 
+    /**
+     * Tres consultas en total, sin importar el limite: los analisis, todos
+     * sus indicadores de una vez y el catalogo de reglas. Antes eran dos
+     * consultas extra por cada fila (N+1).
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Analisis> listarUltimos(int limite) {
-        return analisisRepository
-                .findAllByOrderByFechaAnalisisDesc(PageRequest.of(0, Math.max(1, limite)))
-                .stream()
-                .map(this::aDominio)
-                .toList();
+        return aDominio(analisisRepository
+                .findAllByOrderByFechaAnalisisDesc(PageRequest.of(0, Math.max(1, limite))));
     }
 
     // ---- Traduccion ----
@@ -146,6 +148,34 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
     }
 
     private Analisis aDominio(AnalisisEntity entidad) {
+        return aDominio(List.of(entidad)).get(0);
+    }
+
+    /** Traduce un lote de filas cargando indicadores y reglas una sola vez. */
+    private List<Analisis> aDominio(List<AnalisisEntity> entidades) {
+        if (entidades.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> ids = entidades.stream().map(AnalisisEntity::getIdAnalisis).toList();
+        Map<Long, String> codigosPorId = codigosDeReglas();
+        Map<Long, List<Indicador>> indicadoresPorAnalisis = new HashMap<>();
+
+        for (AnalisisIndicadorEntity fila : indicadorRepository.findByIdAnalisisIn(ids)) {
+            String codigo = codigosPorId.get(fila.getIdRegla());
+            if (codigo != null) {
+                indicadoresPorAnalisis
+                        .computeIfAbsent(fila.getIdAnalisis(), id -> new ArrayList<>())
+                        .add(new Indicador(codigo, fila.getValor(), fila.getAporte()));
+            }
+        }
+
+        return entidades.stream()
+                .map(e -> aDominio(e, indicadoresPorAnalisis.getOrDefault(e.getIdAnalisis(), List.of())))
+                .toList();
+    }
+
+    private Analisis aDominio(AnalisisEntity entidad, List<Indicador> indicadores) {
         return Analisis.desdePersistencia(
                 entidad.getIdAnalisis(),
                 entidad.getUuidPublico(),
@@ -160,20 +190,7 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
                 entidad.getNivelRiesgo(),
                 entidad.getTiempoMs(),
                 entidad.getFechaAnalisis(),
-                indicadoresDe(entidad.getIdAnalisis()));
-    }
-
-    private List<Indicador> indicadoresDe(Long idAnalisis) {
-        Map<Long, String> codigosPorId = codigosDeReglas();
-        List<Indicador> indicadores = new ArrayList<>();
-
-        for (AnalisisIndicadorEntity fila : indicadorRepository.findByIdAnalisis(idAnalisis)) {
-            String codigo = codigosPorId.get(fila.getIdRegla());
-            if (codigo != null) {
-                indicadores.add(new Indicador(codigo, fila.getValor(), fila.getAporte()));
-            }
-        }
-        return indicadores;
+                indicadores);
     }
 
     private Map<String, Long> idsDeReglas() {
