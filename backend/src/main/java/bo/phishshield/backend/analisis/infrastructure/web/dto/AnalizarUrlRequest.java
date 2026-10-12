@@ -1,6 +1,7 @@
 package bo.phishshield.backend.analisis.infrastructure.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -14,6 +15,8 @@ public record AnalizarUrlRequest(
         @Size(max = 2048, message = "La URL es demasiado larga")
         String url,
 
+        @Pattern(regexp = "extension|plugin_correo|web|api",
+                message = "El origen debe ser extension, plugin_correo, web o api")
         String origen,
 
         Long idUsuario,

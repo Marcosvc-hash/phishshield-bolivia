@@ -1,3 +1,9 @@
+### Puntajes de referencia con los pesos de 02_seed.sql + migraciones V2 y V3:
+### IP literal 18, sin HTTPS 8, typosquatting 45, TLD sospechoso 12,
+### subdominios 10, lista negra 70. El total tiene tope de 100.
+### Umbrales: sospechoso >= 40, phishing >= 70. Sospechoso y phishing crean una alerta.
+### Una misma URL se reutiliza durante 24 horas (mismo id en la respuesta).
+
 ### Sitio legitimo: deberia dar seguro
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
@@ -9,7 +15,7 @@ Content-Type: application/json
   "idEmpresa": 1
 }
 
-### Phishing que imita al BNB
+### Phishing que imita al BNB: phishing, 100 (lista negra 70 + typosquatting 45 + sin HTTPS 8 = 123)
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -20,7 +26,8 @@ Content-Type: application/json
   "idEmpresa": 1
 }
 
-### Dominio con TLD sospechoso
+### TLD sospechoso + marca Tigo: sospechoso (12 + 45 = 57 puntos).
+### No esta en la lista negra (esta en la gris, que el motor no consulta).
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -29,7 +36,8 @@ Content-Type: application/json
   "origen": "web"
 }
 
-### URL con IP literal y sin HTTPS
+### URL con IP literal y sin HTTPS: seguro (18 + 8 = 26 puntos)
+### Ojo: si su base tiene URL_IP_LITERAL en 30 (cambio manual), da 38: sigue seguro.
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -38,7 +46,7 @@ Content-Type: application/json
   "origen": "api"
 }
 
-### Suplantacion de Impuestos Nacionales
+### Suplantacion de Impuestos Nacionales: phishing, 100 (lista negra 70 + typosquatting 45 + TLD .info 12)
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -63,7 +71,7 @@ Content-Type: application/json
   "url": ""
 }
 
-### Origen invalido: deberia dar 400
+### Origen invalido: deberia dar 400 con el mensaje de validacion
 POST http://localhost:8080/api/analisis
 Content-Type: application/json
 
@@ -72,8 +80,30 @@ Content-Type: application/json
   "origen": "telepatia"
 }
 
+### Usuario inexistente: deberia dar 409 (viola la clave foranea).
+### La URL lleva un UUID para que sea nueva y no salga de la cache.
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{
+  "url": "https://prueba-usuario-inexistente.com/{{$uuid}}",
+  "idUsuario": 99999
+}
+
+### JSON mal formado: deberia dar 400
+POST http://localhost:8080/api/analisis
+Content-Type: application/json
+
+{ "url": "https://ejemplo.com",
+
 ### Listar los ultimos analisis
 GET http://localhost:8080/api/analisis
 
 ### Listar solo 5
 GET http://localhost:8080/api/analisis?limite=5
+
+### UUID con formato invalido: deberia dar 400
+GET http://localhost:8080/api/analisis/abc
+
+### Ruta inexistente: deberia dar 404
+GET http://localhost:8080/api/no-existe

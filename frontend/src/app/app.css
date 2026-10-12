@@ -1,3 +1,5 @@
+/* Tablas y avisos compartidos viven en src/styles.css (ver la explicacion alla). */
+
 .contenedor {
   max-width: 1000px;
   margin: 0 auto;
@@ -30,29 +32,6 @@ h1 {
   margin-bottom: 0.75rem;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-}
-
-th {
-  text-align: left;
-  padding: 0.7rem 0.9rem;
-  background: #f1f5f9;
-  border-bottom: 2px solid #cbd5e1;
-  font-weight: 600;
-}
-
-td {
-  padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-tbody tr:hover {
-  background: #f8fafc;
-}
-
 .plan {
   background: #e0e7ff;
   color: #3730a3;
@@ -64,18 +43,6 @@ tbody tr:hover {
 .activa  { color: #15803d; font-weight: 600; }
 .inactiva { color: #b91c1c; font-weight: 600; }
 
-.aviso {
-  padding: 1rem;
-  background: #f1f5f9;
-  border-radius: 6px;
-  color: #475569;
-}
-
-.aviso.error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
 .titulo-seccion {
   font-size: 1.25rem;
   color: #1d4ed8;

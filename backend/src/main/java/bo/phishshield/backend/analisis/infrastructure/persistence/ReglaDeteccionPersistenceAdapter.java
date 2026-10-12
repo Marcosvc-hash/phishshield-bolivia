@@ -6,7 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class ReglaDeteccionPersistenceAdapter implements ReglaDeteccionRepositoryPort {
@@ -25,5 +27,15 @@ public class ReglaDeteccionPersistenceAdapter implements ReglaDeteccionRepositor
             pesos.put(regla.getCodigo(), regla.getPeso());
         }
         return pesos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<String> codigosRegistrados() {
+        Set<String> codigos = new HashSet<>();
+        for (ReglaDeteccionEntity regla : jpaRepository.findAll()) {
+            codigos.add(regla.getCodigo());
+        }
+        return codigos;
     }
 }

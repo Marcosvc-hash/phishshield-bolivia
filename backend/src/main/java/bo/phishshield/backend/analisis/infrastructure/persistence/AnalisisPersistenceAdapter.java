@@ -1,5 +1,6 @@
 package bo.phishshield.backend.analisis.infrastructure.persistence;
 
+import bo.phishshield.backend.analisis.domain.model.Alerta;
 import bo.phishshield.backend.analisis.domain.model.Analisis;
 import bo.phishshield.backend.analisis.domain.model.Indicador;
 import bo.phishshield.backend.analisis.domain.model.OrigenAnalisis;
@@ -19,21 +20,26 @@ import java.util.UUID;
 
 /**
  * Adaptador de salida: traduce entre el dominio y las tablas
- * analisis / analisis_indicadores.
+ * analisis / analisis_indicadores / alertas.
  */
 @Component
 public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
 
+    private static final String ESTADO_ALERTA_INICIAL = "pendiente";
+
     private final AnalisisJpaRepository analisisRepository;
     private final AnalisisIndicadorJpaRepository indicadorRepository;
     private final ReglaDeteccionJpaRepository reglaRepository;
+    private final AlertaJpaRepository alertaRepository;
 
     public AnalisisPersistenceAdapter(AnalisisJpaRepository analisisRepository,
                                       AnalisisIndicadorJpaRepository indicadorRepository,
-                                      ReglaDeteccionJpaRepository reglaRepository) {
+                                      ReglaDeteccionJpaRepository reglaRepository,
+                                      AlertaJpaRepository alertaRepository) {
         this.analisisRepository = analisisRepository;
         this.indicadorRepository = indicadorRepository;
         this.reglaRepository = reglaRepository;
+        this.alertaRepository = alertaRepository;
     }
 
     /**
@@ -71,10 +77,32 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
         return analisis;
     }
 
+    /**
+     * Tres tablas en una transaccion. La llamada interna a guardar() no abre
+     * otra transaccion (es una llamada dentro del mismo objeto): todo queda
+     * bajo la de este metodo.
+     */
+    @Override
+    @Transactional
+    public Analisis guardarConAlerta(Analisis analisis, Alerta alerta) {
+        Analisis guardado = guardar(analisis);
+
+        AlertaEntity fila = new AlertaEntity();
+        fila.setIdAnalisis(guardado.getId());
+        fila.setSeveridad(alerta.severidad().aValorBd());
+        fila.setEstado(ESTADO_ALERTA_INICIAL);
+        fila.setCanal(alerta.canal().aValorBd());
+        alertaRepository.save(fila);
+
+        return guardado;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Optional<Analisis> buscarPorHash(String contenidoHash) {
-        return analisisRepository.findByContenidoHash(contenidoHash).map(this::aDominio);
+        return analisisRepository
+                .findFirstByContenidoHashOrderByFechaAnalisisDesc(contenidoHash)
+                .map(this::aDominio);
     }
 
     @Override
@@ -83,14 +111,16 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
         return analisisRepository.findByUuidPublico(uuidPublico).map(this::aDominio);
     }
 
+    /**
+     * Tres consultas en total, sin importar el limite: los analisis, todos
+     * sus indicadores de una vez y el catalogo de reglas. Antes eran dos
+     * consultas extra por cada fila (N+1).
+     */
     @Override
     @Transactional(readOnly = true)
     public List<Analisis> listarUltimos(int limite) {
-        return analisisRepository
-                .findAllByOrderByFechaAnalisisDesc(PageRequest.of(0, Math.max(1, limite)))
-                .stream()
-                .map(this::aDominio)
-                .toList();
+        return aDominio(analisisRepository
+                .findAllByOrderByFechaAnalisisDesc(PageRequest.of(0, Math.max(1, limite))));
     }
 
     // ---- Traduccion ----
@@ -118,6 +148,34 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
     }
 
     private Analisis aDominio(AnalisisEntity entidad) {
+        return aDominio(List.of(entidad)).get(0);
+    }
+
+    /** Traduce un lote de filas cargando indicadores y reglas una sola vez. */
+    private List<Analisis> aDominio(List<AnalisisEntity> entidades) {
+        if (entidades.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> ids = entidades.stream().map(AnalisisEntity::getIdAnalisis).toList();
+        Map<Long, String> codigosPorId = codigosDeReglas();
+        Map<Long, List<Indicador>> indicadoresPorAnalisis = new HashMap<>();
+
+        for (AnalisisIndicadorEntity fila : indicadorRepository.findByIdAnalisisIn(ids)) {
+            String codigo = codigosPorId.get(fila.getIdRegla());
+            if (codigo != null) {
+                indicadoresPorAnalisis
+                        .computeIfAbsent(fila.getIdAnalisis(), id -> new ArrayList<>())
+                        .add(new Indicador(codigo, fila.getValor(), fila.getAporte()));
+            }
+        }
+
+        return entidades.stream()
+                .map(e -> aDominio(e, indicadoresPorAnalisis.getOrDefault(e.getIdAnalisis(), List.of())))
+                .toList();
+    }
+
+    private Analisis aDominio(AnalisisEntity entidad, List<Indicador> indicadores) {
         return Analisis.desdePersistencia(
                 entidad.getIdAnalisis(),
                 entidad.getUuidPublico(),
@@ -132,20 +190,7 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
                 entidad.getNivelRiesgo(),
                 entidad.getTiempoMs(),
                 entidad.getFechaAnalisis(),
-                indicadoresDe(entidad.getIdAnalisis()));
-    }
-
-    private List<Indicador> indicadoresDe(Long idAnalisis) {
-        Map<Long, String> codigosPorId = codigosDeReglas();
-        List<Indicador> indicadores = new ArrayList<>();
-
-        for (AnalisisIndicadorEntity fila : indicadorRepository.findByIdAnalisis(idAnalisis)) {
-            String codigo = codigosPorId.get(fila.getIdRegla());
-            if (codigo != null) {
-                indicadores.add(new Indicador(codigo, fila.getValor(), fila.getAporte()));
-            }
-        }
-        return indicadores;
+                indicadores);
     }
 
     private Map<String, Long> idsDeReglas() {

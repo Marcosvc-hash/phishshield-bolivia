@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -32,17 +34,19 @@ public class UsuarioController {
                 .toList();
     }
 
+    /** El "id" publico es el uuid_publico, igual que el que devuelve UsuarioResponse. */
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> obtener(@PathVariable Long id) {
-        return usuarioRepository.buscarPorId(id)
+    public ResponseEntity<UsuarioResponse> obtener(@PathVariable UUID id) {
+        return usuarioRepository.buscarPorUuid(id)
                 .map(UsuarioResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /** La base guarda los emails en minusculas (chk en usuarios), asi que se normaliza. */
     @GetMapping("/buscar")
     public ResponseEntity<UsuarioResponse> buscarPorEmail(@RequestParam String email) {
-        return usuarioRepository.buscarPorEmail(email)
+        return usuarioRepository.buscarPorEmail(email.trim().toLowerCase(Locale.ROOT))
                 .map(UsuarioResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

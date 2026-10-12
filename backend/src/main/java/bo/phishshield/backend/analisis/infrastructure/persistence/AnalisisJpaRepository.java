@@ -9,7 +9,8 @@ import java.util.UUID;
 
 public interface AnalisisJpaRepository extends JpaRepository<AnalisisEntity, Long> {
 
-    Optional<AnalisisEntity> findByContenidoHash(String contenidoHash);
+    /** Puede haber varias filas con el mismo hash (una por recalculo): se toma la mas reciente. */
+    Optional<AnalisisEntity> findFirstByContenidoHashOrderByFechaAnalisisDesc(String contenidoHash);
 
     Optional<AnalisisEntity> findByUuidPublico(UUID uuidPublico);
 

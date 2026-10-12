@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +11,10 @@ import { Analisis } from '../analisis.model';
   templateUrl: './analizador.html',
   styleUrl: './analizador.css'
 })
-export class Analizador {
+export class Analizador implements OnInit {
+
+  /** Mismo criterio que el backend: solo http o https, sin espacios. */
+  private static readonly FORMATO_URL = /^https?:\/\/\S+$/i;
 
   private servicio = inject(AnalisisService);
 
@@ -21,11 +24,21 @@ export class Analizador {
   error = signal<string | null>(null);
   historial = signal<Analisis[]>([]);
 
+  ngOnInit(): void {
+    this.cargarHistorial();
+  }
+
   analizar(): void {
     const url = this.url.trim();
 
     if (url.length === 0) {
       this.error.set('Escriba una URL para analizar.');
+      return;
+    }
+
+    if (!Analizador.FORMATO_URL.test(url)) {
+      this.error.set('La URL debe empezar con http:// o https://, por ejemplo https://ejemplo.com');
+      this.resultado.set(null);
       return;
     }
 

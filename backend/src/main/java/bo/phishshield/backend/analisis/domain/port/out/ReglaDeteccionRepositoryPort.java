@@ -2,6 +2,7 @@ package bo.phishshield.backend.analisis.domain.port.out;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Puerto de salida: pesos de las reglas activas.
@@ -15,4 +16,7 @@ public interface ReglaDeteccionRepositoryPort {
      * @param categoria url | contenido | remitente | adjunto | visual
      */
     Map<String, BigDecimal> pesosActivosPorCategoria(String categoria);
+
+    /** Codigos de todas las reglas registradas, activas o no. */
+    Set<String> codigosRegistrados();
 }

@@ -3,6 +3,7 @@ package bo.phishshield.backend.analisis.infrastructure.config;
 import bo.phishshield.backend.analisis.application.AnalizarUrlUseCase;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ReglaDeteccionRepositoryPort;
 import bo.phishshield.backend.analisis.domain.service.ReglaIpLiteral;
 import bo.phishshield.backend.analisis.domain.service.ReglaSinHttps;
@@ -12,6 +13,7 @@ import bo.phishshield.backend.analisis.domain.service.ReglaUrl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
 import java.util.List;
 
 /**
@@ -23,8 +25,8 @@ import java.util.List;
 public class AnalisisConfig {
 
     /**
-     * Reglas sin estado. ReglaTyposquatting no esta aca porque necesita
-     * la lista de dominios oficiales, que se lee en cada ejecucion.
+     * Reglas sin estado. ReglaTyposquatting y ReglaListaNegra no estan aca
+     * porque necesitan datos de la base que se leen en cada ejecucion.
      */
     @Bean
     public List<ReglaUrl> reglasUrlBase() {
@@ -41,12 +43,15 @@ public class AnalisisConfig {
             List<ReglaUrl> reglasUrlBase,
             AnalisisRepositoryPort analisisRepository,
             ReglaDeteccionRepositoryPort reglaRepository,
-            DominioOficialRepositoryPort dominioRepository) {
+            DominioOficialRepositoryPort dominioRepository,
+            ListaNegraRepositoryPort listaNegraRepository) {
 
         return new AnalizarUrlUseCase(
                 reglasUrlBase,
                 analisisRepository,
                 reglaRepository,
-                dominioRepository);
+                dominioRepository,
+                listaNegraRepository,
+                Clock.systemDefaultZone());
     }
 }

@@ -1,0 +1,10 @@
+package bo.phishshield.backend.analisis.infrastructure.persistence;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface DominioListaJpaRepository extends JpaRepository<DominioListaEntity, Long> {
+
+    List<DominioListaEntity> findByListaAndActivoTrue(String lista);
+}
