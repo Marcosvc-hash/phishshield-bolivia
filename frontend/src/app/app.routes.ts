@@ -4,8 +4,6 @@ import { Inicio } from './paginas/inicio/inicio';
 import { Login } from './paginas/login/login';
 import { Registro } from './paginas/registro/registro';
 import { AdminLayout } from './layout/admin-layout/admin-layout';
-import { Panel } from './paginas/admin/panel/panel';
-import { Empresas } from './paginas/admin/empresas/empresas';
 
 export const routes: Routes = [
   { path: '', component: Inicio },
@@ -16,10 +14,20 @@ export const routes: Routes = [
     path: 'admin',
     component: AdminLayout,
     canActivate: [authGuard],
+    // Carga diferida: el codigo de estas paginas (y chart.js) solo se
+    // descarga cuando alguien entra; quien solo usa el analizador no lo baja
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'panel' },
-      { path: 'panel', component: Panel, canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')] },
-      { path: 'empresas', component: Empresas, canActivate: [rolGuard('ADMIN')] },
+      {
+        path: 'panel',
+        canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
+        loadComponent: () => import('./paginas/admin/panel/panel').then((m) => m.Panel)
+      },
+      {
+        path: 'empresas',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/empresas/empresas').then((m) => m.Empresas)
+      },
     ]
   },
   { path: '**', redirectTo: '' }
