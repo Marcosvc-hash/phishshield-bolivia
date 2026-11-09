@@ -24,6 +24,11 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/admin/panel/panel').then((m) => m.Panel)
       },
       {
+        path: 'usuarios',
+        canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
+        loadComponent: () => import('./paginas/admin/usuarios/usuarios').then((m) => m.Usuarios)
+      },
+      {
         path: 'empresas',
         canActivate: [rolGuard('ADMIN')],
         loadComponent: () => import('./paginas/admin/empresas/empresas').then((m) => m.Empresas)

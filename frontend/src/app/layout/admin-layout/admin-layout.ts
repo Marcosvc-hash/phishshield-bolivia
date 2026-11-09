@@ -25,7 +25,7 @@ export class AdminLayout {
 
   private static readonly MENU: OpcionMenu[] = [
     { etiqueta: 'Panel', ruta: '/admin/panel', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
-    { etiqueta: 'Usuarios', ruta: null, roles: ['ADMIN'] },
+    { etiqueta: 'Usuarios', ruta: '/admin/usuarios', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Empresas', ruta: '/admin/empresas', roles: ['ADMIN'] },
     { etiqueta: 'Historial de analisis', ruta: null, roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Alertas', ruta: null, roles: ['ADMIN', 'ADMIN_EMPRESA'] },

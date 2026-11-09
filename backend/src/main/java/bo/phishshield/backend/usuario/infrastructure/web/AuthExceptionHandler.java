@@ -5,6 +5,7 @@ import bo.phishshield.backend.usuario.domain.model.CredencialesInvalidasExceptio
 import bo.phishshield.backend.usuario.domain.model.CuentaNoHabilitadaException;
 import bo.phishshield.backend.usuario.domain.model.EmailYaRegistradoException;
 import bo.phishshield.backend.usuario.domain.model.SesionInvalidaException;
+import bo.phishshield.backend.usuario.domain.model.UsuarioNoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -29,6 +30,11 @@ public class AuthExceptionHandler {
     @ExceptionHandler(CuentaNoHabilitadaException.class)
     public ResponseEntity<ErrorResponse> cuentaNoHabilitada(RuntimeException ex, HttpServletRequest peticion) {
         return respuesta(HttpStatus.FORBIDDEN, ex, peticion);
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    public ResponseEntity<ErrorResponse> usuarioNoEncontrado(RuntimeException ex, HttpServletRequest peticion) {
+        return respuesta(HttpStatus.NOT_FOUND, ex, peticion);
     }
 
     @ExceptionHandler(EmailYaRegistradoException.class)

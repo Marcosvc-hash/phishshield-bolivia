@@ -1,8 +1,10 @@
 package bo.phishshield.backend.usuario.infrastructure.config;
 
 import bo.phishshield.backend.shared.infrastructure.security.JwtPropiedades;
+import bo.phishshield.backend.usuario.application.CambiarEstadoUsuarioUseCase;
 import bo.phishshield.backend.usuario.application.CerrarSesionUseCase;
 import bo.phishshield.backend.usuario.application.IniciarSesionUseCase;
+import bo.phishshield.backend.usuario.application.ListarUsuariosUseCase;
 import bo.phishshield.backend.usuario.application.RefrescarSesionUseCase;
 import bo.phishshield.backend.usuario.application.RegistrarUsuarioUseCase;
 import bo.phishshield.backend.usuario.domain.port.out.PasswordHasherPort;
@@ -51,5 +53,15 @@ public class UsuarioConfig {
     public CerrarSesionUseCase cerrarSesionUseCase(SesionRepositoryPort sesionRepository,
                                                    RegistroAccesoPort registroAcceso) {
         return new CerrarSesionUseCase(sesionRepository, registroAcceso);
+    }
+
+    @Bean
+    public ListarUsuariosUseCase listarUsuariosUseCase(UsuarioRepositoryPort usuarioRepository) {
+        return new ListarUsuariosUseCase(usuarioRepository);
+    }
+
+    @Bean
+    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepositoryPort usuarioRepository) {
+        return new CambiarEstadoUsuarioUseCase(usuarioRepository);
     }
 }
