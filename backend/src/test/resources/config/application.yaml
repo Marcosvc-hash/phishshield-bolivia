@@ -1,0 +1,6 @@
+# Solo para las pruebas. Se suma al application.yaml principal (Spring Boot
+# carga classpath:/config/ despues de classpath:/ y estos valores ganan).
+# El secreto es falso a proposito: el real va en la variable JWT_SECRET.
+phishshield:
+  jwt:
+    secreto: secreto-falso-solo-para-pruebas-0123456789

@@ -1,9 +1,13 @@
 package bo.phishshield.backend.usuario.infrastructure.persistence;
 
+import bo.phishshield.backend.shared.domain.model.Rol;
+import bo.phishshield.backend.usuario.domain.model.EstadoUsuario;
 import bo.phishshield.backend.usuario.domain.model.Usuario;
 import bo.phishshield.backend.usuario.domain.port.out.UsuarioRepositoryPort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,6 +52,46 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
                 .toList();
     }
 
+    /**
+     * Al actualizar solo se copian los campos que el dominio puede cambiar
+     * (estado, intentos, ultimo login); los demas quedan como estan en la base.
+     */
+    @Override
+    @Transactional
+    public Usuario guardar(Usuario usuario) {
+        OffsetDateTime ahora = OffsetDateTime.now();
+        UsuarioEntity entidad;
+
+        if (usuario.getId() == null) {
+            entidad = new UsuarioEntity();
+            entidad.setUuidPublico(UUID.randomUUID());
+            entidad.setIdEmpresa(usuario.getIdEmpresa());
+            entidad.setNombres(usuario.getNombres());
+            entidad.setApellidos(usuario.getApellidos());
+            entidad.setEmail(usuario.getEmail());
+            entidad.setPasswordHash(usuario.getPasswordHash());
+            entidad.setRol(usuario.getRol().aValorBd());
+            entidad.setEmailVerificado(usuario.isEmailVerificado());
+            entidad.setCreadoEn(ahora);
+        } else {
+            entidad = jpaRepository.findById(usuario.getId())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "No existe el usuario con id " + usuario.getId()));
+        }
+
+        entidad.setEstado(usuario.getEstado().aValorBd());
+        entidad.setIntentosFallidos((short) usuario.getIntentosFallidos());
+        entidad.setUltimoLogin(usuario.getUltimoLogin());
+        entidad.setActualizadoEn(ahora);
+
+        return aDominio(jpaRepository.save(entidad));
+    }
+
+    @Override
+    public boolean existeEmail(String email) {
+        return jpaRepository.existsByEmail(email);
+    }
+
     private Usuario aDominio(UsuarioEntity entidad) {
         return new Usuario(
                 entidad.getIdUsuario(),
@@ -56,9 +100,11 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
                 entidad.getNombres(),
                 entidad.getApellidos(),
                 entidad.getEmail(),
-                entidad.getRol(),
-                entidad.getEstado(),
+                entidad.getPasswordHash(),
+                Rol.desdeValorBd(entidad.getRol()),
+                EstadoUsuario.desdeValorBd(entidad.getEstado()),
                 entidad.getEmailVerificado(),
+                entidad.getIntentosFallidos(),
                 entidad.getUltimoLogin(),
                 entidad.getCreadoEn()
         );

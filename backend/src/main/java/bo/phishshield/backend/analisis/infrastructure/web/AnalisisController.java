@@ -7,8 +7,10 @@ import bo.phishshield.backend.analisis.domain.model.OrigenAnalisis;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
 import bo.phishshield.backend.analisis.infrastructure.web.dto.AnalisisResponse;
 import bo.phishshield.backend.analisis.infrastructure.web.dto.AnalizarUrlRequest;
+import bo.phishshield.backend.shared.domain.model.UsuarioActual;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,9 +41,14 @@ public class AnalisisController {
     /**
      * Devuelve 200 y no 201 a proposito: analizar dos veces la misma URL
      * no crea un recurso nuevo, devuelve el analisis ya existente.
+     *
+     * Es publico. Si llega con token, el analisis queda a nombre del usuario
+     * y de su empresa; sin token, queda anonimo. El usuario nunca sale del
+     * cuerpo: si saliera, cualquiera podria atribuirle analisis a otro.
      */
     @PostMapping
-    public AnalisisResponse analizar(@Valid @RequestBody AnalizarUrlRequest peticion) {
+    public AnalisisResponse analizar(@Valid @RequestBody AnalizarUrlRequest peticion,
+                                     @AuthenticationPrincipal UsuarioActual quien) {
 
         OrigenAnalisis origen = peticion.origen() == null || peticion.origen().isBlank()
                 ? OrigenAnalisis.WEB
@@ -50,8 +57,8 @@ public class AnalisisController {
         Analisis resultado = analizarUrl.ejecutar(new ComandoAnalizarUrl(
                 peticion.url(),
                 origen,
-                peticion.idUsuario(),
-                peticion.idEmpresa()));
+                quien == null ? null : quien.idUsuario(),
+                quien == null ? null : quien.idEmpresa()));
 
         return AnalisisResponse.desde(resultado);
     }

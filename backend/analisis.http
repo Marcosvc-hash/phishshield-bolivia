@@ -4,6 +4,8 @@
 ### Typosquatting no se dispara para dominios de la lista blanca (por ejemplo visa.com).
 ### Umbrales: sospechoso >= 40, phishing >= 70. Sospechoso y phishing crean una alerta.
 ### Una misma URL se reutiliza durante 24 horas (mismo id en la respuesta).
+### idUsuario / idEmpresa del cuerpo ya se IGNORAN: el analisis queda a nombre
+### del usuario del token (Authorization: Bearer ...), o anonimo si no hay token.
 
 ### Sitio legitimo: deberia dar seguro
 POST http://localhost:8080/api/analisis

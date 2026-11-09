@@ -6,8 +6,10 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Entrada del endpoint POST /api/analisis.
- * Mientras no exista autenticacion, el usuario y la empresa
- * llegan en el cuerpo; en el Sprint 3 saldran del token JWT.
+ * El usuario y la empresa salen del token JWT, no del cuerpo.
+ *
+ * @param idUsuario obsoleto: se acepta para no romper clientes viejos, pero se ignora
+ * @param idEmpresa obsoleto: se acepta para no romper clientes viejos, pero se ignora
  */
 public record AnalizarUrlRequest(
 
@@ -19,8 +21,10 @@ public record AnalizarUrlRequest(
                 message = "El origen debe ser extension, plugin_correo, web o api")
         String origen,
 
+        @Deprecated
         Long idUsuario,
 
+        @Deprecated
         Long idEmpresa
 ) {
 }
