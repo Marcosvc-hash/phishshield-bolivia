@@ -1,0 +1,27 @@
+<main class="pantalla">
+  <form class="caja" (ngSubmit)="entrar()">
+    <h1>PhishShield Bolivia</h1>
+    <p class="subtitulo">Iniciar sesion</p>
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="username"
+           [(ngModel)]="email" [disabled]="enviando()" />
+
+    <label for="contrasena">Contrasena</label>
+    <input id="contrasena" name="contrasena" type="password" autocomplete="current-password"
+           [(ngModel)]="contrasena" [disabled]="enviando()" />
+
+    @if (error()) {
+      <p class="aviso error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="enviando()">
+      @if (enviando()) { Entrando... } @else { Entrar }
+    </button>
+
+    <p class="pie">
+      No tiene cuenta? <a routerLink="/registro">Registrese</a>
+      &middot; <a routerLink="/">Volver al analizador</a>
+    </p>
+  </form>
+</main>

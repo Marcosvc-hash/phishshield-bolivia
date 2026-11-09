@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AnalisisService } from '../analisis.service';
 import { Analisis } from '../analisis.model';
+import { AuthService } from '../core/auth/auth.service';
 
 @Component({
   selector: 'app-analizador',
@@ -17,6 +18,7 @@ export class Analizador implements OnInit {
   private static readonly FORMATO_URL = /^https?:\/\/\S+$/i;
 
   private servicio = inject(AnalisisService);
+  private auth = inject(AuthService);
 
   url = '';
   analizando = signal(false);
@@ -65,7 +67,15 @@ export class Analizador implements OnInit {
     this.error.set(null);
   }
 
+  /**
+   * El listado general muestra URL de todos los usuarios, por eso el backend
+   * solo se lo da al ADMIN. A los demas no se les pide (evita un 403 seguro).
+   */
   cargarHistorial(): void {
+    if (!this.auth.tieneRol('ADMIN')) {
+      this.historial.set([]);
+      return;
+    }
     this.servicio.listar(10).subscribe({
       next: (datos) => this.historial.set(datos),
       error: () => this.historial.set([])

@@ -1,14 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { App } from './app';
+import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
       // HttpClient de prueba: las peticiones no salen a la red
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter(routes)],
     })
       .compileComponents();
   });
@@ -19,10 +23,16 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('PhishShield Bolivia');
+  it('la ruta raiz muestra el titulo y el boton de iniciar sesion', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    const pagina = harness.routeNativeElement as HTMLElement;
+    expect(pagina.querySelector('h1')?.textContent).toContain('PhishShield Bolivia');
+    expect(pagina.textContent).toContain('Iniciar sesion');
+  });
+
+  it('sin sesion, /admin redirige al login', async () => {
+    const harness = await RouterTestingHarness.create('/admin');
+    const pagina = harness.routeNativeElement as HTMLElement;
+    expect(pagina.querySelector('.subtitulo')?.textContent).toContain('Iniciar sesion');
   });
 });

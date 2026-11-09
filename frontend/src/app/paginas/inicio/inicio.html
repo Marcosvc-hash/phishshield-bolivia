@@ -1,0 +1,25 @@
+<div class="contenedor">
+
+  <header>
+    <div>
+      <h1>PhishShield Bolivia</h1>
+      <p class="subtitulo">Deteccion de phishing para el contexto boliviano</p>
+    </div>
+
+    <nav class="sesion">
+      @if (auth.usuario(); as u) {
+        <span class="saludo">Hola, {{ u.nombreCompleto }}</span>
+        @if (auth.tieneRol('ADMIN', 'ADMIN_EMPRESA')) {
+          <a routerLink="/admin" class="boton">Administracion</a>
+        }
+        <button class="boton secundario" (click)="auth.logout()">Cerrar sesion</button>
+      } @else {
+        <a routerLink="/login" class="boton">Iniciar sesion</a>
+        <a routerLink="/registro" class="boton secundario">Crear cuenta</a>
+      }
+    </nav>
+  </header>
+
+  <app-analizador />
+
+</div>

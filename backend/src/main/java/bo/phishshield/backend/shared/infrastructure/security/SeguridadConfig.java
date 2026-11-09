@@ -66,10 +66,9 @@ public class SeguridadConfig {
                         .requestMatchers(HttpMethod.POST, "/api/analisis").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/analisis/*").permitAll()
 
-                        // TEMPORAL: el frontend actual los llama sin sesion
-                        .requestMatchers(HttpMethod.GET, "/api/analisis", "/api/empresas").permitAll()
-
-                        // Administracion
+                        // Administracion. El listado general de analisis muestra URL
+                        // de todos los usuarios: solo lo ve el ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/api/analisis").hasRole("ADMIN")
                         .requestMatchers("/api/usuarios/**", "/api/empresas/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "ADMIN_EMPRESA")
 

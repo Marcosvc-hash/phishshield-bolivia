@@ -1,0 +1,33 @@
+<div class="marco">
+
+  <aside class="lateral">
+    <div class="marca">
+      <strong>PhishShield</strong>
+      <span>Administracion</span>
+    </div>
+
+    <nav>
+      @for (opcion of opciones(); track opcion.etiqueta) {
+        @if (opcion.ruta) {
+          <a [routerLink]="opcion.ruta" routerLinkActive="activa">{{ opcion.etiqueta }}</a>
+        } @else {
+          <span class="pronto" title="Proximamente">{{ opcion.etiqueta }}</span>
+        }
+      }
+      <a routerLink="/" class="separado">Ir al analizador</a>
+    </nav>
+
+    @if (auth.usuario(); as u) {
+      <div class="cuenta">
+        <span class="nombre">{{ u.nombreCompleto }}</span>
+        <span class="rol">{{ nombreRol(u.rol) }}</span>
+        <button (click)="auth.logout()">Cerrar sesion</button>
+      </div>
+    }
+  </aside>
+
+  <main class="contenido">
+    <router-outlet />
+  </main>
+
+</div>

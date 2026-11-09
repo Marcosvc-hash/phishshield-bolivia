@@ -1,0 +1,57 @@
+.contenedor {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f2933;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #1d4ed8;
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #1d4ed8;
+}
+
+.subtitulo {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.sesion {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.saludo {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.boton {
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.88rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton.secundario {
+  background: #fff;
+  color: #1d4ed8;
+}
