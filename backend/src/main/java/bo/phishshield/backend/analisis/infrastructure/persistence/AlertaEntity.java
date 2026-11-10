@@ -9,8 +9,9 @@ import jakarta.persistence.Table;
 
 /**
  * Mapeo parcial de alertas: solo lo que escribe el motor.
- * fecha_notificacion la pone la base (DEFAULT NOW()); la asignacion,
- * las notas y el cierre quedan para el modulo de gestion de alertas.
+ * fecha_notificacion y uuid_publico (V9) los pone la base con su DEFAULT.
+ * La asignacion, las notas y el cierre los escribe la vertical alerta/
+ * con SQL directo (AlertaJdbcAdapter).
  */
 @Entity
 @Table(name = "alertas")

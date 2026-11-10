@@ -1,0 +1,109 @@
+<h1 class="titulo-admin">Alertas</h1>
+<p class="subtitulo-admin">
+  @if (auth.tieneRol('ADMIN')) { Alertas de toda la plataforma } @else { Alertas de los analisis de su empresa }
+</p>
+
+<form class="filtros" (ngSubmit)="filtrar()">
+  <label>
+    Estado
+    <select name="estado" [(ngModel)]="estado" (change)="filtrar()">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="en_revision">En revision</option>
+      <option value="revisada">Revisada</option>
+      <option value="descartada">Descartada</option>
+    </select>
+  </label>
+  <label>
+    Severidad
+    <select name="severidad" [(ngModel)]="severidad" (change)="filtrar()">
+      <option value="">Todas</option>
+      <option value="critica">Critica</option>
+      <option value="alta">Alta</option>
+      <option value="media">Media</option>
+      <option value="baja">Baja</option>
+    </select>
+  </label>
+</form>
+
+@if (error()) {
+  <p class="aviso error">{{ error() }}</p>
+}
+
+<div class="contenedor" [class.con-detalle]="seleccionada()">
+  <div class="tarjeta-admin">
+    @if (cargando() && !pagina()) {
+      <p class="aviso">Cargando alertas...</p>
+    } @else if (pagina(); as p) {
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Severidad</th>
+            <th>Estado</th>
+            <th>URL</th>
+            @if (auth.tieneRol('ADMIN')) { <th>Empresa</th> }
+            <th>Asignada a</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of p.contenido; track a.id) {
+            <tr class="clicable" [class.seleccionada]="seleccionada()?.id === a.id" (click)="elegir(a)">
+              <td class="fecha">{{ a.fechaNotificacion | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td><span class="chip" [class]="a.severidad">{{ a.severidad }}</span></td>
+              <td><span class="chip" [class]="a.estado">{{ nombreEstado(a.estado) }}</span></td>
+              <td class="celda-url" [title]="a.url">{{ a.url }}</td>
+              @if (auth.tieneRol('ADMIN')) { <td>{{ a.empresa ?? 'anonimo' }}</td> }
+              <td>{{ a.asignado ?? '-' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (p.contenido.length === 0) {
+        <p class="aviso">No hay alertas con esos filtros.</p>
+      }
+      <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas"
+                     [totalElementos]="p.totalElementos" (cambiar)="cargar($event)" />
+    }
+  </div>
+
+  @if (seleccionada(); as a) {
+    <aside class="detalle tarjeta-admin">
+      <div class="cabecera">
+        <h2>Alerta {{ a.severidad }}</h2>
+        <button class="btn" (click)="seleccionada.set(null)">Cerrar</button>
+      </div>
+      <p class="url">{{ a.url }}</p>
+      <dl>
+        <dt>Estado</dt><dd><span class="chip" [class]="a.estado">{{ nombreEstado(a.estado) }}</span></dd>
+        <dt>Riesgo</dt><dd>{{ a.nivelRiesgo | number: '1.0-2' }} puntos</dd>
+        <dt>Usuario</dt><dd>{{ a.usuario ?? 'anonimo' }}</dd>
+        <dt>Asignada a</dt><dd>{{ a.asignado ?? 'nadie' }}</dd>
+        <dt>Notificada</dt><dd>{{ a.fechaNotificacion | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        @if (a.fechaCierre) { <dt>Cerrada</dt><dd>{{ a.fechaCierre | date: 'dd/MM/yyyy HH:mm' }}</dd> }
+      </dl>
+
+      @if (esCerrada(a)) {
+        <h3>Notas</h3>
+        <p class="notas-cerradas">{{ a.notas ?? 'Sin notas.' }}</p>
+        <p class="aviso">Esta alerta esta cerrada y ya no se puede modificar.</p>
+      } @else {
+        <label class="notas">
+          Notas
+          <textarea name="notas" rows="4" maxlength="2000" [(ngModel)]="notas"
+                    placeholder="Que se reviso, a quien se aviso..."></textarea>
+        </label>
+        <div class="botones">
+          @for (accion of acciones(a); track accion.estado) {
+            <button class="btn primario" [class.peligro]="accion.peligro" [disabled]="guardando()"
+                    (click)="aplicar(a, accion.estado)">{{ accion.etiqueta }}</button>
+          }
+          <button class="btn" [disabled]="guardando()" (click)="guardarNotas(a)">Guardar notas</button>
+        </div>
+      }
+      @if (aviso()) {
+        <p class="aviso ok">{{ aviso() }}</p>
+      }
+    </aside>
+  }
+</div>

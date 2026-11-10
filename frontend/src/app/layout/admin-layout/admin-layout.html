@@ -9,7 +9,12 @@
     <nav>
       @for (opcion of opciones(); track opcion.etiqueta) {
         @if (opcion.ruta) {
-          <a [routerLink]="opcion.ruta" routerLinkActive="activa">{{ opcion.etiqueta }}</a>
+          <a [routerLink]="opcion.ruta" routerLinkActive="activa">
+            {{ opcion.etiqueta }}
+            @if (opcion.conPendientes && alertas.pendientes() > 0) {
+              <span class="insignia" [title]="alertas.pendientes() + ' alertas pendientes'">{{ alertas.pendientes() }}</span>
+            }
+          </a>
         } @else {
           <span class="pronto" title="Proximamente">{{ opcion.etiqueta }}</span>
         }
