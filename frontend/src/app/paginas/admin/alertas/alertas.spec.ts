@@ -4,6 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { Alertas } from './alertas';
 import { Alerta, AlertasService } from './alertas.service';
+import { ConfirmacionService } from '../../../core/ui/confirmacion.service';
+import { ToastService } from '../../../core/ui/toast.service';
 
 describe('Alertas', () => {
   const URL = 'http://localhost:8080/api/admin/alertas';
@@ -58,9 +60,9 @@ describe('Alertas', () => {
     peticion.flush(pagina([]));
   });
 
-  it('una pendiente solo ofrece "Tomar en revision" y manda el PATCH con las notas', async () => {
+  it('una pendiente solo ofrece "Tomar en revisión" y manda el PATCH con las notas', async () => {
     await abrirPrimera(alerta('pendiente'));
-    expect(botones().map((b) => b.textContent?.trim())).toEqual(['Tomar en revision', 'Guardar notas']);
+    expect(botones().map((b) => b.textContent?.trim())).toEqual(['Tomar en revisión', 'Guardar notas']);
 
     fixture.componentInstance.notas = 'La reviso yo';
     botones()[0].click();
@@ -84,15 +86,47 @@ describe('Alertas', () => {
     expect(fixture.nativeElement.querySelector('.notas-cerradas')?.textContent).toContain('Falso positivo');
   });
 
-  it('si el backend rechaza la transicion muestra su mensaje', async () => {
+  it('descartar pide confirmación y, si se cancela, no manda nada', async () => {
+    await abrirPrimera(alerta('en_revision'));
+    const confirmacion = TestBed.inject(ConfirmacionService);
+    botones()[1].click();   // Descartar (falso positivo)
+
+    expect(confirmacion.solicitud()?.confirmar).toBe('Descartar alerta');
+    confirmacion.responder(false);
+    http.expectNone(`${URL}/al1`);
+
+    botones()[1].click();
+    confirmacion.responder(true);
+    const patch = http.expectOne(`${URL}/al1`);
+    expect(patch.request.body).toEqual({ estado: 'descartada', notas: '' });
+    patch.flush(alerta('descartada'));
+    http.expectOne(`${URL}/pendientes`).flush({ cantidad: 0 });
+  });
+
+  it('si el backend rechaza la transición muestra su mensaje en un toast', async () => {
     await abrirPrimera(alerta('en_revision'));
     botones()[0].click();
 
     http.expectOne(`${URL}/al1`).flush(
-      { mensaje: 'Otra persona cambio esta alerta mientras la editaba.' },
+      { mensaje: 'Otra persona cambió esta alerta mientras la editaba.' },
       { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('.aviso.error')?.textContent).toContain('Otra persona');
+    const ultimo = TestBed.inject(ToastService).toasts().at(-1);
+    expect(ultimo?.tipo).toBe('error');
+    expect(ultimo?.mensaje).toContain('Otra persona');
+  });
+
+  it('los chips de severidad filtran al instante', () => {
+    http.expectOne((r) => r.url === URL).flush(pagina([]));
+    fixture.detectChanges();
+    const chip = ([...fixture.nativeElement.querySelectorAll('.chip-filtro')] as HTMLButtonElement[])
+      .find((b) => b.textContent?.includes('Crítica'))!;
+    chip.click();
+
+    const peticion = http.expectOne((r) => r.url === URL);
+    expect(peticion.request.params.get('severidad')).toBe('critica');
+    expect(peticion.request.params.get('estado')).toBe('pendiente');
+    peticion.flush(pagina([]));
   });
 });
