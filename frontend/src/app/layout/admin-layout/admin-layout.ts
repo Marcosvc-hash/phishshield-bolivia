@@ -27,7 +27,7 @@ export class AdminLayout {
     { etiqueta: 'Panel', ruta: '/admin/panel', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Usuarios', ruta: '/admin/usuarios', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Empresas', ruta: '/admin/empresas', roles: ['ADMIN'] },
-    { etiqueta: 'Historial de analisis', ruta: null, roles: ['ADMIN', 'ADMIN_EMPRESA'] },
+    { etiqueta: 'Historial de analisis', ruta: '/admin/historial', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Alertas', ruta: null, roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Listas de dominios', ruta: null, roles: ['ADMIN'] },
     { etiqueta: 'Registro de accesos', ruta: null, roles: ['ADMIN'] },

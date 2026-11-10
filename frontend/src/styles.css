@@ -43,3 +43,156 @@ tbody tr:hover {
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
+
+.aviso.ok {
+  background: #e8f6e8;
+  color: #166534;
+  border: 1px solid #bbe5bb;
+}
+
+/*
+ * Piezas comunes de las paginas de administracion (historial, alertas,
+ * dominios, auditoria, empresas, usuarios). Van aca para no repetirlas en
+ * cada componente: Angular limita el CSS de cada uno a 8 kB.
+ */
+
+.titulo-admin {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1e3a8a;
+}
+
+.subtitulo-admin {
+  margin: 0.2rem 0 1.25rem;
+  color: #52514e;
+  font-size: 0.9rem;
+}
+
+.tarjeta-admin {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem;
+  overflow-x: auto;
+}
+
+.tarjeta-admin table {
+  font-size: 0.88rem;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.filtros label,
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: #52514e;
+}
+
+.filtros input,
+.filtros select,
+.formulario input,
+.formulario select,
+.formulario textarea {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formulario .ancho {
+  grid-column: 1 / -1;
+}
+
+.formulario .acciones {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #1d4ed8;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn.primario {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.btn.peligro {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Etiquetas de estado: el texto dice el valor; el color solo lo acompana */
+.chip {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1f2933;
+  background: #f1f5f9;
+  border-left: 4px solid #94a3b8;
+  white-space: nowrap;
+}
+
+.chip.phishing, .chip.critica, .chip.negra   { background: #fbeaea; border-left-color: #d03b3b; }
+.chip.sospechoso, .chip.alta, .chip.pendiente { background: #fef3c7; border-left-color: #d97706; }
+.chip.seguro, .chip.revisada, .chip.blanca   { background: #e8f6e8; border-left-color: #0ca30c; }
+.chip.media, .chip.en_revision               { background: #e0e7ff; border-left-color: #2563eb; }
+
+tr.clicable {
+  cursor: pointer;
+}
+
+tr.seleccionada td {
+  background: #eff6ff;
+}
+
+tr.apagado td {
+  color: #6b7280;
+}
+
+.celda-url {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fecha {
+  white-space: nowrap;
+}
