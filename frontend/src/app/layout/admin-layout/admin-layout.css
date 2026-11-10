@@ -1,126 +1,88 @@
-.marco {
-  display: flex;
-  min-height: 100vh;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #1f2933;
-}
+.marco { display: flex; min-height: 100vh; }
 
+/* Menu lateral */
 .lateral {
-  width: 240px;
-  flex-shrink: 0;
-  background: #1e3a8a;
-  color: #e0e7ff;
-  display: flex;
-  flex-direction: column;
-  padding: 1.25rem 0;
+  position: sticky; top: 0; height: 100vh; width: 256px; flex-shrink: 0; z-index: 40;
+  display: flex; flex-direction: column; background: var(--marino); color: #c7d2e7;
 }
-
-.marca {
-  display: flex;
-  flex-direction: column;
-  padding: 0 1.25rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+.lateral-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; }
+.enlace-marca { text-decoration: none; border-radius: var(--radio-sm); }
+.lateral :focus-visible { outline-color: #93c5fd; }
+nav { flex: 1; overflow-y: auto; padding: 4px 12px 16px; }
+.grupo {
+  margin: 20px 12px 6px; font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #8193b5;
 }
-
-.marca strong {
-  font-size: 1.2rem;
-  color: #fff;
+nav a, .ir-analizador {
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 12px; margin-bottom: 2px;
+  border-radius: 8px; color: #c7d2e7; font-size: var(--t-sm); font-weight: 500; text-decoration: none;
+  transition: background var(--transicion), color var(--transicion);
 }
-
-.marca span {
-  font-size: 0.8rem;
-  color: #a5b4fc;
+nav a:hover, .ir-analizador:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+nav a.activa { background: rgba(96, 165, 250, 0.16); color: #fff; font-weight: 600; }
+nav a.activa::before {
+  content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0; background: #60a5fa;
 }
-
-nav {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem 0;
-  flex: 1;
+nav a.activa app-icono { color: #93c5fd; }
+.etiqueta { flex: 1; }
+.insignia {
+  min-width: 22px; padding: 1px 7px; border-radius: var(--radio-full); background: var(--alerta-solido);
+  color: #1f1300; font-size: var(--t-xs); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums;
 }
+.ir-analizador { margin: 0 12px 16px; border: 1px solid rgba(255, 255, 255, 0.12); }
+.cerrar-menu { display: none; color: #c7d2e7; }
+.fondo-menu { display: none; }
 
-nav a,
-nav .pronto {
-  padding: 0.6rem 1.25rem;
-  color: #e0e7ff;
-  text-decoration: none;
-  font-size: 0.92rem;
-  border-left: 3px solid transparent;
+/* Barra superior */
+.principal { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.barra {
+  position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px;
+  height: 64px; padding: 0 32px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--borde);
 }
-
-nav a:hover {
-  background: rgba(255, 255, 255, 0.08);
+.abrir-menu { display: none; }
+.titulo { flex: 1; min-width: 0; font-size: var(--t-lg); font-weight: 700; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usuario { position: relative; }
+.boton-usuario {
+  display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 4px; border: 1px solid transparent;
+  border-radius: var(--radio); background: transparent; cursor: pointer; text-align: left;
 }
-
-nav a.activa {
-  background: rgba(255, 255, 255, 0.12);
-  border-left-color: #93c5fd;
-  color: #fff;
-  font-weight: 600;
+.boton-usuario:hover, .boton-usuario[aria-expanded="true"] { background: var(--superficie-2); border-color: var(--borde); }
+.quien { display: flex; flex-direction: column; line-height: 1.25; }
+.quien .nombre { font-size: var(--t-sm); font-weight: 600; }
+.quien .rol { font-size: var(--t-xs); color: var(--texto-3); }
+.flecha { color: var(--texto-3); }
+.desplegable {
+  position: absolute; right: 0; top: calc(100% + 6px); width: 260px; padding: 6px;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra-3);
 }
-
-/* Numero de alertas pendientes junto a "Alertas" */
-nav .insignia {
-  display: inline-block;
-  min-width: 1.4rem;
-  margin-left: 0.4rem;
-  padding: 0.05rem 0.45rem;
-  border-radius: 999px;
-  background: #fbbf24;
-  color: #1f2933;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-align: center;
+.cuenta { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 10px 12px; border-bottom: 1px solid var(--borde); margin-bottom: 6px; }
+.cuenta .nombre { font-weight: 600; }
+.cuenta .email { font-size: var(--t-sm); color: var(--texto-3); margin-bottom: 6px; overflow-wrap: anywhere; }
+.opcion {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: none; border-radius: var(--radio-sm);
+  background: transparent; color: var(--texto); font-size: var(--t-sm); text-decoration: none; cursor: pointer;
 }
+.opcion:hover { background: var(--superficie-2); }
+.opcion.salir { color: var(--peligro); }
 
-nav .pronto {
-  color: #7c8fd1;
-  cursor: default;
+.contenido { flex: 1; padding: 28px 32px 48px; width: 100%; max-width: 1440px; }
+.contenido:focus { outline: none; }
+
+/* Celular y tableta: el menu lateral se desliza desde la izquierda */
+@media (max-width: 1023px) {
+  .lateral {
+    position: fixed; left: 0; top: 0; bottom: 0; height: auto; transform: translateX(-100%);
+    visibility: hidden; transition: transform 200ms ease, visibility 0s linear 200ms;
+  }
+  .menu-abierto .lateral { transform: none; visibility: visible; transition: transform 200ms ease; box-shadow: var(--sombra-3); }
+  .menu-abierto .fondo-menu { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(15, 23, 42, 0.5); }
+  .cerrar-menu, .abrir-menu { display: inline-flex; }
+  .barra { padding: 0 12px 0 8px; }
+  .contenido { padding: 20px 16px 40px; }
 }
-
-nav .pronto::after {
-  content: " (pronto)";
-  font-size: 0.75rem;
-}
-
-nav .separado {
-  margin-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 1rem;
-}
-
-.cuenta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 1rem 1.25rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.cuenta .nombre {
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.cuenta .rol {
-  font-size: 0.78rem;
-  color: #a5b4fc;
-}
-
-.cuenta button {
-  margin-top: 0.6rem;
-  padding: 0.45rem;
-  border: 1px solid #93c5fd;
-  border-radius: 6px;
-  background: transparent;
-  color: #e0e7ff;
-  cursor: pointer;
-}
-
-.contenido {
-  flex: 1;
-  background: #f8fafc;
-  padding: 2rem;
-  overflow-x: auto;
+@media (max-width: 640px) {
+  .quien, .flecha { display: none; }
+  .titulo { font-size: var(--t-md); }
 }

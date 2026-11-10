@@ -34,7 +34,7 @@ describe('AdminLayout', () => {
     localStorage.clear();
   });
 
-  it('muestra el numero de alertas pendientes junto a "Alertas"', async () => {
+  it('muestra el número de alertas pendientes junto a "Alertas"', async () => {
     await montarComo('ADMIN_EMPRESA');
     http.expectOne(PENDIENTES).flush({ cantidad: 4 });
     await fixture.whenStable();
@@ -42,7 +42,7 @@ describe('AdminLayout', () => {
     expect(opcion('Alertas')?.querySelector('.insignia')?.textContent?.trim()).toBe('4');
   });
 
-  it('sin pendientes no muestra el numero', async () => {
+  it('sin pendientes no muestra el número', async () => {
     await montarComo('ADMIN');
     http.expectOne(PENDIENTES).flush({ cantidad: 0 });
     await fixture.whenStable();
@@ -57,6 +57,44 @@ describe('AdminLayout', () => {
 
     expect(opcion('Registro de accesos')).toBeUndefined();
     expect(opcion('Empresas')).toBeUndefined();
-    expect(opcion('Historial de analisis')).toBeDefined();
+    expect(opcion('Historial de análisis')).toBeDefined();
+    // El grupo "Plataforma" queda vacío y no se muestra
+    const grupos = [...fixture.nativeElement.querySelectorAll('.grupo')].map((g: HTMLElement) => g.textContent?.trim());
+    expect(grupos).toEqual(['Monitoreo', 'Gestión']);
+  });
+
+  it('el menú del usuario muestra nombre y rol y se cierra con Escape', async () => {
+    await montarComo('ADMIN');
+    http.expectOne(PENDIENTES).flush({ cantidad: 0 });
+    await fixture.whenStable();
+
+    const boton = fixture.nativeElement.querySelector('.boton-usuario') as HTMLButtonElement;
+    boton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(boton.getAttribute('aria-expanded')).toBe('true');
+    const menu = fixture.nativeElement.querySelector('#menu-usuario') as HTMLElement;
+    expect(menu.textContent).toContain('Administrador');
+    expect(menu.textContent).toContain('Cerrar sesión');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('#menu-usuario')).toBeNull();
+  });
+
+  it('el botón de hamburguesa abre el menú lateral (celular)', async () => {
+    await montarComo('ADMIN');
+    http.expectOne(PENDIENTES).flush({ cantidad: 0 });
+    await fixture.whenStable();
+
+    const abrir = fixture.nativeElement.querySelector('button[aria-label="Abrir menú"]') as HTMLButtonElement;
+    abrir.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(abrir.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.marco')?.classList).toContain('menu-abierto');
   });
 });
