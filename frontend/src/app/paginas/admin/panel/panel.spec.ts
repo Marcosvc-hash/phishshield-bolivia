@@ -49,14 +49,26 @@ describe('Panel', () => {
     expect(cifras).toEqual(['8', '25.0%', '3', '4']);
   });
 
-  it('lista el top de entidades y marca los analisis anonimos', async () => {
+  it('lista el top de entidades y marca los análisis anónimos', async () => {
     fixture.detectChanges();
     http.expectOne(URL).flush(datos);
     await fixture.whenStable();
 
     const pagina = fixture.nativeElement as HTMLElement;
     expect(pagina.querySelectorAll('.top li').length).toBe(2);
-    expect(pagina.querySelector('.usuario')?.textContent).toContain('anonimo');
+    expect(pagina.querySelector('.usuario')?.textContent).toContain('anónimo');
+  });
+
+  it('la dona suma los veredictos del periodo y los lista con su porcentaje', async () => {
+    fixture.detectChanges();
+    http.expectOne(URL).flush(datos);
+    await fixture.whenStable();
+
+    const filas = [...fixture.nativeElement.querySelectorAll('app-grafico-veredictos li')] as HTMLElement[];
+    const texto = (f: HTMLElement) => [...f.querySelectorAll('span')]
+      .map((s) => s.textContent?.trim()).filter(Boolean).join(' ');
+    expect(filas.map(texto))
+      .toEqual(['Phishing 2 25%', 'Sospechoso 1 13%', 'Seguro 5 63%']);
   });
 
   it('muestra el mensaje del backend si responde con error', async () => {

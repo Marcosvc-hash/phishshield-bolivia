@@ -40,7 +40,12 @@
   --superficie: #ffffff;
   --superficie-2: #f1f5f9;
 
-  /* Veredictos y severidades: tono de texto, fondo suave, borde y relleno solido */
+  /*
+   * Veredictos y severidades: tono de texto, fondo suave, borde y relleno
+   * solido. Los tres solidos se validaron para daltonismo (protan dE 15);
+   * el ambar tiene poco contraste sobre blanco, por eso los graficos van
+   * siempre con leyenda, tooltip y tabla de datos.
+   */
   --peligro: #b91c1c;
   --peligro-suave: #fef2f2;
   --peligro-borde: #fecaca;
@@ -48,11 +53,11 @@
   --alerta: #a14a06;
   --alerta-suave: #fffbeb;
   --alerta-borde: #fde68a;
-  --alerta-solido: #f59e0b;
+  --alerta-solido: #e8a317;
   --exito: #15803d;
   --exito-suave: #f0fdf4;
   --exito-borde: #bbf7d0;
-  --exito-solido: #16a34a;
+  --exito-solido: #0f8a4a;
 
   /* Espaciado (multiplos de 4 px) */
   --esp-1: 4px;
@@ -744,9 +749,9 @@ select.entrada {
   }
 
   .tabla-apilable .celda-url {
-    display: block;
     max-width: none;
-    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 
