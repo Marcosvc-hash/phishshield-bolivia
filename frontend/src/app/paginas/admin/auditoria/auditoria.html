@@ -1,74 +1,125 @@
-<h1 class="titulo-admin">Registro de accesos</h1>
-<p class="subtitulo-admin">Inicios de sesion y acciones administrativas de toda la plataforma</p>
-
-<form class="filtros" (ngSubmit)="buscar()">
-  <label>
-    Accion
-    <select name="accion" [(ngModel)]="filtro.accion">
-      <option value="">Todas</option>
-      @for (a of acciones(); track a) {
-        <option [value]="a">{{ a }}</option>
-      }
-    </select>
-  </label>
-  <label>
-    Usuario (email)
-    <input type="search" name="usuario" placeholder="ej. carlos" [(ngModel)]="filtro.usuario">
-  </label>
-  <label>
-    Desde
-    <input type="date" name="desde" [(ngModel)]="filtro.desde">
-  </label>
-  <label>
-    Hasta
-    <input type="date" name="hasta" [(ngModel)]="filtro.hasta">
-  </label>
-  <button type="submit" class="btn primario">Buscar</button>
-  <button type="button" class="btn" (click)="limpiar()">Limpiar</button>
-</form>
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    Inicios de sesión y acciones administrativas de toda la plataforma. Los accesos fallidos y las
+    desactivaciones aparecen resaltados.
+  </p>
+</div>
 
 @if (error()) {
-  <p class="aviso error">{{ error() }}</p>
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
 }
 
-<div class="tarjeta-admin">
-  @if (cargando() && !pagina()) {
-    <p class="aviso">Cargando registro...</p>
-  } @else if (pagina(); as p) {
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Usuario</th>
-          <th>Accion</th>
-          <th>Sobre</th>
-          <th>IP</th>
-          <th>Detalle</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of p.contenido; track $index) {
-          <tr>
-            <td class="fecha">{{ r.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
-            <td>{{ r.usuario ?? '-' }}</td>
-            <td><span class="chip" [class.atencion]="esDeAtencion(r.accion)">{{ r.accion }}</span></td>
-            <td>{{ r.entidad ?? '-' }}</td>
-            <td class="ip">{{ r.ip ?? '-' }}</td>
-            <td>
-              <ul class="detalle">
-                @for (par of pares(r.detalle); track par.clave) {
-                  <li><span>{{ par.clave }}:</span> {{ par.valor }}</li>
-                }
-              </ul>
-            </td>
-          </tr>
+<section class="tarjeta" aria-label="Registro">
+  <form class="barra-filtros" (ngSubmit)="buscar()" role="search">
+    <div class="barra-filtros-fila">
+      <div class="campo buscador">
+        <label class="campo-etiqueta" for="filtro-usuario">Usuario</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="buscar" [tamano]="18" />
+          <input id="filtro-usuario" type="search" name="usuario" class="entrada" placeholder="Email, por ejemplo carlos"
+                 [(ngModel)]="filtro.usuario">
+        </div>
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="filtro-accion">Acción</label>
+        <select id="filtro-accion" name="accion" class="entrada" [(ngModel)]="filtro.accion">
+          <option value="">Todas</option>
+          @for (a of acciones(); track a) {
+            <option [value]="a">{{ nombreAccion(a) }}</option>
+          }
+        </select>
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="filtro-desde">Desde</label>
+        <input id="filtro-desde" type="date" name="desde" class="entrada" [(ngModel)]="filtro.desde">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="filtro-hasta">Hasta</label>
+        <input id="filtro-hasta" type="date" name="hasta" class="entrada" [(ngModel)]="filtro.hasta">
+      </div>
+      <button type="submit" class="btn btn-primario"><app-icono nombre="buscar" [tamano]="16" /> Buscar</button>
+    </div>
+
+    <fieldset class="grupo-chips">
+      <legend>Atajos</legend>
+      @for (a of rapidas; track a) {
+        <button type="button" class="chip-filtro" [attr.aria-pressed]="aplicado.accion === a" (click)="elegirAccion(a)">
+          {{ a ? nombreAccion(a) : 'Todas las acciones' }}
+        </button>
+      }
+    </fieldset>
+
+    @if (hayFiltros()) {
+      <div class="filtros-aplicados">
+        <span>Filtros:</span>
+        @if (aplicado.accion && !rapidas.includes(aplicado.accion)) {
+          <span class="chip-aplicado">{{ nombreAccion(aplicado.accion) }}
+            <button type="button" aria-label="Quitar el filtro de acción" (click)="elegirAccion('')"><app-icono nombre="x" [tamano]="14" /></button>
+          </span>
         }
-      </tbody>
-    </table>
-    @if (p.contenido.length === 0) {
-      <p class="aviso">Ningun registro cumple los filtros.</p>
+        @if (aplicado.usuario) {
+          <span class="chip-aplicado">Usuario “{{ aplicado.usuario }}”
+            <button type="button" aria-label="Quitar el filtro de usuario" (click)="quitar('usuario')"><app-icono nombre="x" [tamano]="14" /></button>
+          </span>
+        }
+        @if (aplicado.desde) {
+          <span class="chip-aplicado">Desde {{ fechaLegible(aplicado.desde) }}
+            <button type="button" aria-label="Quitar la fecha desde" (click)="quitar('desde')"><app-icono nombre="x" [tamano]="14" /></button>
+          </span>
+        }
+        @if (aplicado.hasta) {
+          <span class="chip-aplicado">Hasta {{ fechaLegible(aplicado.hasta) }}
+            <button type="button" aria-label="Quitar la fecha hasta" (click)="quitar('hasta')"><app-icono nombre="x" [tamano]="14" /></button>
+          </span>
+        }
+        <button type="button" class="btn btn-fantasma btn-sm" (click)="limpiar()">Limpiar todo</button>
+      </div>
     }
-    <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas"
+  </form>
+
+  @if (cargando() && !pagina()) {
+    <app-skeleton tipo="tabla" [cantidad]="8" etiqueta="Cargando registro…" />
+  } @else if (pagina(); as p) {
+    @if (p.contenido.length === 0) {
+      <app-estado-vacio icono="registro" titulo="Ningún registro cumple los filtros" descripcion="Pruebe con otro rango de fechas o usuario." />
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Usuario</th>
+              <th scope="col">Acción</th>
+              <th scope="col">Sobre</th>
+              <th scope="col">IP</th>
+              <th scope="col">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of p.contenido; track $index) {
+              <tr>
+                <td data-etiqueta="Fecha" class="fecha">{{ r.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+                <td data-etiqueta="Usuario">{{ r.usuario ?? '—' }}</td>
+                <td data-etiqueta="Acción">
+                  <span class="badge" [class.atencion]="esDeAtencion(r.accion)" [class.acceso]="r.accion === 'LOGIN_EXITOSO'"
+                        [title]="r.accion">{{ nombreAccion(r.accion) }}</span>
+                </td>
+                <td data-etiqueta="Sobre" class="texto-secundario">{{ r.entidad ?? '—' }}</td>
+                <td data-etiqueta="IP" class="ip">{{ r.ip ?? '—' }}</td>
+                <td data-etiqueta="Detalle">
+                  <ul class="detalle">
+                    @for (par of pares(r.detalle); track par.clave) {
+                      <li><span>{{ par.clave }}:</span> {{ par.valor }}</li>
+                    }
+                  </ul>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas" [tamano]="p.tamano"
                    [totalElementos]="p.totalElementos" (cambiar)="cargar($event)" />
   }
-</div>
+</section>
