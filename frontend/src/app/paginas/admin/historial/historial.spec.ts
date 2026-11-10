@@ -50,17 +50,17 @@ describe('Historial', () => {
     localStorage.clear();
   });
 
-  it('pide la primera pagina sin filtros vacios', async () => {
+  it('pide la primera página sin filtros vacíos', async () => {
     const peticion = http.expectOne((r) => r.url === URL);
     expect(peticion.request.params.keys().sort()).toEqual(['pagina', 'tamano']);
     peticion.flush(pagina([fila]));
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(1);
-    expect(fixture.nativeElement.textContent).toContain('anonimo');
+    expect(fixture.nativeElement.textContent).toContain('anónimo');
   });
 
-  it('manda los filtros elegidos y vuelve a la pagina 0', async () => {
+  it('manda los filtros elegidos y vuelve a la página 0', async () => {
     http.expectOne((r) => r.url === URL).flush(pagina([fila], 1, 45));
     await fixture.whenStable();
 
@@ -89,5 +89,33 @@ describe('Historial', () => {
     expect(filasIndicadores[1].textContent).toContain('IA_MODELO_URL');
     expect(filasIndicadores[1].textContent).toContain('+37.40');
     expect(fixture.nativeElement.querySelector('tfoot')?.textContent).toContain('82.40');
+    // Junto al código va un título en lenguaje simple
+    expect(filasIndicadores[1].querySelector('.regla')?.textContent).toContain('inteligencia artificial');
+  });
+
+  it('el chip de resultado filtra al instante y queda marcado', async () => {
+    http.expectOne((r) => r.url === URL).flush(pagina([fila]));
+    await fixture.whenStable();
+
+    const chip = ([...fixture.nativeElement.querySelectorAll('.chip-filtro')] as HTMLButtonElement[])
+      .find((b) => b.textContent?.includes('Phishing'))!;
+    chip.click();
+
+    const peticion = http.expectOne((r) => r.url === URL);
+    expect(peticion.request.params.get('resultado')).toBe('phishing');
+    peticion.flush(pagina([fila]));
+    await fixture.whenStable();
+
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('la fila se abre también con Enter (teclado)', async () => {
+    http.expectOne((r) => r.url === URL).flush(pagina([fila]));
+    await fixture.whenStable();
+
+    const filaTabla = fixture.nativeElement.querySelector('tbody tr') as HTMLElement;
+    expect(filaTabla.getAttribute('tabindex')).toBe('0');
+    filaTabla.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    http.expectOne(`${URL}/a1`).flush(detalle);
   });
 });
