@@ -35,6 +35,6 @@ describe('App', () => {
   it('sin sesion, /admin redirige al login', async () => {
     const harness = await RouterTestingHarness.create('/admin');
     const pagina = harness.routeNativeElement as HTMLElement;
-    expect(pagina.querySelector('.subtitulo')?.textContent).toContain('Iniciar sesion');
+    expect(pagina.querySelector('h1')?.textContent).toContain('Iniciar sesión');
   });
 });
