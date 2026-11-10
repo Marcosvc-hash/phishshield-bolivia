@@ -8,6 +8,7 @@ import bo.phishshield.backend.usuario.application.ListarUsuariosUseCase;
 import bo.phishshield.backend.usuario.domain.model.Usuario;
 import bo.phishshield.backend.usuario.infrastructure.web.dto.CambiarEstadoRequest;
 import bo.phishshield.backend.usuario.infrastructure.web.dto.UsuarioAdminResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,8 +55,9 @@ public class AdminUsuarioController {
     @PatchMapping("/{id}/estado")
     public UsuarioAdminResponse cambiarEstado(@AuthenticationPrincipal UsuarioActual quien,
                                               @PathVariable UUID id,
-                                              @Valid @RequestBody CambiarEstadoRequest peticion) {
-        Usuario actualizado = cambiarEstado.ejecutar(quien, id, peticion.activo());
+                                              @Valid @RequestBody CambiarEstadoRequest peticion,
+                                              HttpServletRequest http) {
+        Usuario actualizado = cambiarEstado.ejecutar(quien, id, peticion.activo(), http.getRemoteAddr());
         return UsuarioAdminResponse.desde(actualizado, nombresDeEmpresas().get(actualizado.getIdEmpresa()));
     }
 

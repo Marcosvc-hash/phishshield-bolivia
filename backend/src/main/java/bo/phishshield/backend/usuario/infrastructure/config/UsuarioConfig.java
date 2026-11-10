@@ -1,5 +1,6 @@
 package bo.phishshield.backend.usuario.infrastructure.config;
 
+import bo.phishshield.backend.shared.domain.port.out.AuditoriaPort;
 import bo.phishshield.backend.shared.infrastructure.security.JwtPropiedades;
 import bo.phishshield.backend.usuario.application.CambiarEstadoUsuarioUseCase;
 import bo.phishshield.backend.usuario.application.CerrarSesionUseCase;
@@ -61,7 +62,8 @@ public class UsuarioConfig {
     }
 
     @Bean
-    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepositoryPort usuarioRepository) {
-        return new CambiarEstadoUsuarioUseCase(usuarioRepository);
+    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepositoryPort usuarioRepository,
+                                                                   AuditoriaPort auditoria) {
+        return new CambiarEstadoUsuarioUseCase(usuarioRepository, auditoria);
     }
 }

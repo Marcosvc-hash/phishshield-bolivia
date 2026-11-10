@@ -30,7 +30,7 @@ export class AdminLayout {
     { etiqueta: 'Historial de analisis', ruta: '/admin/historial', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Alertas', ruta: null, roles: ['ADMIN', 'ADMIN_EMPRESA'] },
     { etiqueta: 'Listas de dominios', ruta: null, roles: ['ADMIN'] },
-    { etiqueta: 'Registro de accesos', ruta: null, roles: ['ADMIN'] },
+    { etiqueta: 'Registro de accesos', ruta: '/admin/auditoria', roles: ['ADMIN'] },
   ];
 
   /** Cada rol ve solo sus opciones; se recalcula si cambia el usuario. */

@@ -38,6 +38,11 @@ export const routes: Routes = [
         canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
         loadComponent: () => import('./paginas/admin/historial/historial').then((m) => m.Historial)
       },
+      {
+        path: 'auditoria',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/auditoria/auditoria').then((m) => m.Auditoria)
+      },
     ]
   },
   { path: '**', redirectTo: '' }
