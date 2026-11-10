@@ -1,27 +1,58 @@
 <main class="pantalla">
-  <form class="caja" (ngSubmit)="entrar()">
-    <h1>PhishShield Bolivia</h1>
-    <p class="subtitulo">Iniciar sesion</p>
+  <app-panel-marca />
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" autocomplete="username"
-           [(ngModel)]="email" [disabled]="enviando()" />
+  <section class="lado-formulario">
+    <form class="caja" (ngSubmit)="entrar()" novalidate>
+      <div class="encabezado">
+        <h1>Iniciar sesión</h1>
+        <p class="subtitulo">Ingrese con su cuenta de PhishShield.</p>
+      </div>
 
-    <label for="contrasena">Contrasena</label>
-    <input id="contrasena" name="contrasena" type="password" autocomplete="current-password"
-           [(ngModel)]="contrasena" [disabled]="enviando()" />
+      <div class="campo" [class.invalido]="errorEmail()">
+        <label class="campo-etiqueta" for="email">Correo electrónico</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="correo" [tamano]="18" />
+          <input id="email" name="email" type="email" class="entrada" autocomplete="username"
+                 placeholder="nombre@empresa.bo" [(ngModel)]="email" [disabled]="enviando()"
+                 (blur)="tocado.email = true"
+                 [attr.aria-invalid]="errorEmail() ? 'true' : null"
+                 [attr.aria-describedby]="errorEmail() ? 'email-error' : null" />
+        </div>
+        @if (errorEmail()) {
+          <p id="email-error" class="campo-error"><app-icono nombre="info" [tamano]="14" /> {{ errorEmail() }}</p>
+        }
+      </div>
 
-    @if (error()) {
-      <p class="aviso error">{{ error() }}</p>
-    }
+      <div class="campo" [class.invalido]="errorContrasena()">
+        <label class="campo-etiqueta" for="contrasena">Contraseña</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="candado" [tamano]="18" />
+          <input id="contrasena" name="contrasena" class="entrada con-boton" autocomplete="current-password"
+                 [type]="mostrarContrasena() ? 'text' : 'password'"
+                 [(ngModel)]="contrasena" [disabled]="enviando()" (blur)="tocado.contrasena = true"
+                 [attr.aria-invalid]="errorContrasena() ? 'true' : null"
+                 [attr.aria-describedby]="errorContrasena() ? 'contrasena-error' : null" />
+          <button type="button" class="btn btn-icono"
+                  [attr.aria-label]="mostrarContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="mostrarContrasena()" (click)="mostrarContrasena.set(!mostrarContrasena())">
+            <app-icono [nombre]="mostrarContrasena() ? 'ojo-tachado' : 'ojo'" [tamano]="18" />
+          </button>
+        </div>
+        @if (errorContrasena()) {
+          <p id="contrasena-error" class="campo-error"><app-icono nombre="info" [tamano]="14" /> {{ errorContrasena() }}</p>
+        }
+      </div>
 
-    <button type="submit" [disabled]="enviando()">
-      @if (enviando()) { Entrando... } @else { Entrar }
-    </button>
+      @if (error()) {
+        <p class="aviso error" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
+      }
 
-    <p class="pie">
-      No tiene cuenta? <a routerLink="/registro">Registrese</a>
-      &middot; <a routerLink="/">Volver al analizador</a>
-    </p>
-  </form>
+      <button type="submit" class="btn btn-primario btn-lg btn-bloque" [disabled]="enviando()">
+        @if (enviando()) { <span class="girador" aria-hidden="true"></span> Entrando… } @else { Entrar }
+      </button>
+
+      <p class="pie">¿No tiene cuenta? <a routerLink="/registro">Regístrese gratis</a></p>
+      <a routerLink="/" class="volver"><app-icono nombre="chevron-izq" [tamano]="16" /> Volver al analizador</a>
+    </form>
+  </section>
 </main>

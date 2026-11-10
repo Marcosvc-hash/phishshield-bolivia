@@ -1,38 +1,79 @@
-<div class="marco">
+<a class="saltar-contenido" href="#contenido-admin">Saltar al contenido</a>
 
-  <aside class="lateral">
-    <div class="marca">
-      <strong>PhishShield</strong>
-      <span>Administracion</span>
+<div class="marco" [class.menu-abierto]="menuAbierto()">
+
+  <aside id="menu-lateral" class="lateral" aria-label="Menú de administración">
+    <div class="lateral-cabecera">
+      <a routerLink="/admin" class="enlace-marca" aria-label="PhishShield, ir al panel"><app-marca [claro]="true" /></a>
+      <button type="button" class="btn btn-icono cerrar-menu" aria-label="Cerrar menú" (click)="menuAbierto.set(false)">
+        <app-icono nombre="x" />
+      </button>
     </div>
 
-    <nav>
-      @for (opcion of opciones(); track opcion.etiqueta) {
-        @if (opcion.ruta) {
-          <a [routerLink]="opcion.ruta" routerLinkActive="activa">
-            {{ opcion.etiqueta }}
+    <nav aria-label="Secciones de administración">
+      @for (grupo of grupos(); track grupo.titulo) {
+        <p class="grupo">{{ grupo.titulo }}</p>
+        @for (opcion of grupo.opciones; track opcion.ruta) {
+          <a [routerLink]="opcion.ruta" routerLinkActive="activa" ariaCurrentWhenActive="page">
+            <app-icono [nombre]="opcion.icono" [tamano]="18" />
+            <span class="etiqueta">{{ opcion.etiqueta }}</span>
             @if (opcion.conPendientes && alertas.pendientes() > 0) {
-              <span class="insignia" [title]="alertas.pendientes() + ' alertas pendientes'">{{ alertas.pendientes() }}</span>
+              <span class="insignia" aria-hidden="true">{{ alertas.pendientes() }}</span>
+              <span class="sr-only">, {{ alertas.pendientes() }} pendientes</span>
             }
           </a>
-        } @else {
-          <span class="pronto" title="Proximamente">{{ opcion.etiqueta }}</span>
         }
       }
-      <a routerLink="/" class="separado">Ir al analizador</a>
     </nav>
 
-    @if (auth.usuario(); as u) {
-      <div class="cuenta">
-        <span class="nombre">{{ u.nombreCompleto }}</span>
-        <span class="rol">{{ nombreRol(u.rol) }}</span>
-        <button (click)="auth.logout()">Cerrar sesion</button>
-      </div>
-    }
+    <a routerLink="/" class="ir-analizador">
+      <app-icono nombre="escudo-check" [tamano]="18" /> Ir al analizador
+    </a>
   </aside>
 
-  <main class="contenido">
-    <router-outlet />
-  </main>
+  <div class="fondo-menu" aria-hidden="true" (click)="menuAbierto.set(false)"></div>
+
+  <div class="principal">
+    <header class="barra">
+      <button type="button" class="btn btn-icono abrir-menu" aria-label="Abrir menú" aria-controls="menu-lateral"
+              [attr.aria-expanded]="menuAbierto()" (click)="menuAbierto.set(true)">
+        <app-icono nombre="menu" />
+      </button>
+
+      <h1 class="titulo">{{ titulo() }}</h1>
+
+      @if (auth.usuario(); as u) {
+        <div class="usuario">
+          <button type="button" class="boton-usuario" aria-haspopup="true" aria-controls="menu-usuario"
+                  [attr.aria-expanded]="menuUsuario()" (click)="menuUsuario.set(!menuUsuario())">
+            <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+            <span class="quien">
+              <span class="nombre">{{ u.nombreCompleto }}</span>
+              <span class="rol">{{ nombreRol(u.rol) }}</span>
+            </span>
+            <app-icono nombre="chevron-abajo" [tamano]="16" class="flecha" />
+          </button>
+
+          @if (menuUsuario()) {
+            <div id="menu-usuario" class="desplegable">
+              <div class="cuenta">
+                <span class="nombre">{{ u.nombreCompleto }}</span>
+                <span class="email">{{ u.email }}</span>
+                <span class="badge badge-acento sin-punto">{{ nombreRol(u.rol) }}</span>
+              </div>
+              <a routerLink="/" class="opcion"><app-icono nombre="escudo-check" [tamano]="16" /> Ir al analizador</a>
+              <button type="button" class="opcion salir" (click)="auth.logout()">
+                <app-icono nombre="salir" [tamano]="16" /> Cerrar sesión
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </header>
+
+    <main id="contenido-admin" class="contenido" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
 
 </div>

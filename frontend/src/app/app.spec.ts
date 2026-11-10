@@ -23,16 +23,18 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('la ruta raiz muestra el titulo y el boton de iniciar sesion', async () => {
+  it('la ruta raiz muestra la marca, el analizador y el boton de iniciar sesion', async () => {
     const harness = await RouterTestingHarness.create('/');
     const pagina = harness.routeNativeElement as HTMLElement;
-    expect(pagina.querySelector('h1')?.textContent).toContain('PhishShield Bolivia');
-    expect(pagina.textContent).toContain('Iniciar sesion');
+    expect(pagina.querySelector('header')?.textContent).toContain('PhishShield');
+    expect(pagina.querySelector('h1')?.textContent).toContain('Verifique un enlace');
+    expect(pagina.querySelector('app-analizador')).not.toBeNull();
+    expect(pagina.textContent).toContain('Iniciar sesión');
   });
 
   it('sin sesion, /admin redirige al login', async () => {
     const harness = await RouterTestingHarness.create('/admin');
     const pagina = harness.routeNativeElement as HTMLElement;
-    expect(pagina.querySelector('.subtitulo')?.textContent).toContain('Iniciar sesion');
+    expect(pagina.querySelector('h1')?.textContent).toContain('Iniciar sesión');
   });
 });

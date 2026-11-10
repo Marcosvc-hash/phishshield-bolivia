@@ -1,122 +1,184 @@
-<h1 class="titulo-admin">Historial de analisis</h1>
-<p class="subtitulo-admin">
-  @if (auth.tieneRol('ADMIN')) { Todos los analisis, incluidos los anonimos } @else { Analisis de su empresa }
-</p>
-
-<form class="filtros" (ngSubmit)="buscar()">
-  <label>
-    Resultado
-    <select name="resultado" [(ngModel)]="filtro.resultado">
-      <option value="">Todos</option>
-      <option value="phishing">Phishing</option>
-      <option value="sospechoso">Sospechoso</option>
-      <option value="seguro">Seguro</option>
-    </select>
-  </label>
-  <label>
-    Desde
-    <input type="date" name="desde" [(ngModel)]="filtro.desde">
-  </label>
-  <label>
-    Hasta
-    <input type="date" name="hasta" [(ngModel)]="filtro.hasta">
-  </label>
-  <label>
-    Dominio o URL
-    <input type="search" name="q" placeholder="ej. bnb" [(ngModel)]="filtro.q">
-  </label>
-  <button type="submit" class="btn primario">Buscar</button>
-  <button type="button" class="btn" (click)="limpiar()">Limpiar</button>
-</form>
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    @if (auth.tieneRol('ADMIN')) { Todos los análisis, incluidos los anónimos. } @else { Análisis de los usuarios de su empresa. }
+    Haga clic en una fila para ver cómo se calculó el puntaje.
+  </p>
+</div>
 
 @if (error()) {
-  <p class="aviso error">{{ error() }}</p>
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
 }
 
-<div class="contenedor" [class.con-detalle]="detalle()">
-  <div class="tarjeta-admin">
-    @if (cargando() && !pagina()) {
-      <p class="aviso">Cargando historial...</p>
-    } @else if (pagina(); as p) {
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>URL</th>
-            <th>Resultado</th>
-            <th>Riesgo</th>
-            <th>Usuario</th>
-            @if (auth.tieneRol('ADMIN')) { <th>Empresa</th> }
-            <th>Alerta</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (fila of p.contenido; track fila.id) {
-            <tr class="clicable" [class.seleccionada]="detalle()?.id === fila.id" (click)="abrir(fila)">
-              <td class="fecha">{{ fila.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
-              <td class="celda-url" [title]="fila.url">{{ fila.url }}</td>
-              <td><span class="chip" [class]="fila.resultado">{{ fila.resultado }}</span></td>
-              <td>{{ fila.nivelRiesgo | number: '1.0-1' }}</td>
-              <td>{{ fila.usuario ?? 'anonimo' }}</td>
-              @if (auth.tieneRol('ADMIN')) { <td>{{ fila.empresa ?? '-' }}</td> }
-              <td>{{ fila.estadoAlerta ?? '-' }}</td>
-            </tr>
+<div class="con-detalle" [class.abierto]="detalle() || cargandoDetalle()">
+  <section class="tarjeta" aria-label="Análisis">
+    <form class="barra-filtros" (ngSubmit)="buscar()" role="search">
+      <div class="barra-filtros-fila">
+        <div class="campo buscador">
+          <label class="campo-etiqueta" for="filtro-q">Buscar</label>
+          <div class="entrada-con-icono">
+            <app-icono nombre="buscar" [tamano]="18" />
+            <input id="filtro-q" type="search" name="q" class="entrada" placeholder="Dominio o URL"
+                   [(ngModel)]="filtro.q">
+          </div>
+        </div>
+        <div class="campo">
+          <label class="campo-etiqueta" for="filtro-desde">Desde</label>
+          <input id="filtro-desde" type="date" name="desde" class="entrada" [(ngModel)]="filtro.desde">
+        </div>
+        <div class="campo">
+          <label class="campo-etiqueta" for="filtro-hasta">Hasta</label>
+          <input id="filtro-hasta" type="date" name="hasta" class="entrada" [(ngModel)]="filtro.hasta">
+        </div>
+        <button type="submit" class="btn btn-primario"><app-icono nombre="buscar" [tamano]="16" /> Buscar</button>
+      </div>
+
+      <fieldset class="grupo-chips">
+        <legend>Resultado</legend>
+        @for (r of resultados; track r.valor) {
+          <button type="button" class="chip-filtro" [attr.aria-pressed]="aplicado.resultado === r.valor"
+                  (click)="elegirResultado(r.valor)">
+            @if (r.valor) { <span class="punto" [class]="r.valor"></span> }
+            {{ r.nombre }}
+          </button>
+        }
+      </fieldset>
+
+      @if (hayFiltros()) {
+        <div class="filtros-aplicados">
+          <span>Filtros:</span>
+          @if (aplicado.q) {
+            <span class="chip-aplicado">“{{ aplicado.q }}”
+              <button type="button" aria-label="Quitar la búsqueda" (click)="quitar('q')"><app-icono nombre="x" [tamano]="14" /></button>
+            </span>
           }
-        </tbody>
-      </table>
-      @if (p.contenido.length === 0) {
-        <p class="aviso">Ningun analisis cumple los filtros.</p>
+          @if (aplicado.desde) {
+            <span class="chip-aplicado">Desde {{ fechaLegible(aplicado.desde) }}
+              <button type="button" aria-label="Quitar la fecha desde" (click)="quitar('desde')"><app-icono nombre="x" [tamano]="14" /></button>
+            </span>
+          }
+          @if (aplicado.hasta) {
+            <span class="chip-aplicado">Hasta {{ fechaLegible(aplicado.hasta) }}
+              <button type="button" aria-label="Quitar la fecha hasta" (click)="quitar('hasta')"><app-icono nombre="x" [tamano]="14" /></button>
+            </span>
+          }
+          <button type="button" class="btn btn-fantasma btn-sm" (click)="limpiar()">Limpiar todo</button>
+        </div>
       }
-      <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas"
+    </form>
+
+    @if (cargando() && !pagina()) {
+      <app-skeleton tipo="tabla" [cantidad]="8" etiqueta="Cargando historial…" />
+    } @else if (pagina(); as p) {
+      @if (p.contenido.length === 0) {
+        <app-estado-vacio icono="buscar" titulo="Ningún análisis cumple los filtros"
+                          descripcion="Pruebe con otro rango de fechas o quite algún filtro." />
+      } @else {
+        <div class="tabla-contenedor">
+          <table class="tabla tabla-apilable">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">URL</th>
+                <th scope="col">Resultado</th>
+                <th scope="col">Riesgo</th>
+                <th scope="col" class="col-extra">Usuario</th>
+                @if (auth.tieneRol('ADMIN')) { <th scope="col" class="col-extra">Empresa</th> }
+                <th scope="col" class="col-extra">Alerta</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (fila of p.contenido; track fila.id) {
+                <tr class="clicable" tabindex="0" [class.seleccionada]="detalle()?.id === fila.id"
+                    [attr.aria-label]="'Ver el detalle de ' + fila.url"
+                    (click)="abrir(fila)" (keydown.enter)="abrir(fila)">
+                  <td data-etiqueta="Fecha" class="fecha">{{ fila.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td data-etiqueta="URL" class="celda-url" [title]="fila.url">{{ fila.url }}</td>
+                  <td data-etiqueta="Resultado"><span class="badge" [class]="fila.resultado">{{ nombreVeredicto(fila.resultado) }}</span></td>
+                  <td data-etiqueta="Riesgo">
+                    <span class="riesgo">
+                      <span class="riesgo-barra" [class]="fila.resultado"><span [style.width.%]="fila.nivelRiesgo"></span></span>
+                      {{ fila.nivelRiesgo | number: '1.0-1' }}
+                    </span>
+                  </td>
+                  <td data-etiqueta="Usuario" class="texto-secundario col-extra">{{ fila.usuario ?? 'anónimo' }}</td>
+                  @if (auth.tieneRol('ADMIN')) { <td data-etiqueta="Empresa" class="texto-secundario col-extra">{{ fila.empresa ?? '—' }}</td> }
+                  <td data-etiqueta="Alerta" class="col-extra">
+                    @if (fila.estadoAlerta) {
+                      <span class="badge" [class]="fila.estadoAlerta">{{ nombreEstadoAlerta(fila.estadoAlerta) }}</span>
+                    } @else { <span class="texto-secundario">—</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas" [tamano]="p.tamano"
                      [totalElementos]="p.totalElementos" (cambiar)="cargar($event)" />
     }
-  </div>
+  </section>
 
   @if (detalle(); as d) {
-    <aside class="detalle tarjeta-admin">
-      <div class="cabecera">
-        <h2>Detalle</h2>
-        <button class="btn" (click)="detalle.set(null)">Cerrar</button>
+    <aside class="detalle-lateral tarjeta" aria-labelledby="titulo-detalle">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-detalle" class="tarjeta-titulo">Detalle del análisis</h2>
+        <button type="button" class="btn btn-icono" aria-label="Cerrar el detalle" data-tooltip="Cerrar" (click)="detalle.set(null)">
+          <app-icono nombre="x" />
+        </button>
       </div>
-      <p class="url">{{ d.url }}</p>
-      <dl>
-        <dt>Resultado</dt>
-        <dd><span class="chip" [class]="d.resultado">{{ d.resultado }}</span> ({{ d.nivelRiesgo | number: '1.0-2' }} puntos)</dd>
-        <dt>Fecha</dt><dd>{{ d.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</dd>
-        <dt>Origen</dt><dd>{{ d.origen }}</dd>
-        <dt>Usuario</dt><dd>{{ d.usuario ?? 'anonimo' }}</dd>
-        <dt>Empresa</dt><dd>{{ d.empresa ?? '-' }}</dd>
-        <dt>Modelo de IA</dt><dd>{{ d.modeloIa ?? 'no se consulto' }}</dd>
-        <dt>Alerta</dt>
-        <dd>{{ d.estadoAlerta ? d.estadoAlerta + ' (' + d.severidadAlerta + ')' : 'sin alerta' }}</dd>
-        <dt>Tiempo</dt><dd>{{ d.tiempoMs != null ? d.tiempoMs + ' ms' : '-' }}</dd>
-      </dl>
+      <div class="tarjeta-cuerpo">
+        <div class="resumen-detalle">
+          <span class="badge" [class]="d.resultado">{{ nombreVeredicto(d.resultado) }}</span>
+          <span class="puntos"><strong>{{ d.nivelRiesgo | number: '1.0-2' }}</strong> / 100 puntos</span>
+        </div>
+        <p class="url-completa">{{ d.url }}</p>
+        <dl class="lista-datos">
+          <dt>Fecha</dt><dd>{{ d.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</dd>
+          <dt>Origen</dt><dd>{{ d.origen }}</dd>
+          <dt>Usuario</dt><dd>{{ d.usuario ?? 'anónimo' }}</dd>
+          <dt>Empresa</dt><dd>{{ d.empresa ?? '—' }}</dd>
+          <dt>Modelo de IA</dt><dd>{{ d.modeloIa ?? 'No se consultó' }}</dd>
+          <dt>Alerta</dt>
+          <dd>
+            @if (d.estadoAlerta) {
+              {{ nombreEstadoAlerta(d.estadoAlerta) }} · severidad {{ nombreSeveridad(d.severidadAlerta).toLowerCase() }}
+            } @else { Sin alerta }
+          </dd>
+          <dt>Tiempo</dt><dd>{{ d.tiempoMs != null ? d.tiempoMs + ' ms' : '—' }}</dd>
+        </dl>
 
-      <h3>Indicadores disparados</h3>
-      @if (d.indicadores.length === 0) {
-        <p class="aviso">Ninguna regla se disparo.</p>
-      } @else {
-        <table class="indicadores">
-          <thead>
-            <tr><th>Regla</th><th>Evidencia</th><th>Aporte</th></tr>
-          </thead>
-          <tbody>
-            @for (i of d.indicadores; track i.codigo) {
-              <tr [class.ia]="i.codigo === 'IA_MODELO_URL'">
-                <td><strong>{{ i.codigo }}</strong><br><small>{{ i.descripcion }}</small></td>
-                <td>{{ i.valor ?? '-' }}</td>
-                <td class="aporte">+{{ i.aporte | number: '1.2-2' }}</td>
-              </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr><td colspan="2">Suma de aportes (el puntaje se limita a 100)</td>
-              <td class="aporte">{{ sumaAportes(d) | number: '1.2-2' }}</td></tr>
-          </tfoot>
-        </table>
-      }
+        <h3 class="subtitulo-seccion">Indicadores que sumaron puntos</h3>
+        @if (d.indicadores.length === 0) {
+          <app-estado-vacio icono="check-circulo" [compacto]="true" titulo="Ninguna regla se activó" />
+        } @else {
+          <div class="tabla-contenedor indicadores-caja">
+            <table class="tabla indicadores">
+              <thead>
+                <tr><th scope="col">Regla y evidencia</th><th scope="col" class="derecha">Aporte</th></tr>
+              </thead>
+              <tbody>
+                @for (i of d.indicadores; track i.codigo) {
+                  <tr [class.ia]="i.codigo === 'IA_MODELO_URL'">
+                    <td class="ajustable">
+                      <span class="regla">{{ explicar(i.codigo).titulo }} <code class="codigo">{{ i.codigo }}</code></span>
+                      @if (i.valor) { <span class="evidencia">{{ i.valor }}</span> }
+                    </td>
+                    <td class="derecha numero aporte">+{{ i.aporte | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td class="ajustable">Suma de aportes <span class="texto-secundario">(el puntaje se limita a 100)</span></td>
+                  <td class="derecha numero aporte">{{ sumaAportes(d) | number: '1.2-2' }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        }
+      </div>
     </aside>
   } @else if (cargandoDetalle()) {
-    <aside class="detalle tarjeta-admin"><p class="aviso">Cargando detalle...</p></aside>
+    <aside class="detalle-lateral tarjeta"><app-skeleton tipo="texto" [cantidad]="8" etiqueta="Cargando detalle…" /></aside>
   }
 </div>

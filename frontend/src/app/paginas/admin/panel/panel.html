@@ -1,121 +1,170 @@
-<div class="titulo">
-  <div>
-    <h1>Panel</h1>
-    <p class="alcance">
-      @if (auth.tieneRol('ADMIN')) { Toda la plataforma } @else { Datos de su empresa }
-    </p>
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    @if (auth.tieneRol('ADMIN')) { Resumen de toda la plataforma } @else { Resumen de los datos de su empresa }
+    · últimos {{ dias }} días
+  </p>
+  <div class="pagina-acciones">
+    <button type="button" class="btn btn-secundario" (click)="cargar()" [disabled]="cargando()">
+      @if (cargando()) { <span class="girador" aria-hidden="true"></span> } @else { <app-icono nombre="refrescar" [tamano]="16" /> }
+      Actualizar
+    </button>
   </div>
-  <button class="actualizar" (click)="cargar()" [disabled]="cargando()">Actualizar</button>
 </div>
 
 @if (error()) {
-  <p class="aviso error">{{ error() }}</p>
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
 }
 
 @if (cargando() && !datos()) {
-  <p class="aviso">Cargando el panel...</p>
+  <app-skeleton tipo="tarjetas" [cantidad]="4" etiqueta="Cargando el panel…" />
+  <div class="tarjeta seccion"><app-skeleton tipo="texto" [cantidad]="6" /></div>
 }
 
 @if (datos(); as d) {
 
-  <!-- 1. Tarjetas de totales -->
-  <section class="tarjetas">
-    <article class="tarjeta">
-      <span class="rotulo">Analisis realizados</span>
-      <span class="cifra">{{ d.resumen.totalAnalisis | number }}</span>
-      <span class="detalle">desde el inicio</span>
+  <!-- 1. Tarjetas de totales: la cifra va en tinta de texto, el color solo en el icono -->
+  <section class="kpis" aria-label="Totales">
+    <article class="tarjeta kpi">
+      <span class="kpi-icono primario"><app-icono nombre="actividad" /></span>
+      <div>
+        <p class="rotulo">Análisis realizados</p>
+        <p class="cifra">{{ d.resumen.totalAnalisis | number }}</p>
+        <p class="detalle">desde el inicio</p>
+      </div>
     </article>
-    <article class="tarjeta">
-      <span class="rotulo">Phishing detectado</span>
-      <span class="cifra">{{ d.resumen.porcentajePhishing | number: '1.1-1' }}%</span>
-      <span class="detalle">{{ d.resumen.totalPhishing }} de {{ d.resumen.totalAnalisis }} analisis</span>
+    <article class="tarjeta kpi">
+      <span class="kpi-icono peligro"><app-icono nombre="escudo-alerta" /></span>
+      <div>
+        <p class="rotulo">Phishing detectado</p>
+        <p class="cifra">{{ d.resumen.porcentajePhishing | number: '1.1-1' }}%</p>
+        <p class="detalle">{{ d.resumen.totalPhishing | number }} de {{ d.resumen.totalAnalisis | number }} análisis</p>
+      </div>
     </article>
-    <article class="tarjeta">
-      <span class="rotulo">Alertas abiertas</span>
-      <span class="cifra">{{ d.resumen.alertasAbiertas | number }}</span>
-      <span class="detalle">pendientes o en revision</span>
+    <article class="tarjeta kpi">
+      <span class="kpi-icono alerta"><app-icono nombre="campana" /></span>
+      <div>
+        <p class="rotulo">Alertas abiertas</p>
+        <p class="cifra">{{ d.resumen.alertasAbiertas | number }}</p>
+        <p class="detalle">pendientes o en revisión</p>
+      </div>
     </article>
-    <article class="tarjeta">
-      <span class="rotulo">Usuarios activos</span>
-      <span class="cifra">{{ d.resumen.usuariosActivos | number }}</span>
-      <span class="detalle">con la cuenta habilitada</span>
+    <article class="tarjeta kpi">
+      <span class="kpi-icono acento"><app-icono nombre="usuarios" /></span>
+      <div>
+        <p class="rotulo">Usuarios activos</p>
+        <p class="cifra">{{ d.resumen.usuariosActivos | number }}</p>
+        <p class="detalle">con la cuenta habilitada</p>
+      </div>
     </article>
   </section>
 
-  <!-- 2. Grafico por dia -->
-  <section class="bloque">
-    <h2>Analisis por dia <small>(ultimos {{ dias }} dias)</small></h2>
-    <app-grafico-analisis [dias]="d.porDia" />
-    <details class="tabla-datos">
-      <summary>Ver los datos en tabla</summary>
-      @if (diasConDatos().length === 0) {
-        <p class="vacio">No hubo analisis en este periodo.</p>
-      } @else {
-        <table>
-          <thead>
-            <tr><th>Dia</th><th>Phishing</th><th>Sospechoso</th><th>Seguro</th><th>Total</th></tr>
-          </thead>
-          <tbody>
-            @for (dia of diasConDatos(); track dia.dia) {
-              <tr>
-                <td>{{ fechaCorta(dia.dia) }}</td>
-                <td>{{ dia.phishing }}</td>
-                <td>{{ dia.sospechosos }}</td>
-                <td>{{ dia.seguros }}</td>
-                <td><strong>{{ dia.total }}</strong></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </details>
-  </section>
-
-  <div class="columnas">
-
-    <!-- 3. Top de entidades suplantadas -->
-    <section class="bloque">
-      <h2>Entidades mas suplantadas</h2>
-      @if (d.topEntidades.length === 0) {
-        <p class="vacio">Todavia no se detectaron suplantaciones de entidades bolivianas.</p>
-      } @else {
-        <ol class="top">
-          @for (e of d.topEntidades; track e.entidad) {
-            <li>
-              <div class="fila-top">
-                <span class="nombre">{{ e.entidad }} <span class="tipo">{{ e.tipo }}</span></span>
-                <span class="veces">{{ e.veces }}</span>
-              </div>
-              <div class="barra"><div class="relleno" [style.width.%]="(e.veces / maximoTop()) * 100"></div></div>
-            </li>
+  <!-- 2. Graficos: por dia y distribucion del periodo -->
+  <div class="rejilla graficos">
+    <section class="tarjeta" aria-labelledby="titulo-por-dia">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-por-dia" class="tarjeta-titulo">Análisis por día</h2>
+        <span class="tarjeta-subtitulo">últimos {{ dias }} días</span>
+      </div>
+      <div class="tarjeta-cuerpo">
+        <app-grafico-analisis [dias]="d.porDia" />
+        <details class="tabla-datos">
+          <summary>Ver los datos en una tabla</summary>
+          @if (diasConDatos().length === 0) {
+            <p class="vacio">No hubo análisis en este periodo.</p>
+          } @else {
+            <div class="tabla-contenedor">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th scope="col">Día</th><th scope="col" class="derecha">Phishing</th><th scope="col" class="derecha">Sospechoso</th>
+                    <th scope="col" class="derecha">Seguro</th><th scope="col" class="derecha">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (dia of diasConDatos(); track dia.dia) {
+                    <tr>
+                      <td class="fecha">{{ fechaCorta(dia.dia) }}</td>
+                      <td class="derecha numero">{{ dia.phishing }}</td>
+                      <td class="derecha numero">{{ dia.sospechosos }}</td>
+                      <td class="derecha numero">{{ dia.seguros }}</td>
+                      <td class="derecha numero"><strong>{{ dia.total }}</strong></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           }
-        </ol>
-      }
+        </details>
+      </div>
+    </section>
+
+    <section class="tarjeta" aria-labelledby="titulo-distribucion">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-distribucion" class="tarjeta-titulo">Veredictos</h2>
+        <span class="tarjeta-subtitulo">del periodo</span>
+      </div>
+      <div class="tarjeta-cuerpo">
+        <app-grafico-veredictos [totales]="totalesPeriodo()" />
+      </div>
+    </section>
+  </div>
+
+  <div class="rejilla listas">
+    <!-- 3. Top de entidades suplantadas -->
+    <section class="tarjeta" aria-labelledby="titulo-top">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-top" class="tarjeta-titulo">Entidades más suplantadas</h2>
+      </div>
+      <div class="tarjeta-cuerpo">
+        @if (d.topEntidades.length === 0) {
+          <app-estado-vacio icono="escudo-check" [compacto]="true" titulo="Sin suplantaciones"
+                            descripcion="Todavía no se detectaron intentos de suplantar a entidades bolivianas." />
+        } @else {
+          <ol class="top">
+            @for (e of d.topEntidades; track e.entidad) {
+              <li>
+                <div class="fila-top">
+                  <span class="nombre">{{ e.entidad }} <span class="tipo">{{ nombreTipo(e.tipo) }}</span></span>
+                  <span class="veces">{{ e.veces }}</span>
+                </div>
+                <div class="barra" aria-hidden="true"><div class="relleno" [style.width.%]="(e.veces / maximoTop()) * 100"></div></div>
+              </li>
+            }
+          </ol>
+        }
+      </div>
     </section>
 
     <!-- 4. Ultimos analisis -->
-    <section class="bloque ancho">
-      <h2>Ultimos analisis</h2>
+    <section class="tarjeta" aria-labelledby="titulo-ultimos">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-ultimos" class="tarjeta-titulo">Últimos análisis</h2>
+      </div>
       @if (d.ultimosAnalisis.length === 0) {
-        <p class="vacio">Todavia no hay analisis.</p>
+        <app-estado-vacio icono="historial" [compacto]="true" titulo="Sin análisis" descripcion="Todavía no hay análisis." />
       } @else {
-        <div class="desplazable">
-        <table>
-          <thead>
-            <tr><th>Fecha</th><th>Contenido</th><th>Veredicto</th><th>Riesgo</th><th>Usuario</th></tr>
-          </thead>
-          <tbody>
-            @for (a of d.ultimosAnalisis; track a.id) {
-              <tr>
-                <td class="fecha">{{ a.fecha | date: 'dd/MM HH:mm' }}</td>
-                <td class="contenido" [title]="a.contenido">{{ a.dominio || a.contenido }}</td>
-                <td><span class="pastilla" [class]="a.resultado">{{ etiquetaVeredicto(a.resultado) }}</span></td>
-                <td>{{ a.nivelRiesgo | number: '1.0-1' }}</td>
-                <td class="usuario" [title]="a.usuario ?? 'anonimo'">{{ a.usuario ?? 'anonimo' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="tabla-contenedor">
+          <table class="tabla tabla-apilable">
+            <thead>
+              <tr><th scope="col">Fecha</th><th scope="col">Contenido</th><th scope="col">Veredicto</th><th scope="col">Riesgo</th><th scope="col">Usuario</th></tr>
+            </thead>
+            <tbody>
+              @for (a of d.ultimosAnalisis; track a.id) {
+                <tr>
+                  <td data-etiqueta="Fecha" class="fecha">{{ a.fecha | date: 'dd/MM HH:mm' }}</td>
+                  <td data-etiqueta="Contenido" class="celda-url contenido" [title]="a.contenido">{{ a.dominio || a.contenido }}</td>
+                  <td data-etiqueta="Veredicto"><span class="badge" [class]="a.resultado">{{ etiquetaVeredicto(a.resultado) }}</span></td>
+                  <td data-etiqueta="Riesgo">
+                    <span class="riesgo">
+                      <span class="riesgo-barra" [class]="a.resultado"><span [style.width.%]="a.nivelRiesgo"></span></span>
+                      {{ a.nivelRiesgo | number: '1.0-0' }}
+                    </span>
+                  </td>
+                  <td data-etiqueta="Usuario" class="usuario" [title]="a.usuario ?? 'anónimo'">{{ a.usuario ?? 'anónimo' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </section>
@@ -123,24 +172,31 @@
 
   <!-- Solo ADMIN: comparacion entre empresas (vista v_resumen_empresa) -->
   @if (d.porEmpresa.length > 0) {
-    <section class="bloque">
-      <h2>Resumen por empresa</h2>
-      <table>
-        <thead>
-          <tr><th>Empresa</th><th>Analisis</th><th>Phishing</th><th>Riesgo promedio</th><th>Ultimo analisis</th></tr>
-        </thead>
-        <tbody>
-          @for (e of d.porEmpresa; track e.empresa) {
+    <section class="tarjeta seccion" aria-labelledby="titulo-empresas">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-empresas" class="tarjeta-titulo">Resumen por empresa</h2>
+      </div>
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
             <tr>
-              <td>{{ e.empresa }}</td>
-              <td>{{ e.totalAnalisis }}</td>
-              <td>{{ e.totalPhishing }}</td>
-              <td>{{ e.riesgoPromedio === null ? '-' : (e.riesgoPromedio | number: '1.0-1') }}</td>
-              <td>{{ e.ultimoAnalisis ? (e.ultimoAnalisis | date: 'dd/MM/yyyy HH:mm') : '-' }}</td>
+              <th scope="col">Empresa</th><th scope="col" class="derecha">Análisis</th><th scope="col" class="derecha">Phishing</th>
+              <th scope="col" class="derecha">Riesgo promedio</th><th scope="col">Último análisis</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (e of d.porEmpresa; track e.empresa) {
+              <tr>
+                <td data-etiqueta="Empresa"><strong>{{ e.empresa }}</strong></td>
+                <td data-etiqueta="Análisis" class="derecha numero">{{ e.totalAnalisis | number }}</td>
+                <td data-etiqueta="Phishing" class="derecha numero">{{ e.totalPhishing | number }}</td>
+                <td data-etiqueta="Riesgo promedio" class="derecha numero">{{ e.riesgoPromedio === null ? '—' : (e.riesgoPromedio | number: '1.0-1') }}</td>
+                <td data-etiqueta="Último análisis" class="fecha">{{ e.ultimoAnalisis ? (e.ultimoAnalisis | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </section>
   }
 }

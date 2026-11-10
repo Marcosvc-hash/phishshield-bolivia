@@ -1,16 +1,4 @@
-.titulo-form {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #1e3a8a;
-}
-
-.dominio {
-  font-family: ui-monospace, monospace;
-  font-size: 0.85rem;
-}
-
-.botones {
-  display: flex;
-  gap: 0.4rem;
-  white-space: nowrap;
-}
+.dominio { font-family: var(--fuente-mono); font-size: 0.8125rem; font-weight: 600; }
+.dominio .badge { margin-left: var(--esp-2); font-family: var(--fuente); }
+.motivo { max-width: 320px; color: var(--texto-2); }
+.filas-chips { display: flex; flex-wrap: wrap; gap: var(--esp-3) var(--esp-7); }

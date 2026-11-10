@@ -70,6 +70,34 @@ describe('Analizador', () => {
     expect(component.historial().length).toBe(1);
   });
 
+  it('muestra el veredicto, el medidor y cada indicador explicado, sin códigos sueltos', async () => {
+    crear();
+    fixture.detectChanges();
+
+    component.url = 'http://bnb-bo-seguro.com/login';
+    component.analizar();
+    http.expectOne({ method: 'POST', url: API }).flush({
+      id: 'x1', url: 'http://bnb-bo-seguro.com/login', dominio: 'bnb-bo-seguro.com',
+      tipo: 'url', origen: 'web', resultado: 'phishing', nivelRiesgo: 100,
+      requiereAlerta: true, tiempoMs: 12, fechaAnalisis: '2026-11-10T12:00:00-04:00',
+      indicadores: [
+        { codigo: 'IA_MODELO_URL', detalle: 'probabilidad 0.91', aporte: 36.4 },
+        { codigo: 'URL_LISTA_NEGRA', detalle: 'bnb-bo-seguro.com', aporte: 70 },
+        { codigo: 'URL_REGLA_FUTURA', detalle: null, aporte: 5 },
+      ],
+    });
+    await fixture.whenStable();
+
+    const pagina = fixture.nativeElement as HTMLElement;
+    expect(pagina.querySelector('.etiqueta')?.textContent).toContain('Phishing detectado');
+    expect(pagina.querySelector('[role="meter"]')?.getAttribute('aria-valuenow')).toBe('100');
+
+    const titulos = [...pagina.querySelectorAll('.titulo-indicador')].map((e) => e.textContent?.trim());
+    // Ordenados por aporte: lista negra (70), IA (36.4), regla sin texto (5)
+    expect(titulos).toEqual(['Dominio reportado como fraude', 'Detectado por inteligencia artificial', 'Otra señal de riesgo']);
+    expect(pagina.querySelector('.explicacion')?.textContent).not.toMatch(/URL_|IA_MODELO/);
+  });
+
   it('no llama a la API si la URL no tiene http o https', () => {
     crear();
     fixture.detectChanges();

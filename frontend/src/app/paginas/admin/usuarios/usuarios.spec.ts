@@ -4,6 +4,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { Usuarios } from './usuarios';
 import { UsuarioAdmin } from './usuarios.service';
+import { ConfirmacionService } from '../../../core/ui/confirmacion.service';
+import { ToastService } from '../../../core/ui/toast.service';
+
+/** El boton "Nuevo usuario" de la cabecera. */
+function botonNuevo(raiz: HTMLElement): HTMLButtonElement {
+  return ([...raiz.querySelectorAll('.pagina-acciones button')] as HTMLButtonElement[])
+    .find((b) => b.textContent?.includes('Nuevo usuario'))!;
+}
 
 describe('Usuarios', () => {
   const URL = 'http://localhost:8080/api/admin/usuarios';
@@ -40,18 +48,27 @@ describe('Usuarios', () => {
     localStorage.clear();
   });
 
-  function botonDe(email: string): HTMLButtonElement {
+  function filaDe(email: string): HTMLElement {
     const filas = [...fixture.nativeElement.querySelectorAll('tbody tr')] as HTMLElement[];
-    return filas.find((f) => f.textContent?.includes(email))!.querySelector('button')!;
+    return filas.find((f) => f.textContent?.includes(email))!;
   }
 
-  it('no deja desactivar la propia cuenta', () => {
+  /** El boton de activar/desactivar de la fila (es el unico de la fila). */
+  function botonDe(email: string): HTMLButtonElement {
+    return filaDe(email).querySelector('button')!;
+  }
+
+  it('no deja desactivar la propia cuenta y explica por qué', () => {
     expect(botonDe('admin@x.bo').disabled).toBe(true);
+    expect(botonDe('admin@x.bo').getAttribute('data-tooltip')).toBe('No puede desactivar su propia cuenta');
     expect(botonDe('carlos@x.bo').disabled).toBe(false);
   });
 
-  it('desactivar manda PATCH con activo=false y actualiza la fila', async () => {
+  it('desactivar pide confirmación, manda PATCH con activo=false y actualiza la fila', async () => {
     botonDe('carlos@x.bo').click();
+    const confirmacion = TestBed.inject(ConfirmacionService);
+    expect(confirmacion.solicitud()?.confirmar).toBe('Desactivar');
+    confirmacion.responder(true);
 
     const peticion = http.expectOne(`${URL}/c1/estado`);
     expect(peticion.request.method).toBe('PATCH');
@@ -59,21 +76,22 @@ describe('Usuarios', () => {
     peticion.flush(fila('c1', 'carlos@x.bo', 'inactivo'));
     await fixture.whenStable();
 
-    expect(botonDe('carlos@x.bo').textContent?.trim()).toBe('Activar');
+    expect(botonDe('carlos@x.bo').getAttribute('aria-label')).toBe('Activar a carlos@x.bo');
+    expect(TestBed.inject(ToastService).toasts().at(-1)?.mensaje).toContain('se desactivó');
   });
 
   function selectorDeRol(email: string): HTMLSelectElement | null {
-    const filas = [...fixture.nativeElement.querySelectorAll('tbody tr')] as HTMLElement[];
-    return filas.find((f) => f.textContent?.includes(email))!.querySelector('select.rol');
+    return filaDe(email).querySelector('select.rol');
   }
 
-  it('el propio rol no se puede cambiar; el de otro manda PATCH /rol', async () => {
+  it('el propio rol no se puede cambiar; el de otro se confirma y manda PATCH /rol', async () => {
     expect(selectorDeRol('admin@x.bo')).toBeNull();
 
     const selector = selectorDeRol('carlos@x.bo')!;
     expect([...selector.options].map((o) => o.value)).toEqual(['USUARIO', 'ADMIN_EMPRESA', 'ADMIN']);
     selector.value = 'ADMIN_EMPRESA';
     selector.dispatchEvent(new Event('change'));
+    TestBed.inject(ConfirmacionService).responder(true);
 
     const peticion = http.expectOne(`${URL}/c1/rol`);
     expect(peticion.request.method).toBe('PATCH');
@@ -81,11 +99,33 @@ describe('Usuarios', () => {
     peticion.flush({ ...fila('c1', 'carlos@x.bo', 'activo'), rol: 'ADMIN_EMPRESA' });
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('.aviso.ok')?.textContent).toContain('Admin. de empresa');
+    expect(TestBed.inject(ToastService).toasts().at(-1)?.mensaje).toContain('Admin. de empresa');
+  });
+
+  it('si se cancela el cambio de rol no se manda nada y el selector vuelve al rol actual', () => {
+    const selector = selectorDeRol('carlos@x.bo')!;
+    selector.value = 'ADMIN';
+    selector.dispatchEvent(new Event('change'));
+    TestBed.inject(ConfirmacionService).responder(false);
+
+    http.expectNone(`${URL}/c1/rol`);
+    expect(selector.value).toBe('USUARIO');
+  });
+
+  it('el buscador filtra la tabla en el navegador', async () => {
+    const buscador = fixture.nativeElement.querySelector('#filtro-usuarios') as HTMLInputElement;
+    buscador.value = 'carlos';
+    buscador.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const filas = [...fixture.nativeElement.querySelectorAll('tbody tr')] as HTMLElement[];
+    expect(filas.length).toBe(1);
+    expect(filas[0].textContent).toContain('carlos@x.bo');
   });
 
   it('el admin crea un usuario eligiendo una empresa activa', async () => {
-    (fixture.nativeElement.querySelector('button.nuevo') as HTMLButtonElement).click();
+    botonNuevo(fixture.nativeElement).click();
     http.expectOne('http://localhost:8080/api/empresas').flush([
       { id: 'e1', nombre: 'Andina', nit: null, sector: null, ciudad: null, plan: 'basico', activa: true, creadoEn: '' },
       { id: 'e2', nombre: 'Cerrada', nit: null, sector: null, ciudad: null, plan: 'basico', activa: false, creadoEn: '' },
@@ -138,7 +178,7 @@ describe('Usuarios como admin de empresa', () => {
     http.expectOne(URL).flush([]);
     await fixture.whenStable();
 
-    (fixture.nativeElement.querySelector('button.nuevo') as HTMLButtonElement).click();
+    botonNuevo(fixture.nativeElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 

@@ -9,23 +9,43 @@ Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, L
 
 /**
  * Colores de estado (no de serie): rojo = phishing, ambar = sospechoso,
- * verde = seguro. Se validaron para daltonismo; como el ambar tiene poco
- * contraste sobre blanco, el grafico siempre va con leyenda, tooltip y
- * la tabla de datos debajo.
+ * verde = seguro. Son los --*-solido de styles.css (canvas no lee variables
+ * CSS). Se validaron para daltonismo; como el ambar tiene poco contraste
+ * sobre blanco, los graficos siempre van con leyenda, tooltip y la tabla de
+ * datos debajo.
  */
 export const COLOR_VEREDICTO = {
-  phishing: '#d03b3b',
-  sospechoso: '#fab219',
-  seguro: '#0ca30c',
+  phishing: '#dc2626',
+  sospechoso: '#e8a317',
+  seguro: '#0f8a4a',
 } as const;
 
-const TEXTO_SECUNDARIO = '#52514e';
-const SUPERFICIE = '#ffffff';
+/** Tinta, rejilla y tipografia del sistema de diseno, para todos los graficos. */
+export const ESTILO_GRAFICO = {
+  texto: '#0f172a',
+  textoSecundario: '#475569',
+  rejilla: '#e2e8f0',
+  superficie: '#ffffff',
+  fuente: 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
+} as const;
+
+Chart.defaults.font.family = ESTILO_GRAFICO.fuente;
+Chart.defaults.color = ESTILO_GRAFICO.textoSecundario;
+
+/** Tooltip oscuro, igual en todos los graficos del panel. */
+export const TOOLTIP_BASE = {
+  backgroundColor: ESTILO_GRAFICO.texto,
+  padding: 10,
+  cornerRadius: 8,
+  boxPadding: 4,
+  titleFont: { weight: 600 as const },
+  usePointStyle: true,
+};
 
 /** Barras apiladas por dia: cuantos analisis hubo y con que veredicto. */
 @Component({
   selector: 'app-grafico-analisis',
-  template: `<div class="lienzo"><canvas #lienzo aria-label="Analisis por dia segun veredicto" role="img"></canvas></div>`,
+  template: `<div class="lienzo"><canvas #lienzo aria-label="Análisis por día según veredicto" role="img"></canvas></div>`,
   styles: `.lienzo { position: relative; height: 280px; }`
 })
 export class GraficoAnalisis implements OnDestroy {
@@ -56,9 +76,10 @@ export class GraficoAnalisis implements OnDestroy {
       data: valores,
       backgroundColor: color,
       // 2px del color de fondo entre segmentos apilados: separa los colores
-      borderColor: SUPERFICIE,
+      borderColor: ESTILO_GRAFICO.superficie,
       borderWidth: { top: 2 },
       borderSkipped: false as const,
+      borderRadius: 3,
       maxBarThickness: 18,
     });
 
@@ -82,23 +103,25 @@ export class GraficoAnalisis implements OnDestroy {
           x: {
             stacked: true,
             grid: { display: false },
-            ticks: { color: TEXTO_SECUNDARIO, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+            border: { color: ESTILO_GRAFICO.rejilla },
+            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { size: 11 } },
           },
           y: {
             stacked: true,
             beginAtZero: true,
-            ticks: { color: TEXTO_SECUNDARIO, precision: 0 },
-            grid: { color: '#eef0f3' },
+            ticks: { precision: 0, font: { size: 11 } },
+            grid: { color: ESTILO_GRAFICO.rejilla },
             border: { display: false },
           },
         },
         plugins: {
           legend: {
             position: 'top',
-            align: 'start',
-            labels: { color: '#1f2933', boxWidth: 12, boxHeight: 12 },
+            align: 'end',
+            labels: { color: ESTILO_GRAFICO.texto, boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3, padding: 16 },
           },
           tooltip: {
+            ...TOOLTIP_BASE,
             callbacks: {
               title: (items) => dias[items[0].dataIndex]?.dia ?? '',
               footer: (items) => `Total: ${dias[items[0].dataIndex]?.total ?? 0}`,

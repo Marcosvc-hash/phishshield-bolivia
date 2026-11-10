@@ -1,34 +1,92 @@
 <main class="pantalla">
-  <form class="caja" (ngSubmit)="registrar()">
-    <h1>PhishShield Bolivia</h1>
-    <p class="subtitulo">Crear una cuenta</p>
+  <app-panel-marca />
 
-    <label for="nombres">Nombres</label>
-    <input id="nombres" name="nombres" [(ngModel)]="nombres" [disabled]="enviando()" />
+  <section class="lado-formulario">
+    <form class="caja" (ngSubmit)="registrar()" novalidate>
+      <div class="encabezado">
+        <h1>Crear una cuenta</h1>
+        <p class="subtitulo">Gratis. Guarde sus análisis y acceda al panel si su empresa lo habilita.</p>
+      </div>
 
-    <label for="apellidos">Apellidos (opcional)</label>
-    <input id="apellidos" name="apellidos" [(ngModel)]="apellidos" [disabled]="enviando()" />
+      <div class="fila-doble">
+        <div class="campo" [class.invalido]="errorDe('nombres')">
+          <label class="campo-etiqueta" for="nombres">Nombres</label>
+          <input id="nombres" name="nombres" class="entrada" autocomplete="given-name"
+                 [(ngModel)]="nombres" [disabled]="enviando()" (blur)="tocado.nombres = true"
+                 [attr.aria-invalid]="errorDe('nombres') ? 'true' : null"
+                 [attr.aria-describedby]="errorDe('nombres') ? 'nombres-error' : null" />
+          @if (errorDe('nombres')) {
+            <p id="nombres-error" class="campo-error"><app-icono nombre="info" [tamano]="14" /> {{ errorDe('nombres') }}</p>
+          }
+        </div>
+        <div class="campo">
+          <label class="campo-etiqueta" for="apellidos">Apellidos <span class="opcional">(opcional)</span></label>
+          <input id="apellidos" name="apellidos" class="entrada" autocomplete="family-name"
+                 [(ngModel)]="apellidos" [disabled]="enviando()" />
+        </div>
+      </div>
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" autocomplete="username"
-           [(ngModel)]="email" [disabled]="enviando()" />
+      <div class="campo" [class.invalido]="errorDe('email')">
+        <label class="campo-etiqueta" for="email">Correo electrónico</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="correo" [tamano]="18" />
+          <input id="email" name="email" type="email" class="entrada" autocomplete="username"
+                 placeholder="nombre@empresa.bo" [(ngModel)]="email" [disabled]="enviando()"
+                 (blur)="tocado.email = true"
+                 [attr.aria-invalid]="errorDe('email') ? 'true' : null"
+                 [attr.aria-describedby]="errorDe('email') ? 'email-error' : null" />
+        </div>
+        @if (errorDe('email')) {
+          <p id="email-error" class="campo-error"><app-icono nombre="info" [tamano]="14" /> {{ errorDe('email') }}</p>
+        }
+      </div>
 
-    <label for="contrasena">Contrasena (minimo 8 caracteres)</label>
-    <input id="contrasena" name="contrasena" type="password" autocomplete="new-password"
-           [(ngModel)]="contrasena" [disabled]="enviando()" />
+      <div class="campo" [class.invalido]="errorDe('contrasena')">
+        <label class="campo-etiqueta" for="contrasena">Contraseña</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="candado" [tamano]="18" />
+          <input id="contrasena" name="contrasena" class="entrada con-boton" autocomplete="new-password"
+                 [type]="mostrarContrasena() ? 'text' : 'password'"
+                 [(ngModel)]="contrasena" [disabled]="enviando()" (blur)="tocado.contrasena = true"
+                 [attr.aria-invalid]="errorDe('contrasena') ? 'true' : null"
+                 aria-describedby="requisitos-contrasena" />
+          <button type="button" class="btn btn-icono"
+                  [attr.aria-label]="mostrarContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="mostrarContrasena()" (click)="mostrarContrasena.set(!mostrarContrasena())">
+            <app-icono [nombre]="mostrarContrasena() ? 'ojo-tachado' : 'ojo'" [tamano]="18" />
+          </button>
+        </div>
+        <ul id="requisitos-contrasena" class="requisitos">
+          <li [class.cumple]="largoSuficiente()">
+            <app-icono [nombre]="largoSuficiente() ? 'check-circulo' : 'info'" [tamano]="14" />
+            Al menos {{ minimo }} caracteres
+            <span class="sr-only">{{ largoSuficiente() ? '(cumplido)' : '(pendiente)' }}</span>
+          </li>
+        </ul>
+      </div>
 
-    <label for="confirmacion">Repita la contrasena</label>
-    <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password"
-           [(ngModel)]="confirmacion" [disabled]="enviando()" />
+      <div class="campo" [class.invalido]="errorDe('confirmacion')">
+        <label class="campo-etiqueta" for="confirmacion">Repita la contraseña</label>
+        <input id="confirmacion" name="confirmacion" class="entrada" autocomplete="new-password"
+               [type]="mostrarContrasena() ? 'text' : 'password'"
+               [(ngModel)]="confirmacion" [disabled]="enviando()" (blur)="tocado.confirmacion = true"
+               [attr.aria-invalid]="errorDe('confirmacion') ? 'true' : null"
+               [attr.aria-describedby]="errorDe('confirmacion') ? 'confirmacion-error' : null" />
+        @if (errorDe('confirmacion')) {
+          <p id="confirmacion-error" class="campo-error"><app-icono nombre="info" [tamano]="14" /> {{ errorDe('confirmacion') }}</p>
+        }
+      </div>
 
-    @if (error()) {
-      <p class="aviso error">{{ error() }}</p>
-    }
+      @if (error()) {
+        <p class="aviso error" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
+      }
 
-    <button type="submit" [disabled]="enviando()">
-      @if (enviando()) { Creando cuenta... } @else { Crear cuenta }
-    </button>
+      <button type="submit" class="btn btn-primario btn-lg btn-bloque" [disabled]="enviando()">
+        @if (enviando()) { <span class="girador" aria-hidden="true"></span> Creando cuenta… } @else { Crear cuenta }
+      </button>
 
-    <p class="pie">Ya tiene cuenta? <a routerLink="/login">Inicie sesion</a></p>
-  </form>
+      <p class="pie">¿Ya tiene cuenta? <a routerLink="/login">Inicie sesión</a></p>
+      <a routerLink="/" class="volver"><app-icono nombre="chevron-izq" [tamano]="16" /> Volver al analizador</a>
+    </form>
+  </section>
 </main>

@@ -1,21 +1,5 @@
-.chip.atencion {
-  background: #fbeaea;
-  border-left-color: #d03b3b;
-}
-
-.ip {
-  font-family: ui-monospace, monospace;
-  font-size: 0.82rem;
-  white-space: nowrap;
-}
-
-.detalle {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.8rem;
-}
-
-.detalle span {
-  color: #52514e;
-}
+.badge.atencion { background: var(--peligro-suave); border-color: var(--peligro-borde); color: var(--peligro); }
+.badge.acceso { background: var(--primario-suave); border-color: var(--primario-borde); color: var(--primario); }
+.ip { font-family: var(--fuente-mono); font-size: 0.8rem; white-space: nowrap; color: var(--texto-2); }
+.detalle { list-style: none; margin: 0; padding: 0; font-size: var(--t-xs); overflow-wrap: anywhere; }
+.detalle span { color: var(--texto-3); }
