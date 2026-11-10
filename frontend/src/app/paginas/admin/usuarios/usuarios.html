@@ -1,120 +1,180 @@
-<div class="cabecera">
-  <div>
-    <h1>Usuarios</h1>
-    <p class="alcance">
-      @if (auth.tieneRol('ADMIN')) { Todos los usuarios de la plataforma } @else { Usuarios de su empresa }
-    </p>
-  </div>
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    @if (auth.tieneRol('ADMIN')) { Todas las cuentas de la plataforma. } @else { Las cuentas de su empresa. }
+    Cambie el rol desde la tabla; nadie puede cambiar su propio rol ni desactivarse.
+  </p>
   @if (!mostrarFormulario()) {
-    <button class="nuevo" (click)="abrirFormulario()">Nuevo usuario</button>
+    <div class="pagina-acciones">
+      <button type="button" class="btn btn-primario" (click)="abrirFormulario()">
+        <app-icono nombre="mas" [tamano]="16" /> Nuevo usuario
+      </button>
+    </div>
   }
 </div>
 
 @if (mostrarFormulario()) {
-  <form class="formulario" (ngSubmit)="crear()">
-    <label>
-      Nombres
-      <input name="nombres" maxlength="80" required [(ngModel)]="nuevo.nombres">
-    </label>
-    <label>
-      Apellidos
-      <input name="apellidos" maxlength="80" [(ngModel)]="nuevo.apellidos">
-    </label>
-    <label>
-      Email
-      <input name="email" type="email" maxlength="150" required [(ngModel)]="nuevo.email">
-    </label>
-    <label>
-      Contrasena inicial
-      <input name="contrasena" type="password" minlength="8" maxlength="72" required autocomplete="new-password"
-             [(ngModel)]="nuevo.contrasena">
-    </label>
-    <label>
-      Rol
-      <select name="rol" [(ngModel)]="nuevo.rol">
-        @for (r of rolesAsignables(); track r) {
-          <option [value]="r">{{ nombreRol(r) }}</option>
-        }
-      </select>
-    </label>
-    @if (auth.tieneRol('ADMIN') && nuevo.rol !== 'ADMIN') {
-      <label>
-        Empresa
-        <select name="empresa" [(ngModel)]="nuevo.empresa">
-          <option [ngValue]="null">{{ nuevo.rol === 'ADMIN_EMPRESA' ? 'Elija una empresa' : 'Sin empresa' }}</option>
-          @for (e of empresas(); track e.id) {
-            <option [ngValue]="e.id">{{ e.nombre }}</option>
+  <section class="tarjeta seccion" aria-labelledby="titulo-nuevo">
+    <div class="tarjeta-cabecera">
+      <h2 id="titulo-nuevo" class="tarjeta-titulo">Nuevo usuario</h2>
+    </div>
+    <form class="formulario tarjeta-cuerpo" (ngSubmit)="crear()">
+      <div class="campo">
+        <label class="campo-etiqueta" for="nuevo-nombres">Nombres</label>
+        <input id="nuevo-nombres" name="nombres" class="entrada" maxlength="80" required [(ngModel)]="nuevo.nombres">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="nuevo-apellidos">Apellidos <span class="opcional">(opcional)</span></label>
+        <input id="nuevo-apellidos" name="apellidos" class="entrada" maxlength="80" [(ngModel)]="nuevo.apellidos">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="nuevo-email">Correo electrónico</label>
+        <input id="nuevo-email" name="email" type="email" class="entrada" maxlength="150" required [(ngModel)]="nuevo.email">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="nuevo-contrasena">Contraseña inicial</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="candado" [tamano]="18" />
+          <input id="nuevo-contrasena" name="contrasena" class="entrada con-boton" minlength="8" maxlength="72" required
+                 autocomplete="new-password" [type]="mostrarContrasena() ? 'text' : 'password'" [(ngModel)]="nuevo.contrasena"
+                 aria-describedby="ayuda-contrasena">
+          <button type="button" class="btn btn-icono"
+                  [attr.aria-label]="mostrarContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-pressed]="mostrarContrasena()" (click)="mostrarContrasena.set(!mostrarContrasena())">
+            <app-icono [nombre]="mostrarContrasena() ? 'ojo-tachado' : 'ojo'" [tamano]="18" />
+          </button>
+        </div>
+        <p id="ayuda-contrasena" class="campo-ayuda">Mínimo 8 caracteres.</p>
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="nuevo-rol">Rol</label>
+        <select id="nuevo-rol" name="rol" class="entrada" [(ngModel)]="nuevo.rol">
+          @for (r of rolesAsignables(); track r) {
+            <option [value]="r">{{ nombreRol(r) }}</option>
           }
         </select>
-      </label>
-    }
-    <div class="acciones">
-      <button type="submit" class="btn primario" [disabled]="creando()">Crear usuario</button>
-      <button type="button" class="btn" (click)="mostrarFormulario.set(false)">Cancelar</button>
-    </div>
-  </form>
+      </div>
+      @if (auth.tieneRol('ADMIN') && nuevo.rol !== 'ADMIN') {
+        <div class="campo">
+          <label class="campo-etiqueta" for="nuevo-empresa">Empresa</label>
+          <select id="nuevo-empresa" name="empresa" class="entrada" [(ngModel)]="nuevo.empresa">
+            <option [ngValue]="null">{{ nuevo.rol === 'ADMIN_EMPRESA' ? 'Elija una empresa' : 'Sin empresa' }}</option>
+            @for (e of empresas(); track e.id) {
+              <option [ngValue]="e.id">{{ e.nombre }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div class="formulario-acciones">
+        <button type="submit" class="btn btn-primario" [disabled]="creando()">
+          @if (creando()) { <span class="girador" aria-hidden="true"></span> } @else { <app-icono nombre="check" [tamano]="16" /> }
+          Crear usuario
+        </button>
+        <button type="button" class="btn btn-secundario" (click)="mostrarFormulario.set(false)">Cancelar</button>
+      </div>
+    </form>
+  </section>
 }
 
 @if (error()) {
-  <p class="aviso error">{{ error() }}</p>
-}
-@if (aviso()) {
-  <p class="aviso ok">{{ aviso() }}</p>
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
 }
 
-@if (cargando()) {
-  <p class="aviso">Cargando usuarios...</p>
-} @else {
-  <div class="bloque">
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th>Empresa</th>
-          <th>Estado</th>
-          <th>Ultimo acceso</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (u of usuarios(); track u.id) {
-          <tr [class.apagado]="u.estado !== 'activo'">
-            <td>{{ u.nombreCompleto }}</td>
-            <td>{{ u.email }}</td>
-            <td>
-              @if (esUnoMismo(u)) {
-                {{ nombreRol(u.rol) }}
-              } @else {
-                <select class="rol" [attr.aria-label]="'Rol de ' + u.email" [disabled]="guardando() === u.id"
-                        (change)="cambiarRol(u, $any($event.target).value)">
-                  @for (r of rolesAsignables(); track r) {
-                    <option [value]="r" [selected]="r === u.rol">{{ nombreRol(r) }}</option>
-                  }
-                </select>
-              }
-            </td>
-            <td>{{ u.empresa ?? '-' }}</td>
-            <td><span class="estado" [class]="u.estado">{{ u.estado }}</span></td>
-            <td class="fecha">{{ u.ultimoLogin ? (u.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}</td>
-            <td>
-              <button
-                [class.peligro]="u.estado === 'activo'"
-                [disabled]="esUnoMismo(u) || guardando() === u.id"
-                [title]="esUnoMismo(u) ? 'No puede desactivar su propia cuenta' : ''"
-                (click)="alternarEstado(u)">
-                @if (guardando() === u.id) { Guardando... }
-                @else if (u.estado === 'activo') { Desactivar }
-                @else { Activar }
-              </button>
-            </td>
-          </tr>
+<section class="tarjeta" aria-label="Usuarios">
+  <div class="barra-filtros">
+    <div class="barra-filtros-fila">
+      <div class="campo buscador">
+        <label class="campo-etiqueta" for="filtro-usuarios">Buscar</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="buscar" [tamano]="18" />
+          <input id="filtro-usuarios" type="search" class="entrada" placeholder="Nombre o email"
+                 [ngModel]="busqueda()" (ngModelChange)="buscarTexto($event)">
+        </div>
+      </div>
+    </div>
+    <div class="filas-chips">
+      <fieldset class="grupo-chips">
+        <legend>Rol</legend>
+        <button type="button" class="chip-filtro" [attr.aria-pressed]="filtroRol() === ''" (click)="elegirRol('')">Todos</button>
+        @for (r of rolesAsignables(); track r) {
+          <button type="button" class="chip-filtro" [attr.aria-pressed]="filtroRol() === r" (click)="elegirRol(r)">{{ nombreRol(r) }}</button>
         }
-      </tbody>
-    </table>
-    @if (usuarios().length === 0) {
-      <p class="aviso">No hay usuarios para mostrar.</p>
-    }
+      </fieldset>
+      <fieldset class="grupo-chips">
+        <legend>Estado</legend>
+        @for (e of estados; track e.valor) {
+          <button type="button" class="chip-filtro" [attr.aria-pressed]="filtroEstado() === e.valor" (click)="elegirEstado(e.valor)">{{ e.nombre }}</button>
+        }
+      </fieldset>
+    </div>
   </div>
-}
+
+  @if (cargando()) {
+    <app-skeleton tipo="tabla" [cantidad]="6" etiqueta="Cargando usuarios…" />
+  } @else {
+    @if (pagina().totalElementos === 0) {
+      <app-estado-vacio icono="usuarios" [titulo]="usuarios().length === 0 ? 'No hay usuarios para mostrar' : 'Ningún usuario coincide'"
+                        [descripcion]="usuarios().length === 0 ? null : 'Pruebe con otro nombre, rol o estado.'" />
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              <th scope="col">Usuario</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Empresa</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Último acceso</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of pagina().contenido; track u.id) {
+              <tr [class.apagado]="u.estado !== 'activo'">
+                <td data-etiqueta="Usuario">
+                  <div class="persona">
+                    <span class="avatar" aria-hidden="true">{{ iniciales(u.nombreCompleto) }}</span>
+                    <span>
+                      <span class="nombre">{{ u.nombreCompleto }} @if (esUnoMismo(u)) { <span class="badge badge-info sin-punto">Usted</span> }</span>
+                      <span class="email">{{ u.email }}</span>
+                    </span>
+                  </div>
+                </td>
+                <td data-etiqueta="Rol">
+                  @if (esUnoMismo(u)) {
+                    <span class="badge badge-acento sin-punto">{{ nombreRol(u.rol) }}</span>
+                  } @else {
+                    <select #selectorRol class="entrada entrada-sm rol" [attr.aria-label]="'Rol de ' + u.email"
+                            [disabled]="guardando() === u.id" (change)="pedirCambioRol(u, selectorRol)">
+                      @for (r of rolesAsignables(); track r) {
+                        <option [value]="r" [selected]="r === u.rol">{{ nombreRol(r) }}</option>
+                      }
+                    </select>
+                  }
+                </td>
+                <td data-etiqueta="Empresa" class="texto-secundario">{{ u.empresa ?? '—' }}</td>
+                <td data-etiqueta="Estado"><span class="badge" [class]="u.estado">{{ nombreEstado(u.estado) }}</span></td>
+                <td data-etiqueta="Último acceso" class="fecha">{{ u.ultimoLogin ? (u.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}</td>
+                <td>
+                  <div class="acciones-fila">
+                    @if (guardando() === u.id) {
+                      <span class="girador guardando" role="status" aria-label="Guardando"></span>
+                    }
+                    <button type="button" class="btn btn-icono" [class.peligro]="u.estado === 'activo'"
+                            [disabled]="esUnoMismo(u) || guardando() === u.id"
+                            [attr.aria-label]="(u.estado === 'activo' ? 'Desactivar a ' : 'Activar a ') + u.email"
+                            [attr.data-tooltip]="esUnoMismo(u) ? 'No puede desactivar su propia cuenta' : (u.estado === 'activo' ? 'Desactivar' : 'Activar')"
+                            (click)="alternarEstado(u)">
+                      <app-icono [nombre]="u.estado === 'activo' ? 'apagar' : 'refrescar'" [tamano]="18" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-paginador [pagina]="pagina().pagina" [totalPaginas]="pagina().totalPaginas" [tamano]="pagina().tamano"
+                   [totalElementos]="pagina().totalElementos" (cambiar)="numeroPagina.set($event)" />
+  }
+</section>
