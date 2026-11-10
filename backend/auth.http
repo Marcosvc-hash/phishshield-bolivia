@@ -1,0 +1,52 @@
+### Autenticacion con JWT (IntelliJ HTTP Client).
+### 1) Ejecute "Login" y copie tokenAcceso / tokenRefresco en las variables de abajo.
+### 2) El token de acceso dura 15 minutos; el de refresco, 7 dias.
+
+@tokenAcceso = pegar-aqui-el-tokenAcceso
+@tokenRefresco = pegar-aqui-el-tokenRefresco
+
+### Registro publico: siempre crea un USUARIO sin empresa (201)
+POST http://localhost:8080/api/auth/registro
+Content-Type: application/json
+
+{
+  "nombres": "Ana",
+  "apellidos": "Choque",
+  "email": "ana.choque@ejemplo.bo",
+  "contrasena": "una-clave-larga-1"
+}
+
+### Login (200 con tokens; 401 si el email o la contrasena no coinciden)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@phishshield.bo",
+  "contrasena": "la-que-usted-eligio"
+}
+
+### Quien soy (401 sin token)
+GET http://localhost:8080/api/auth/yo
+Authorization: Bearer {{tokenAcceso}}
+
+### Ruta solo para ADMIN (403 con un USUARIO)
+GET http://localhost:8080/api/usuarios
+Authorization: Bearer {{tokenAcceso}}
+
+### Renovar el token de acceso. El token de refresco usado queda revocado:
+### copie el nuevo tokenRefresco de la respuesta.
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "tokenRefresco": "{{tokenRefresco}}"
+}
+
+### Cerrar sesion (204). Despues, el refresh con ese token da 401.
+POST http://localhost:8080/api/auth/logout
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "tokenRefresco": "{{tokenRefresco}}"
+}

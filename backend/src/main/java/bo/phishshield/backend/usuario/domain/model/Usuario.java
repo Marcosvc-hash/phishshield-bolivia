@@ -1,9 +1,14 @@
 package bo.phishshield.backend.usuario.domain.model;
 
+import bo.phishshield.backend.shared.domain.model.Rol;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class Usuario {
+
+    /** chk_usuarios_intentos: la columna no admite mas de 100. */
+    private static final int MAXIMO_INTENTOS_REGISTRADOS = 100;
 
     private final Long id;
     private final UUID uuidPublico;
@@ -11,16 +16,18 @@ public class Usuario {
     private final String nombres;
     private final String apellidos;
     private final String email;
-    private final String rol;
-    private final String estado;
+    private final String passwordHash;
+    private final Rol rol;
+    private EstadoUsuario estado;
     private final boolean emailVerificado;
-    private final OffsetDateTime ultimoLogin;
+    private int intentosFallidos;
+    private OffsetDateTime ultimoLogin;
     private final OffsetDateTime creadoEn;
 
     public Usuario(Long id, UUID uuidPublico, Long idEmpresa,
-                   String nombres, String apellidos, String email,
-                   String rol, String estado, boolean emailVerificado,
-                   OffsetDateTime ultimoLogin, OffsetDateTime creadoEn) {
+                   String nombres, String apellidos, String email, String passwordHash,
+                   Rol rol, EstadoUsuario estado, boolean emailVerificado,
+                   int intentosFallidos, OffsetDateTime ultimoLogin, OffsetDateTime creadoEn) {
 
         if (nombres == null || nombres.isBlank()) {
             throw new IllegalArgumentException("Los nombres del usuario son obligatorios");
@@ -34,11 +41,14 @@ public class Usuario {
         if (!email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
             throw new IllegalArgumentException("Formato de email invalido: " + email);
         }
-        if (rol == null || !rol.matches("admin|analista|empresa|usuario")) {
-            throw new IllegalArgumentException("Rol invalido: " + rol);
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("El usuario necesita una contrasena");
         }
-        if (estado == null || !estado.matches("activo|inactivo|bloqueado|pendiente")) {
-            throw new IllegalArgumentException("Estado invalido: " + estado);
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado es obligatorio");
         }
 
         this.id = id;
@@ -47,15 +57,51 @@ public class Usuario {
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.email = email;
+        this.passwordHash = passwordHash;
         this.rol = rol;
         this.estado = estado;
         this.emailVerificado = emailVerificado;
+        this.intentosFallidos = intentosFallidos;
         this.ultimoLogin = ultimoLogin;
         this.creadoEn = creadoEn;
     }
 
+    /**
+     * Usuario que se registra solo: siempre USUARIO, sin empresa y activo.
+     * El email queda sin verificar porque todavia no se envian correos.
+     */
+    public static Usuario registrado(String nombres, String apellidos,
+                                     String email, String passwordHash) {
+        return new Usuario(null, null, null, nombres, apellidos, email, passwordHash,
+                Rol.USUARIO, EstadoUsuario.ACTIVO, false, 0, null, null);
+    }
+
+    /**
+     * Solo se exige que la cuenta este activa. email_verificado queda como
+     * dato informativo hasta que exista el envio de correos de verificacion.
+     */
     public boolean puedeIniciarSesion() {
-        return "activo".equals(estado) && emailVerificado;
+        return estado == EstadoUsuario.ACTIVO;
+    }
+
+    public void registrarLoginExitoso(OffsetDateTime momento) {
+        this.intentosFallidos = 0;
+        this.ultimoLogin = momento;
+    }
+
+    public void registrarLoginFallido() {
+        if (intentosFallidos < MAXIMO_INTENTOS_REGISTRADOS) {
+            intentosFallidos++;
+        }
+    }
+
+    public void activar() {
+        this.estado = EstadoUsuario.ACTIVO;
+        this.intentosFallidos = 0;
+    }
+
+    public void desactivar() {
+        this.estado = EstadoUsuario.INACTIVO;
     }
 
     public String nombreCompleto() {
@@ -70,9 +116,11 @@ public class Usuario {
     public String getNombres() { return nombres; }
     public String getApellidos() { return apellidos; }
     public String getEmail() { return email; }
-    public String getRol() { return rol; }
-    public String getEstado() { return estado; }
+    public String getPasswordHash() { return passwordHash; }
+    public Rol getRol() { return rol; }
+    public EstadoUsuario getEstado() { return estado; }
     public boolean isEmailVerificado() { return emailVerificado; }
+    public int getIntentosFallidos() { return intentosFallidos; }
     public OffsetDateTime getUltimoLogin() { return ultimoLogin; }
     public OffsetDateTime getCreadoEn() { return creadoEn; }
 }

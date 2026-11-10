@@ -36,12 +36,13 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 - `backend/`: Spring Boot 4.1 + Java 25, Maven Wrapper (`mvnw.cmd`).
 - `frontend/`: Angular 22 + TypeScript 6, pruebas con Vitest.
 - `database/`: PostgreSQL 18 en Docker (contenedor `phishshield-db`).
-  - `initdb/01_schema.sql` (15 tablas) y `initdb/02_seed.sql`: solo corren con el volumen vacío.
+  - `initdb/01_schema.sql` (15 tablas), `initdb/02_seed.sql` y `initdb/03_vistas_panel_admin.sql`
+    (vistas del panel, igual que V8): solo corren con el volumen vacío.
   - `migraciones/V<n>__*.sql`: cambios para bases que ya existen.
 
 ## Arquitectura hexagonal del backend
 
-Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `shared`.
+Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`, `shared`.
 Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
@@ -70,6 +71,21 @@ Otros puntos del diseño:
   - Si el servicio no responde en 2 s, el análisis sigue solo con las reglas.
   - El dataset y `modelo.joblib` no van a git; se regeneran con `descargar_datos.py` y `entrenar.py`.
 - Las pruebas de dominio y de casos de uso usan dobles en memoria, sin Spring.
+- Autenticación (JWT HS256 con Nimbus, BCrypt):
+  - Roles en el dominio (`shared/domain/model/Rol`): ADMIN, ADMIN_EMPRESA y USUARIO. En la base
+    se guardan como `admin`, `empresa` y `usuario`; el valor `analista` no se usa.
+  - Reglas por ruta en `shared/infrastructure/security/SeguridadConfig`. Los casos de uso
+    reciben `UsuarioActual` y filtran con `AlcanceDatos`: ADMIN ve todo, ADMIN_EMPRESA solo su
+    empresa y USUARIO recibe 403.
+  - En cada petición, `JwtUsuarioActualConverter` relee al usuario de la base, así que el rol y
+    el estado del token no se usan para decidir permisos.
+  - Tokens: el JWT dura 15 min. El de refresco es aleatorio, dura 7 días, se rota en cada uso y
+    en `sesiones` solo se guarda su SHA-256.
+  - Los accesos (`LOGIN_EXITOSO`, `LOGIN_FALLIDO`, `LOGOUT`) se escriben en `auditoria`.
+  - `POST /api/analisis` sigue siendo público. Con token, el análisis queda a nombre del
+    usuario; los ids del cuerpo se ignoran.
+- Hash de una contraseña para la base: `backend/herramientas/GenerarHashBcrypt.java` (ver su
+  comentario). Lee la contraseña por teclado y no la muestra.
 
 ## Ejecutar
 
@@ -79,6 +95,10 @@ Otros puntos del diseño:
   - Si ese archivo no existe (pasó en esta máquina), tómala del contenedor sin imprimirla:
     `$env:DB_PASSWORD = (docker exec phishshield-db printenv POSTGRES_PASSWORD)`
   - **Nunca la muestres, nunca la escribas en un archivo y nunca la commitees.**
+- **`JWT_SECRET`:** el backend no arranca sin ella (mínimo 32 caracteres). Las pruebas usan un
+  secreto falso de `src/test/resources/config/application.yaml`. Para levantar el backend en
+  una sesión, genérala al azar sin imprimirla:
+  `$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $env:JWT_SECRET = [Convert]::ToBase64String($b)`
 
 ## Migraciones
 
@@ -94,6 +114,10 @@ Otros puntos del diseño:
 - **Mensajes rojos en PowerShell:** git escribe en stderr y PowerShell 5.1 lo muestra como `NativeCommandError` aunque el comando haya funcionado. Revisa el resultado real.
 - **`docker compose ps` sale vacío en `database/`:** el contenedor se creó desde la carpeta vieja `C:\proyectos\phishshield-db`. Usa `docker ps`.
 - **Puerto del frontend:** en las sesiones de Claude existe `PORT=0`, y por eso `ng serve` elige un puerto al azar en lugar del 4200.
+  Ni siquiera `--port 4200` lo evita: hay que hacer antes `$env:PORT = "4200"`. El CORS del backend solo admite `localhost:4200`.
+- **Tubería de PowerShell 5.1 hacia programas nativos:** antepone un BOM al texto (`"x" | java ...`
+  recibe `﻿x`). `GenerarHashBcrypt` ya lo descarta; tenerlo en cuenta con otras herramientas.
+- **`System.console()` en Java 22+:** ya no es `null` aunque la entrada venga redirigida; usar `isTerminal()`.
 - **Contraseña pública:** la de la base es el valor por defecto de `docker-compose.yml` y ya está en el historial público. Está pendiente rotarla.
 
 ## Convenciones

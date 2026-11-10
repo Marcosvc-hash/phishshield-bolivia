@@ -1,0 +1,112 @@
+.marco {
+  display: flex;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1f2933;
+}
+
+.lateral {
+  width: 240px;
+  flex-shrink: 0;
+  background: #1e3a8a;
+  color: #e0e7ff;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 0;
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.marca strong {
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.marca span {
+  font-size: 0.8rem;
+  color: #a5b4fc;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  flex: 1;
+}
+
+nav a,
+nav .pronto {
+  padding: 0.6rem 1.25rem;
+  color: #e0e7ff;
+  text-decoration: none;
+  font-size: 0.92rem;
+  border-left: 3px solid transparent;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+nav a.activa {
+  background: rgba(255, 255, 255, 0.12);
+  border-left-color: #93c5fd;
+  color: #fff;
+  font-weight: 600;
+}
+
+nav .pronto {
+  color: #7c8fd1;
+  cursor: default;
+}
+
+nav .pronto::after {
+  content: " (pronto)";
+  font-size: 0.75rem;
+}
+
+nav .separado {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 1rem;
+}
+
+.cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 1.25rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.cuenta .nombre {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cuenta .rol {
+  font-size: 0.78rem;
+  color: #a5b4fc;
+}
+
+.cuenta button {
+  margin-top: 0.6rem;
+  padding: 0.45rem;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  background: transparent;
+  color: #e0e7ff;
+  cursor: pointer;
+}
+
+.contenido {
+  flex: 1;
+  background: #f8fafc;
+  padding: 2rem;
+  overflow-x: auto;
+}

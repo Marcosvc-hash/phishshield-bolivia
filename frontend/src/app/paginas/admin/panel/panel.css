@@ -1,0 +1,209 @@
+.titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1e3a8a;
+}
+
+.alcance {
+  margin: 0.2rem 0 0;
+  color: #52514e;
+  font-size: 0.9rem;
+}
+
+.actualizar {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid #1d4ed8;
+  border-radius: 6px;
+  background: #fff;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+/* Tarjetas: el numero va en tinta de texto, nunca en color de serie */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.tarjeta {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.rotulo {
+  font-size: 0.82rem;
+  color: #52514e;
+  font-weight: 600;
+}
+
+.cifra {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0b0b0b;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.detalle {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.bloque {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+  min-width: 0;
+}
+
+h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  color: #1f2933;
+}
+
+h2 small {
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.columnas {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 2fr;
+  gap: 1.25rem;
+}
+
+.columnas .bloque {
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 1000px) {
+  .columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tabla-datos {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.tabla-datos summary {
+  cursor: pointer;
+  color: #1d4ed8;
+}
+
+.vacio {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* Top de entidades: barra proporcional en un solo tono neutro (es magnitud, no estado) */
+.top {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fila-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.nombre {
+  color: #1f2933;
+}
+
+.tipo {
+  font-size: 0.72rem;
+  color: #6b7280;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  margin-left: 0.3rem;
+}
+
+.veces {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.barra {
+  height: 6px;
+  background: #eef0f3;
+  border-radius: 4px;
+  margin-top: 0.3rem;
+}
+
+.relleno {
+  height: 100%;
+  background: #2a78d6;
+  border-radius: 4px;
+}
+
+table {
+  font-size: 0.86rem;
+}
+
+/* Si la tabla no cabe, se desplaza dentro de su tarjeta y no estira la pagina */
+.desplazable {
+  overflow-x: auto;
+}
+
+.fecha,
+.usuario {
+  white-space: nowrap;
+  color: #52514e;
+}
+
+.contenido,
+.usuario {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contenido {
+  max-width: 230px;
+}
+
+.usuario {
+  max-width: 150px;
+}
+
+/* Pastilla de veredicto: el texto dice el estado; el color lo acompana */
+.pastilla {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1f2933;
+  border-left: 4px solid;
+}
+
+.pastilla.phishing   { background: #fbeaea; border-color: #d03b3b; }
+.pastilla.sospechoso { background: #fef5e1; border-color: #fab219; }
+.pastilla.seguro     { background: #e8f6e8; border-color: #0ca30c; }

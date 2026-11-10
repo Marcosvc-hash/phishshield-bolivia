@@ -1,0 +1,34 @@
+<main class="pantalla">
+  <form class="caja" (ngSubmit)="registrar()">
+    <h1>PhishShield Bolivia</h1>
+    <p class="subtitulo">Crear una cuenta</p>
+
+    <label for="nombres">Nombres</label>
+    <input id="nombres" name="nombres" [(ngModel)]="nombres" [disabled]="enviando()" />
+
+    <label for="apellidos">Apellidos (opcional)</label>
+    <input id="apellidos" name="apellidos" [(ngModel)]="apellidos" [disabled]="enviando()" />
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="username"
+           [(ngModel)]="email" [disabled]="enviando()" />
+
+    <label for="contrasena">Contrasena (minimo 8 caracteres)</label>
+    <input id="contrasena" name="contrasena" type="password" autocomplete="new-password"
+           [(ngModel)]="contrasena" [disabled]="enviando()" />
+
+    <label for="confirmacion">Repita la contrasena</label>
+    <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password"
+           [(ngModel)]="confirmacion" [disabled]="enviando()" />
+
+    @if (error()) {
+      <p class="aviso error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="enviando()">
+      @if (enviando()) { Creando cuenta... } @else { Crear cuenta }
+    </button>
+
+    <p class="pie">Ya tiene cuenta? <a routerLink="/login">Inicie sesion</a></p>
+  </form>
+</main>

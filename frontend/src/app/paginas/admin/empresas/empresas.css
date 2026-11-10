@@ -1,0 +1,26 @@
+h1 {
+  margin: 0 0 1.25rem;
+  font-size: 1.5rem;
+  color: #1e3a8a;
+}
+
+.conteo {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.plan {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.activa  { color: #15803d; font-weight: 600; }
+.inactiva { color: #b91c1c; font-weight: 600; }
+
+table {
+  background: #fff;
+}

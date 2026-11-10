@@ -1,0 +1,54 @@
+<h1>Usuarios</h1>
+<p class="alcance">
+  @if (auth.tieneRol('ADMIN')) { Todos los usuarios de la plataforma } @else { Usuarios de su empresa }
+</p>
+
+@if (error()) {
+  <p class="aviso error">{{ error() }}</p>
+}
+
+@if (cargando()) {
+  <p class="aviso">Cargando usuarios...</p>
+} @else {
+  <div class="bloque">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Empresa</th>
+          <th>Estado</th>
+          <th>Ultimo acceso</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of usuarios(); track u.id) {
+          <tr [class.apagado]="u.estado !== 'activo'">
+            <td>{{ u.nombreCompleto }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ nombreRol(u.rol) }}</td>
+            <td>{{ u.empresa ?? '-' }}</td>
+            <td><span class="estado" [class]="u.estado">{{ u.estado }}</span></td>
+            <td class="fecha">{{ u.ultimoLogin ? (u.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}</td>
+            <td>
+              <button
+                [class.peligro]="u.estado === 'activo'"
+                [disabled]="esUnoMismo(u) || guardando() === u.id"
+                [title]="esUnoMismo(u) ? 'No puede desactivar su propia cuenta' : ''"
+                (click)="alternarEstado(u)">
+                @if (guardando() === u.id) { Guardando... }
+                @else if (u.estado === 'activo') { Desactivar }
+                @else { Activar }
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (usuarios().length === 0) {
+      <p class="aviso">No hay usuarios para mostrar.</p>
+    }
+  </div>
+}

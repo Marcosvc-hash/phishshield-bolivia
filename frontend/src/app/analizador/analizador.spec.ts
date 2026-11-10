@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { Analizador } from './analizador';
 
 describe('Analizador', () => {
@@ -10,29 +11,50 @@ describe('Analizador', () => {
   let fixture: ComponentFixture<Analizador>;
   let http: HttpTestingController;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [Analizador],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
-    }).compileComponents();
+  /** Simula una sesion guardada en el navegador (lo que hace AuthService al hacer login). */
+  function sesionGuardada(rol: string): void {
+    localStorage.setItem('phishshield.tokenAcceso', 'token-de-prueba');
+    localStorage.setItem('phishshield.usuario',
+      JSON.stringify({ id: 'u1', nombreCompleto: 'Prueba', email: 'p@x.bo', rol }));
+  }
 
+  function crear(): void {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(Analizador);
     component = fixture.componentInstance;
+  }
+
+  beforeEach(async () => {
+    localStorage.clear();
+    await TestBed.configureTestingModule({
+      imports: [Analizador],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    }).compileComponents();
   });
 
   afterEach(() => {
     // Falla si quedo alguna peticion sin esperar
     http.verify();
+    localStorage.clear();
   });
 
   it('should create', () => {
+    crear();
     fixture.detectChanges();
-    http.expectOne(`${API}?limite=10`).flush([]);
     expect(component).toBeTruthy();
   });
 
-  it('carga el historial al iniciar', () => {
+  it('sin sesion no pide el listado general (es solo para ADMIN)', () => {
+    crear();
+    fixture.detectChanges();
+
+    http.expectNone(`${API}?limite=10`);
+    expect(component.historial().length).toBe(0);
+  });
+
+  it('con sesion de ADMIN carga el historial al iniciar', () => {
+    sesionGuardada('ADMIN');
+    crear();
     fixture.detectChanges(); // dispara ngOnInit
 
     const peticion = http.expectOne(`${API}?limite=10`);
@@ -49,8 +71,8 @@ describe('Analizador', () => {
   });
 
   it('no llama a la API si la URL no tiene http o https', () => {
+    crear();
     fixture.detectChanges();
-    http.expectOne(`${API}?limite=10`).flush([]);
 
     component.url = 'ftp://archivos.com';
     component.analizar();

@@ -24,3 +24,9 @@ phishshield:
     url: ${IA_URL:http://localhost:8000}
     timeout: 2s
     habilitada: ${IA_HABILITADA:true}
+  jwt:
+    # Clave HMAC para firmar los tokens: minimo 32 caracteres. Nunca en git;
+    # se pasa como variable de entorno (en IntelliJ: Run > Edit Configurations).
+    secreto: ${JWT_SECRET}
+    duracion-acceso: 15m
+    duracion-refresco: 7d
