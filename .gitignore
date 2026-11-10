@@ -58,6 +58,8 @@ Desktop.ini
 
 # --- Base de datos ---
 *.dump
+# Respaldo de la base real tomado antes de aplicar V9 (ya lo cubre *.dump; va explicito a proposito)
+respaldo_antes_v9.dump
 backup*.sql
 pgdata/
 

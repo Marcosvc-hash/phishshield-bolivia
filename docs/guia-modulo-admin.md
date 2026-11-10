@@ -24,13 +24,18 @@ Rutas abreviadas en las tablas:
 | `a541cdb` | 5. Empresas |
 | `e8a77e2` | 6. Usuarios |
 
-### La migración V9 todavía no está aplicada en la base real
+### La migración V9
 
 `database/migraciones/V9__uuid_alertas_y_dominios.sql` agrega `uuid_publico` a `alertas` y a
 `dominios_lista`. Sin ella, las páginas de **Alertas** y **Listas de dominios** responden error
 500, porque sus consultas usan esa columna. Las demás páginas funcionan igual.
 
-Cómo aplicarla (desde la raíz del repo, en PowerShell):
+**Estado:** se aplicó en la base real el 2026-11-10. Antes se tomó un respaldo,
+`respaldo_antes_v9.dump`, que está en la raíz del repo y no se sube a git. Se comprobó que ese
+respaldo se restaura con los mismos conteos. Después de aplicarla, Alertas y Listas respondieron
+200 en vivo, sin errores 500.
+
+En otra máquina, se aplica así (desde la raíz del repo, en PowerShell):
 
 ```powershell
 Get-Content database\migraciones\V9__uuid_alertas_y_dominios.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction

@@ -131,9 +131,13 @@ Otros puntos del diseño:
   recibe `﻿x`). `GenerarHashBcrypt` ya lo descarta; tenerlo en cuenta con otras herramientas.
 - **`System.console()` en Java 22+:** ya no es `null` aunque la entrada venga redirigida; usar `isTerminal()`.
 - **Contraseña pública:** la de la base es el valor por defecto de `docker-compose.yml` y ya está en el historial público. Está pendiente rotarla.
-- **V9 pendiente en la base real (2026-11-10):** `V9__uuid_alertas_y_dominios.sql` se probó en una
-  base temporal pero no se aplicó en `phishshield`. Sin ella, alertas y listas de dominios responden 500.
-- **No hay Python en esta máquina** (`python` abre la Microsoft Store), así que `pytest` de `ia/` no corre aquí.
+- **V9 aplicada en la base real (2026-11-10)**, con respaldo previo en `respaldo_antes_v9.dump`
+  (raíz del repo, ignorado por git; restaurar con `pg_restore`).
+- **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
+- **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
+  entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
+- **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.
+  Usar PowerShell o anteponer `MSYS_NO_PATHCONV=1`.
 
 ## Convenciones
 
