@@ -1,87 +1,132 @@
-<section class="analizador">
+<section class="analizador" aria-label="Analizador de enlaces">
 
-  <h2>Analizar una URL</h2>
-  <p class="ayuda">Pegue un enlace sospechoso y PhishShield le dira por que es o no es peligroso.</p>
+  <form class="buscador-url" (ngSubmit)="analizar()" novalidate>
+    <label for="url-a-analizar" class="sr-only">Enlace que quiere analizar</label>
+    <div class="caja" [class.con-error]="error()">
+      <app-icono nombre="enlace" class="icono-caja" />
+      <input
+        id="url-a-analizar"
+        name="url"
+        type="text"
+        inputmode="url"
+        autocomplete="off"
+        spellcheck="false"
+        [(ngModel)]="url"
+        placeholder="Pegue aquí el enlace, por ejemplo https://ejemplo.com/login"
+        [attr.aria-invalid]="error() ? 'true' : null"
+        [attr.aria-describedby]="error() ? 'error-url' : 'ayuda-url'"
+        [disabled]="analizando()" />
+      <button type="submit" class="btn btn-primario btn-lg" [disabled]="analizando()">
+        @if (analizando()) {
+          <span class="girador" aria-hidden="true"></span> Analizando…
+        } @else {
+          <app-icono nombre="escudo-check" [tamano]="18" /> Analizar
+        }
+      </button>
+    </div>
 
-  <div class="formulario">
-    <input
-      type="text"
-      [(ngModel)]="url"
-      (keyup.enter)="analizar()"
-      placeholder="https://ejemplo.com/login"
-      [disabled]="analizando()" />
-
-    <button (click)="analizar()" [disabled]="analizando()">
-      @if (analizando()) { Analizando... } @else { Analizar }
-    </button>
-
-    @if (resultado() || error()) {
-      <button class="secundario" (click)="limpiar()">Limpiar</button>
+    @if (error()) {
+      <p id="error-url" class="aviso error" role="alert">
+        <app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}
+      </p>
+    } @else {
+      <div id="ayuda-url" class="ejemplos">
+        <span>Pruebe con:</span>
+        @for (e of ejemplos; track e) {
+          <button type="button" class="chip-filtro" [disabled]="analizando()" (click)="probarEjemplo(e)">{{ e }}</button>
+        }
+      </div>
     }
-  </div>
-
-  @if (error()) {
-    <p class="aviso error">{{ error() }}</p>
-  }
+  </form>
 
   @if (resultado(); as r) {
-    <article class="tarjeta" [class]="claseDe(r.resultado)">
+    <article class="resultado tarjeta" [class]="claseDe(r.resultado)" aria-live="polite" aria-labelledby="titulo-veredicto">
 
-      <div class="encabezado">
-               <span class="etiqueta">{{ etiquetaDe(r.resultado, r.indicadores.length) }}</span>
-        <span class="puntaje">{{ r.nivelRiesgo }} / 100</span>
+      <div class="resumen">
+        <app-medidor-riesgo [valor]="r.nivelRiesgo" [veredicto]="r.resultado" />
+
+        <div class="veredicto">
+          <p id="titulo-veredicto" class="etiqueta">
+            <app-icono [nombre]="iconoDe(r.resultado)" [tamano]="28" />
+            {{ etiquetaDe(r.resultado, r.indicadores.length) }}
+          </p>
+          <p class="consejo">{{ consejoDe(r.resultado, r.indicadores.length) }}</p>
+
+          <dl class="datos">
+            <div><dt>Dominio</dt><dd class="mono">{{ r.dominio || 'No identificado' }}</dd></div>
+            <div><dt>Señales</dt><dd>{{ r.indicadores.length }}</dd></div>
+            <div><dt>Tiempo</dt><dd>{{ r.tiempoMs != null ? r.tiempoMs + ' ms' : '—' }}</dd></div>
+          </dl>
+
+          <button type="button" class="btn btn-fantasma btn-sm limpiar" (click)="limpiar()">
+            <app-icono nombre="refrescar" [tamano]="16" /> Analizar otro enlace
+          </button>
+        </div>
       </div>
 
-      <div class="barra">
-        <div class="relleno" [style.width.%]="r.nivelRiesgo"></div>
+      <div class="explicacion">
+        <h2>Por qué obtuvo este resultado</h2>
+        @if (indicadores().length > 0) {
+          <ul class="indicadores">
+            @for (i of indicadores(); track i.codigo) {
+              <li>
+                <span class="icono-indicador"><app-icono [nombre]="explicar(i.codigo).icono" [tamano]="18" /></span>
+                <div class="texto">
+                  <p class="titulo-indicador">{{ explicar(i.codigo).titulo }}</p>
+                  <p class="detalle">{{ explicar(i.codigo).explicacion }}</p>
+                  @if (i.detalle) {
+                    <p class="evidencia">{{ i.detalle }}</p>
+                  }
+                </div>
+                <span class="aporte" [attr.aria-label]="'Suma ' + (i.aporte | number: '1.0-1') + ' puntos'">
+                  +{{ i.aporte | number: '1.0-1' }}
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="sin-senales">
+            <app-icono nombre="check-circulo" [tamano]="20" />
+            Ninguna regla de detección se activó para esta dirección.
+          </p>
+        }
       </div>
-
-      <dl class="datos">
-        <dt>Dominio</dt>
-        <dd>{{ r.dominio || 'No identificado' }}</dd>
-        <dt>Analizado en</dt>
-        <dd>{{ r.tiempoMs }} ms</dd>
-      </dl>
-
-      @if (r.indicadores.length > 0) {
-        <h3>Por que se marco asi</h3>
-        <ul class="indicadores">
-          @for (i of r.indicadores; track i.codigo) {
-            <li>
-              <span class="detalle">{{ i.detalle || i.codigo }}</span>
-              <span class="aporte">+{{ i.aporte }}</span>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="ayuda">Ninguna regla heuristica se activo para esta direccion.</p>
-      }
-
     </article>
   }
 
   @if (historial().length > 0) {
-    <h3 class="titulo-historial">Ultimos analisis</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Dominio</th>
-          <th>Veredicto</th>
-          <th>Riesgo</th>
-          <th>Indicadores</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (a of historial(); track a.id) {
-          <tr>
-            <td>{{ a.dominio || a.url }}</td>
-            <td><span class="pastilla" [class]="claseDe(a.resultado)">{{ a.resultado }}</span></td>
-            <td>{{ a.nivelRiesgo }}</td>
-            <td>{{ a.indicadores.length }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <section class="tarjeta historial" aria-labelledby="titulo-historial">
+      <div class="tarjeta-cabecera">
+        <h2 id="titulo-historial" class="tarjeta-titulo">Últimos análisis <span class="tarjeta-subtitulo">de toda la plataforma</span></h2>
+      </div>
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              <th scope="col">Dominio</th>
+              <th scope="col">Veredicto</th>
+              <th scope="col">Riesgo</th>
+              <th scope="col">Señales</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of historial(); track a.id) {
+              <tr>
+                <td data-etiqueta="Dominio" class="celda-url" [title]="a.url">{{ a.dominio || a.url }}</td>
+                <td data-etiqueta="Veredicto"><span class="badge" [class]="a.resultado">{{ nombreVeredicto(a.resultado) }}</span></td>
+                <td data-etiqueta="Riesgo">
+                  <span class="riesgo">
+                    <span class="riesgo-barra" [class]="a.resultado"><span [style.width.%]="a.nivelRiesgo"></span></span>
+                    {{ a.nivelRiesgo | number: '1.0-0' }}
+                  </span>
+                </td>
+                <td data-etiqueta="Señales">{{ a.indicadores.length }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   }
 
 </section>

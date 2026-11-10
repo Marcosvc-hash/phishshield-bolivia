@@ -1,172 +1,79 @@
-.analizador {
-  margin-bottom: 3rem;
+.analizador { display: flex; flex-direction: column; gap: var(--esp-6); }
+
+/* Buscador grande del hero */
+.buscador-url { display: flex; flex-direction: column; gap: var(--esp-3); }
+.caja {
+  display: flex; align-items: center; gap: var(--esp-2); padding: 6px 6px 6px var(--esp-4);
+  background: var(--superficie); border: 1px solid var(--borde-fuerte); border-radius: var(--radio-lg);
+  box-shadow: var(--sombra-2); transition: border-color var(--transicion), box-shadow var(--transicion);
 }
-
-h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.25rem;
-  color: #1d4ed8;
+.caja:focus-within { border-color: var(--primario); box-shadow: var(--foco), var(--sombra-2); }
+.caja.con-error { border-color: var(--peligro); }
+.icono-caja { color: var(--texto-3); }
+.caja input {
+  flex: 1; min-width: 0; height: 48px; border: none; background: transparent;
+  font-size: var(--t-md); color: var(--texto);
 }
+.caja input:focus { outline: none; }
+.caja input::placeholder { color: #8391a7; }
+.ejemplos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); font-size: var(--t-sm); color: var(--texto-2); }
+.ejemplos .chip-filtro { font-family: var(--fuente-mono); font-size: var(--t-xs); }
 
-h3 {
-  font-size: 0.95rem;
-  margin: 1.25rem 0 0.5rem;
-  color: #334155;
+/* Resultado */
+.resultado { overflow: hidden; border-top: 4px solid var(--exito-solido); animation: subir 250ms ease-out; }
+.resultado.veredicto-sospechoso { border-top-color: var(--alerta-solido); }
+.resultado.veredicto-phishing { border-top-color: var(--peligro-solido); }
+@keyframes subir { from { opacity: 0; transform: translateY(8px); } }
+
+.resumen {
+  display: grid; grid-template-columns: 260px 1fr; gap: var(--esp-7); align-items: center;
+  padding: var(--esp-7);
 }
-
-.titulo-historial {
-  margin-top: 2.5rem;
-}
-
-.ayuda {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin: 0 0 1rem;
-}
-
-.formulario {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.formulario input {
-  flex: 1;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-
-.formulario input:focus {
-  outline: 2px solid #93c5fd;
-  border-color: #1d4ed8;
-}
-
-.formulario button {
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  background: #1d4ed8;
-  color: white;
-  font-size: 0.95rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.formulario button:hover:not(:disabled) {
-  background: #1e40af;
-}
-
-.formulario button:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.formulario button.secundario {
-  background: transparent;
-  color: #64748b;
-  border: 1px solid #cbd5e1;
-}
-
-.formulario button.secundario:hover {
-  background: #f1f5f9;
-}
-
-.tarjeta {
-  border: 1px solid #e2e8f0;
-  border-left-width: 5px;
-  border-radius: 8px;
-  padding: 1.25rem;
-  background: #ffffff;
-}
-
-.tarjeta.veredicto-seguro     { border-left-color: #15803d; }
-.tarjeta.veredicto-sospechoso { border-left-color: #b45309; }
-.tarjeta.veredicto-phishing   { border-left-color: #b91c1c; }
-
-.encabezado {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 0.75rem;
-}
-
+.veredicto { display: flex; flex-direction: column; gap: var(--esp-3); align-items: flex-start; }
 .etiqueta {
-  font-size: 1.05rem;
-  font-weight: 600;
+  display: flex; align-items: center; gap: var(--esp-3);
+  font-size: var(--t-2xl); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; color: var(--exito);
 }
+.veredicto-sospechoso .etiqueta { color: var(--alerta); }
+.veredicto-phishing .etiqueta { color: var(--peligro); }
+.consejo { color: var(--texto-2); max-width: 520px; }
+.datos { display: flex; flex-wrap: wrap; gap: var(--esp-2) var(--esp-6); margin: var(--esp-2) 0 0; }
+.datos dt { font-size: var(--t-xs); font-weight: 600; color: var(--texto-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.datos dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.limpiar { margin-left: calc(-1 * var(--esp-3)); }
 
-.veredicto-seguro .etiqueta     { color: #15803d; }
-.veredicto-sospechoso .etiqueta { color: #b45309; }
-.veredicto-phishing .etiqueta   { color: #b91c1c; }
-
-.puntaje {
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.barra {
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-}
-
-.relleno {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-.veredicto-seguro .relleno     { background: #16a34a; }
-.veredicto-sospechoso .relleno { background: #d97706; }
-.veredicto-phishing .relleno   { background: #dc2626; }
-
-.datos {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.3rem 1rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.datos dt { color: #64748b; }
-.datos dd { margin: 0; }
-
-.indicadores {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
+.explicacion { padding: var(--esp-6) var(--esp-7) var(--esp-7); border-top: 1px solid var(--borde); background: #fbfcfe; }
+.explicacion h2 { font-size: var(--t-md); font-weight: 600; margin-bottom: var(--esp-4); }
+.indicadores { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--esp-3); }
 .indicadores li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.9rem;
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--esp-4); align-items: start;
+  padding: var(--esp-4); background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
 }
-
-.indicadores li:last-child { border-bottom: none; }
-
-.detalle { color: #334155; }
-
+.icono-indicador {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radio-sm);
+  background: var(--superficie-2); color: var(--texto-2);
+}
+.titulo-indicador { font-weight: 600; }
+.detalle { margin-top: 2px; font-size: var(--t-sm); color: var(--texto-2); }
+.evidencia {
+  display: inline-block; margin-top: var(--esp-2); padding: 2px 8px; border-radius: var(--radio-sm);
+  background: var(--superficie-2); font-family: var(--fuente-mono); font-size: var(--t-xs); color: var(--texto-2);
+  overflow-wrap: anywhere;
+}
 .aporte {
-  color: #b91c1c;
-  font-weight: 600;
-  white-space: nowrap;
+  padding: 2px 10px; border-radius: var(--radio-full); background: var(--superficie-2);
+  font-size: var(--t-sm); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
 }
+.sin-senales { display: flex; align-items: center; gap: var(--esp-2); color: var(--exito); font-weight: 500; }
 
-.pastilla {
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+@media (max-width: 760px) {
+  .caja { flex-wrap: wrap; padding: var(--esp-2); }
+  .icono-caja { display: none; }
+  .caja input { flex-basis: 100%; height: 44px; padding: 0 var(--esp-2); }
+  .caja .btn { width: 100%; }
+  .resumen { grid-template-columns: 1fr; gap: var(--esp-4); padding: var(--esp-5); }
+  .etiqueta { font-size: var(--t-xl); }
+  .explicacion { padding: var(--esp-5); }
+  .indicadores li { grid-template-columns: auto 1fr; padding: var(--esp-3); gap: var(--esp-3); }
+  .aporte { grid-column: 2; justify-self: start; }
 }
-
-.pastilla.veredicto-seguro     { background: #dcfce7; color: #15803d; }
-.pastilla.veredicto-sospechoso { background: #fef3c7; color: #b45309; }
-.pastilla.veredicto-phishing   { background: #fee2e2; color: #b91c1c; }

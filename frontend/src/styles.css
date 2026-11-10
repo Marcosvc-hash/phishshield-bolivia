@@ -1020,9 +1020,9 @@ select.entrada {
 .titulo-admin { margin: 0; font-size: var(--t-xl); }
 .subtitulo-admin { margin: 0.2rem 0 1.25rem; color: var(--texto-2); font-size: var(--t-sm); }
 .tarjeta-admin { background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); padding: 0.5rem; overflow-x: auto; }
-.tarjeta-admin table, .analizador table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
-.tarjeta-admin th, .analizador th { text-align: left; padding: 0.7rem 0.9rem; background: var(--superficie-2); border-bottom: 1px solid var(--borde); }
-.tarjeta-admin td, .analizador td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--borde); }
+.tarjeta-admin table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.tarjeta-admin th { text-align: left; padding: 0.7rem 0.9rem; background: var(--superficie-2); border-bottom: 1px solid var(--borde); }
+.tarjeta-admin td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--borde); }
 .filtros { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 1rem; }
 .filtros label, form.formulario label { display: flex; flex-direction: column; gap: 0.2rem; font-size: var(--t-xs); color: var(--texto-2); }
 .filtros input, .filtros select, form.formulario input, form.formulario select { padding: 0.4rem 0.5rem; border: 1px solid var(--borde-fuerte); border-radius: var(--radio-sm); }
