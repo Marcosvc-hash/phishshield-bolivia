@@ -13,14 +13,14 @@
       @if (auth.usuario(); as u) {
         <span class="saludo">Hola, <strong>{{ u.nombreCompleto }}</strong></span>
         @if (auth.tieneRol('ADMIN', 'ADMIN_EMPRESA')) {
-          <a routerLink="/admin" class="btn btn-secundario btn-sm"><app-icono nombre="panel" [tamano]="16" /> Administración</a>
+          <a routerLink="/admin" class="btn btn-secundario btn-sm"><app-icono nombre="panel" [tamano]="16" /><span class="texto-boton">Administración</span></a>
         }
-        <button type="button" class="btn btn-fantasma btn-sm" (click)="auth.logout()">
-          <app-icono nombre="salir" [tamano]="16" /> Cerrar sesión
+        <button type="button" class="btn btn-fantasma btn-sm" aria-label="Cerrar sesión" (click)="auth.logout()">
+          <app-icono nombre="salir" [tamano]="16" /><span class="texto-boton">Cerrar sesión</span>
         </button>
       } @else {
         <a routerLink="/login" class="btn btn-fantasma btn-sm">Iniciar sesión</a>
-        <a routerLink="/registro" class="btn btn-primario btn-sm">Crear cuenta</a>
+        <a routerLink="/registro" class="btn btn-primario btn-sm crear-cuenta">Crear cuenta</a>
       }
     </div>
   </div>

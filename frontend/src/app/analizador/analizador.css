@@ -15,7 +15,7 @@
   font-size: var(--t-md); color: var(--texto);
 }
 .caja input:focus { outline: none; }
-.caja input::placeholder { color: #8391a7; }
+.caja input::placeholder { color: var(--texto-3); }
 .ejemplos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); font-size: var(--t-sm); color: var(--texto-2); }
 .ejemplos .chip-filtro { font-family: var(--fuente-mono); font-size: var(--t-xs); }
 

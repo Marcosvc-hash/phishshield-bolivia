@@ -46,8 +46,8 @@
                 <th scope="col">Severidad</th>
                 <th scope="col">Estado</th>
                 <th scope="col">URL</th>
-                @if (auth.tieneRol('ADMIN')) { <th scope="col">Empresa</th> }
-                <th scope="col">Asignada a</th>
+                @if (auth.tieneRol('ADMIN')) { <th scope="col" class="col-extra">Empresa</th> }
+                <th scope="col" class="col-extra">Asignada a</th>
               </tr>
             </thead>
             <tbody>
@@ -58,8 +58,8 @@
                   <td data-etiqueta="Severidad"><span class="badge" [class]="a.severidad">{{ nombreSeveridad(a.severidad) }}</span></td>
                   <td data-etiqueta="Estado"><span class="badge" [class]="a.estado">{{ nombreEstado(a.estado) }}</span></td>
                   <td data-etiqueta="URL" class="celda-url" [title]="a.url">{{ a.url }}</td>
-                  @if (auth.tieneRol('ADMIN')) { <td data-etiqueta="Empresa" class="texto-secundario">{{ a.empresa ?? 'Anónimo' }}</td> }
-                  <td data-etiqueta="Asignada a" class="texto-secundario">{{ a.asignado ?? '—' }}</td>
+                  @if (auth.tieneRol('ADMIN')) { <td data-etiqueta="Empresa" class="texto-secundario col-extra">{{ a.empresa ?? '—' }}</td> }
+                  <td data-etiqueta="Asignada a" class="texto-secundario col-extra">{{ a.asignado ?? '—' }}</td>
                 </tr>
               }
             </tbody>

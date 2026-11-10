@@ -489,7 +489,7 @@ select.entrada {
 }
 
 .entrada::placeholder {
-  color: #8391a7;
+  color: var(--texto-3);
 }
 
 .entrada:hover:not(:disabled) {
@@ -581,7 +581,10 @@ select.entrada {
 
 /* --------------------------------------------------------------- Tablas */
 
+/* position: relative para que los elementos absolutos de adentro (texto sr-only,
+   tooltips) queden recortados por el scroll y no ensanchen la pagina */
 .tabla-contenedor {
+  position: relative;
   overflow-x: auto;
 }
 
@@ -604,10 +607,18 @@ select.entrada {
   white-space: nowrap;
 }
 
+/* Las celdas no se parten: la tabla se desplaza dentro de su tarjeta. Las de
+   texto largo (motivo, detalle) llevan la clase ajustable. */
 .tabla td {
   padding: var(--esp-3) var(--esp-4);
   border-bottom: 1px solid var(--borde);
   vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tabla td.ajustable {
+  white-space: normal;
+  min-width: 220px;
 }
 
 .tabla tbody tr:last-child td {
@@ -731,6 +742,11 @@ select.entrada {
     padding: var(--esp-1) 0;
     border: none;
     text-align: right;
+    white-space: normal;
+  }
+
+  .tabla-apilable td.ajustable {
+    min-width: 0;
   }
 
   .tabla-apilable td::before {
@@ -746,6 +762,18 @@ select.entrada {
 
   .tabla-apilable td:not([data-etiqueta])::before {
     content: none;
+  }
+
+  .tabla-apilable td:not([data-etiqueta]) {
+    justify-content: flex-end;
+  }
+
+  /* La URL va en su propia linea, debajo de su etiqueta */
+  .tabla-apilable td.celda-url {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
   }
 
   .tabla-apilable .celda-url {
@@ -875,6 +903,22 @@ select.entrada {
   color: var(--texto-3);
 }
 
+@media (max-width: 640px) {
+  .grupo-chips legend {
+    float: none;
+    width: 100%;
+    margin: 0 0 var(--esp-1);
+  }
+
+  .barra-filtros-fila > .campo:not(.buscador) {
+    flex: 1 1 130px;
+  }
+
+  .barra-filtros-fila > .btn {
+    flex: 1 1 100%;
+  }
+}
+
 .chip-aplicado {
   display: inline-flex;
   align-items: center;
@@ -959,9 +1003,27 @@ select.entrada {
   color: var(--texto);
 }
 
+/* Con el detalle abierto en escritorio, las columnas secundarias se ocultan
+   para que la tabla entre sin desplazarse (el detalle ya las muestra). */
+@media (min-width: 1181px) {
+  .con-detalle.abierto .col-extra {
+    display: none;
+  }
+
+  .con-detalle.abierto .celda-url {
+    max-width: 200px;
+  }
+}
+
 @media (max-width: 1180px) {
   .con-detalle.abierto {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* En pantallas angostas el detalle va arriba de la tabla */
+  .con-detalle.abierto .detalle-lateral {
+    order: -1;
+    scroll-margin-top: 80px;
   }
 
   .detalle-lateral {

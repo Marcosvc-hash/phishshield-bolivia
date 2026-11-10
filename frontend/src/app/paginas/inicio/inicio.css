@@ -42,7 +42,7 @@
 .garantias app-icono { color: var(--exito); }
 
 .seccion-inicio { padding: var(--esp-10) 0; }
-.seccion-inicio.alterna { background: var(--superficie); border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.seccion-inicio.alterna { background: var(--superficie); border-block: 1px solid var(--borde); }
 .seccion-inicio h2 {
   margin: var(--esp-2) 0 var(--esp-3); text-align: center;
   font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.025em;
@@ -62,7 +62,7 @@
 }
 
 .entidades {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--esp-3);
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--esp-3);
   margin: var(--esp-8) 0 var(--esp-5); padding: 0; list-style: none;
 }
 .entidades li {
@@ -82,12 +82,17 @@
 
 @media (max-width: 900px) {
   .secciones { display: none; }
+  .entidades { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .pasos { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .contenedor { padding: 0 var(--esp-4); }
   .saludo { display: none; }
+  .hero .sobretitulo { font-size: 0.6875rem; letter-spacing: 0.03em; }
   .hero { padding: var(--esp-8) 0; }
   .seccion-inicio { padding: var(--esp-9) 0; }
   .pie .fila { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .crear-cuenta, .texto-boton { display: none; }
 }

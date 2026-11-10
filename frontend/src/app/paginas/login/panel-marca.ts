@@ -38,7 +38,7 @@ import { Marca } from '../../core/ui/marca';
         linear-gradient(160deg, var(--marino) 0%, #13284f 100%);
     }
     .panel::after {
-      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.08;
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.05;
       background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
       background-size: 32px 32px;
     }

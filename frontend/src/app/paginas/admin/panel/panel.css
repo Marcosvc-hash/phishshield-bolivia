@@ -46,8 +46,9 @@
   .graficos, .listas { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
-  .kpis { grid-template-columns: minmax(0, 1fr); gap: var(--esp-3); }
-  .kpi { padding: var(--esp-4); }
+  .kpis { gap: var(--esp-3); }
+  .kpi { flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); }
+  .kpi-icono { width: 36px; height: 36px; }
   .cifra { font-size: var(--t-xl); }
   .usuario, .contenido { max-width: none; }
 }

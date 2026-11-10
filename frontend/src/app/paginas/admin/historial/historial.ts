@@ -5,6 +5,7 @@ import { explicar } from '../../../analizador/explicaciones';
 import { AuthService } from '../../../core/auth/auth.service';
 import { mensajeDeError } from '../../../core/errores';
 import { Pagina } from '../../../core/pagina';
+import { mostrarDetalleEnPantallaAngosta } from '../../../core/ui/desplazar';
 import { EstadoVacio } from '../../../core/ui/estado-vacio';
 import { fechaLegible, nombreEstadoAlerta, nombreSeveridad, nombreVeredicto } from '../../../core/ui/etiquetas';
 import { Icono } from '../../../core/ui/icono';
@@ -109,6 +110,7 @@ export class Historial implements OnInit {
       next: (d) => {
         this.detalle.set(d);
         this.cargandoDetalle.set(false);
+        mostrarDetalleEnPantallaAngosta();
       },
       error: (err) => {
         this.toast.error(mensajeDeError(err, 'No se pudo abrir el análisis.'));

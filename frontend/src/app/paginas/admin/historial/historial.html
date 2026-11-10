@@ -17,7 +17,7 @@
           <label class="campo-etiqueta" for="filtro-q">Buscar</label>
           <div class="entrada-con-icono">
             <app-icono nombre="buscar" [tamano]="18" />
-            <input id="filtro-q" type="search" name="q" class="entrada" placeholder="Dominio o URL, por ejemplo bnb"
+            <input id="filtro-q" type="search" name="q" class="entrada" placeholder="Dominio o URL"
                    [(ngModel)]="filtro.q">
           </div>
         </div>
@@ -81,9 +81,9 @@
                 <th scope="col">URL</th>
                 <th scope="col">Resultado</th>
                 <th scope="col">Riesgo</th>
-                <th scope="col">Usuario</th>
-                @if (auth.tieneRol('ADMIN')) { <th scope="col">Empresa</th> }
-                <th scope="col">Alerta</th>
+                <th scope="col" class="col-extra">Usuario</th>
+                @if (auth.tieneRol('ADMIN')) { <th scope="col" class="col-extra">Empresa</th> }
+                <th scope="col" class="col-extra">Alerta</th>
               </tr>
             </thead>
             <tbody>
@@ -100,9 +100,9 @@
                       {{ fila.nivelRiesgo | number: '1.0-1' }}
                     </span>
                   </td>
-                  <td data-etiqueta="Usuario" class="texto-secundario">{{ fila.usuario ?? 'anónimo' }}</td>
-                  @if (auth.tieneRol('ADMIN')) { <td data-etiqueta="Empresa" class="texto-secundario">{{ fila.empresa ?? '—' }}</td> }
-                  <td data-etiqueta="Alerta">
+                  <td data-etiqueta="Usuario" class="texto-secundario col-extra">{{ fila.usuario ?? 'anónimo' }}</td>
+                  @if (auth.tieneRol('ADMIN')) { <td data-etiqueta="Empresa" class="texto-secundario col-extra">{{ fila.empresa ?? '—' }}</td> }
+                  <td data-etiqueta="Alerta" class="col-extra">
                     @if (fila.estadoAlerta) {
                       <span class="badge" [class]="fila.estadoAlerta">{{ nombreEstadoAlerta(fila.estadoAlerta) }}</span>
                     } @else { <span class="texto-secundario">—</span> }
@@ -154,23 +154,22 @@
           <div class="tabla-contenedor indicadores-caja">
             <table class="tabla indicadores">
               <thead>
-                <tr><th scope="col">Regla</th><th scope="col">Evidencia</th><th scope="col" class="derecha">Aporte</th></tr>
+                <tr><th scope="col">Regla y evidencia</th><th scope="col" class="derecha">Aporte</th></tr>
               </thead>
               <tbody>
                 @for (i of d.indicadores; track i.codigo) {
                   <tr [class.ia]="i.codigo === 'IA_MODELO_URL'">
-                    <td>
-                      <span class="regla">{{ explicar(i.codigo).titulo }}</span>
-                      <code class="codigo">{{ i.codigo }}</code>
+                    <td class="ajustable">
+                      <span class="regla">{{ explicar(i.codigo).titulo }} <code class="codigo">{{ i.codigo }}</code></span>
+                      @if (i.valor) { <span class="evidencia">{{ i.valor }}</span> }
                     </td>
-                    <td class="evidencia">{{ i.valor ?? '—' }}</td>
                     <td class="derecha numero aporte">+{{ i.aporte | number: '1.2-2' }}</td>
                   </tr>
                 }
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="2">Suma de aportes <span class="texto-secundario">(el puntaje se limita a 100)</span></td>
+                  <td class="ajustable">Suma de aportes <span class="texto-secundario">(el puntaje se limita a 100)</span></td>
                   <td class="derecha numero aporte">{{ sumaAportes(d) | number: '1.2-2' }}</td>
                 </tr>
               </tfoot>

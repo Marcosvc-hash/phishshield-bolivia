@@ -106,7 +106,7 @@
                 </td>
                 <td data-etiqueta="Sobre" class="texto-secundario">{{ r.entidad ?? '—' }}</td>
                 <td data-etiqueta="IP" class="ip">{{ r.ip ?? '—' }}</td>
-                <td data-etiqueta="Detalle">
+                <td data-etiqueta="Detalle" class="ajustable">
                   <ul class="detalle">
                     @for (par of pares(r.detalle); track par.clave) {
                       <li><span>{{ par.clave }}:</span> {{ par.valor }}</li>

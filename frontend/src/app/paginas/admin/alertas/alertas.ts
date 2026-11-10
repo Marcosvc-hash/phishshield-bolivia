@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { mensajeDeError } from '../../../core/errores';
 import { Pagina } from '../../../core/pagina';
 import { ConfirmacionService } from '../../../core/ui/confirmacion.service';
+import { mostrarDetalleEnPantallaAngosta } from '../../../core/ui/desplazar';
 import { EstadoVacio } from '../../../core/ui/estado-vacio';
 import { nombreEstadoAlerta, nombreSeveridad } from '../../../core/ui/etiquetas';
 import { Icono, NombreIcono } from '../../../core/ui/icono';
@@ -108,6 +109,7 @@ export class Alertas implements OnInit {
   elegir(alerta: Alerta): void {
     this.seleccionada.set(alerta);
     this.notas = alerta.notas ?? '';
+    mostrarDetalleEnPantallaAngosta();
   }
 
   /** Los botones que corresponden al estado actual. */
