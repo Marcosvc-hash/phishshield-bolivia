@@ -1,25 +1,110 @@
-<div class="contenedor">
+<a class="saltar-contenido" href="#contenido">Saltar al analizador</a>
 
-  <header>
-    <div>
-      <h1>PhishShield Bolivia</h1>
-      <p class="subtitulo">Deteccion de phishing para el contexto boliviano</p>
-    </div>
+<header class="cabecera">
+  <div class="contenedor fila">
+    <a routerLink="/" class="enlace-marca" aria-label="PhishShield Bolivia, inicio"><app-marca /></a>
 
-    <nav class="sesion">
-      @if (auth.usuario(); as u) {
-        <span class="saludo">Hola, {{ u.nombreCompleto }}</span>
-        @if (auth.tieneRol('ADMIN', 'ADMIN_EMPRESA')) {
-          <a routerLink="/admin" class="boton">Administracion</a>
-        }
-        <button class="boton secundario" (click)="auth.logout()">Cerrar sesion</button>
-      } @else {
-        <a routerLink="/login" class="boton">Iniciar sesion</a>
-        <a routerLink="/registro" class="boton secundario">Crear cuenta</a>
-      }
+    <nav class="secciones" aria-label="Secciones">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#entidades">Entidades protegidas</a>
     </nav>
-  </header>
 
-  <app-analizador />
+    <div class="sesion">
+      @if (auth.usuario(); as u) {
+        <span class="saludo">Hola, <strong>{{ u.nombreCompleto }}</strong></span>
+        @if (auth.tieneRol('ADMIN', 'ADMIN_EMPRESA')) {
+          <a routerLink="/admin" class="btn btn-secundario btn-sm"><app-icono nombre="panel" [tamano]="16" /> Administración</a>
+        }
+        <button type="button" class="btn btn-fantasma btn-sm" (click)="auth.logout()">
+          <app-icono nombre="salir" [tamano]="16" /> Cerrar sesión
+        </button>
+      } @else {
+        <a routerLink="/login" class="btn btn-fantasma btn-sm">Iniciar sesión</a>
+        <a routerLink="/registro" class="btn btn-primario btn-sm">Crear cuenta</a>
+      }
+    </div>
+  </div>
+</header>
 
-</div>
+<main id="contenido">
+  <section class="hero">
+    <div class="contenedor angosto">
+      <p class="sobretitulo"><app-icono nombre="escudo" [tamano]="16" /> Protección contra phishing en Bolivia</p>
+      <h1>Verifique un enlace <span>antes de abrirlo</span></h1>
+      <p class="bajada">
+        PhishShield revisa la dirección con reglas de detección y un modelo de inteligencia artificial,
+        y le explica en segundos si es segura, sospechosa o phishing.
+      </p>
+      <app-analizador />
+      <ul class="garantias">
+        <li><app-icono nombre="check" [tamano]="16" /> Gratis y sin registrarse</li>
+        <li><app-icono nombre="check" [tamano]="16" /> Resultado explicado</li>
+        <li><app-icono nombre="check" [tamano]="16" /> Pensado para entidades bolivianas</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="como-funciona" class="seccion-inicio" aria-labelledby="titulo-como">
+    <div class="contenedor">
+      <p class="sobretitulo">Cómo funciona</p>
+      <h2 id="titulo-como">Dos capas de análisis y un veredicto claro</h2>
+
+      <ol class="pasos">
+        <li class="tarjeta">
+          <span class="paso-icono"><app-icono nombre="reglas" [tamano]="22" /></span>
+          <h3>Reglas de detección</h3>
+          <p>
+            Revisa si el sitio está en la lista negra, si su nombre imita al de un banco o una entidad boliviana,
+            si usa una terminación poco confiable, si cifra la conexión y otras señales conocidas.
+          </p>
+        </li>
+        <li class="tarjeta">
+          <span class="paso-icono"><app-icono nombre="ia" [tamano]="22" /></span>
+          <h3>Inteligencia artificial</h3>
+          <p>
+            Un modelo entrenado con sitios legítimos y de phishing estima, a partir del nombre del dominio, la
+            probabilidad de fraude. Si no responde a tiempo, el análisis sigue solo con las reglas.
+          </p>
+        </li>
+        <li class="tarjeta">
+          <span class="paso-icono"><app-icono nombre="escudo-check" [tamano]="22" /></span>
+          <h3>Un veredicto que se entiende</h3>
+          <p>Cada señal suma puntos hasta 100. Le mostramos qué encontró y cuánto pesó cada cosa.</p>
+          <div class="escala" aria-label="Escala de riesgo">
+            <span class="tramo seguro"><strong>0–39</strong> Seguro</span>
+            <span class="tramo sospechoso"><strong>40–69</strong> Sospechoso</span>
+            <span class="tramo phishing"><strong>70–100</strong> Phishing</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="entidades" class="seccion-inicio alterna" aria-labelledby="titulo-entidades">
+    <div class="contenedor">
+      <p class="sobretitulo">Entidades protegidas</p>
+      <h2 id="titulo-entidades">Vigilamos a quienes más suplantan en Bolivia</h2>
+      <p class="bajada-seccion">
+        PhishShield conoce los dominios oficiales de estas entidades y avisa cuando un enlace intenta hacerse pasar
+        por ellas.
+      </p>
+
+      <ul class="entidades">
+        @for (e of entidades; track e.nombre) {
+          <li>
+            <span class="entidad-icono"><app-icono [nombre]="e.icono" [tamano]="18" /></span>
+            <span><strong>{{ e.nombre }}</strong><small>{{ e.tipo }}</small></span>
+          </li>
+        }
+      </ul>
+      <p class="nota">PhishShield no está afiliado a estas entidades: solo detecta los intentos de suplantarlas.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor fila">
+    <app-marca />
+    <p>© {{ anio }} PhishShield Bolivia · Detección de phishing para el contexto boliviano</p>
+  </div>
+</footer>

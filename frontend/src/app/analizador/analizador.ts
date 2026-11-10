@@ -124,15 +124,15 @@ export class Analizador implements OnInit {
   consejoDe(veredicto: Veredicto, indicadores: number): string {
     switch (veredicto) {
       case 'phishing':
-        return 'No abras este enlace ni ingreses tus datos. Si te llegó por mensaje o correo, elimínalo y ' +
-          'avisa a la entidad por sus canales oficiales.';
+        return 'No abra este enlace ni ingrese sus datos. Si le llegó por mensaje o correo, elimínelo y ' +
+          'avise a la entidad por sus canales oficiales.';
       case 'sospechoso':
-        return 'Ten cuidado. Antes de escribir cualquier dato, confirma la dirección con la entidad por sus ' +
+        return 'Tenga cuidado. Antes de escribir cualquier dato, confirme la dirección con la entidad por sus ' +
           'canales oficiales.';
       default:
         return indicadores > 0
-          ? 'Las señales encontradas no alcanzan para considerarlo peligroso, pero revísalas antes de continuar.'
-          : 'No encontramos señales de riesgo. Aun así, nunca compartas tu PIN ni tus contraseñas.';
+          ? 'Las señales encontradas no alcanzan para considerarlo peligroso, pero revíselas antes de continuar.'
+          : 'No encontramos señales de riesgo. Aun así, nunca comparta su PIN ni sus contraseñas.';
     }
   }
 

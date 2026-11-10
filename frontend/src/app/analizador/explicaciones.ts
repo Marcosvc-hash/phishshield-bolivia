@@ -32,7 +32,7 @@ export const EXPLICACIONES: Readonly<Record<string, Explicacion>> = {
   },
   URL_SIN_HTTPS: {
     titulo: 'Conexión sin cifrar',
-    explicacion: 'El sitio no usa HTTPS: lo que escribas, como una contraseña, viaja sin protección.',
+    explicacion: 'El sitio no usa HTTPS: lo que escriba, como una contraseña, viaja sin protección.',
     icono: 'candado-abierto',
   },
   URL_TLD_SOSPECHOSO: {
@@ -53,7 +53,7 @@ export const EXPLICACIONES: Readonly<Record<string, Explicacion>> = {
     icono: 'capas',
   },
   URL_RUTA_SENSIBLE: {
-    titulo: 'Busca tus datos de acceso',
+    titulo: 'Busca sus datos de acceso',
     explicacion: 'La dirección incluye palabras como “login”, “cuenta”, “clave” o “pin”, típicas de las páginas ' +
       'que intentan robar credenciales.',
     icono: 'llave',
@@ -65,18 +65,18 @@ export const EXPLICACIONES: Readonly<Record<string, Explicacion>> = {
     icono: 'ia',
   },
   TXT_URGENCIA: {
-    titulo: 'Te presiona con urgencia',
-    explicacion: 'El mensaje amenaza con bloquear tu cuenta o exige actuar de inmediato para que no lo pienses dos veces.',
+    titulo: 'Presiona con urgencia',
+    explicacion: 'El mensaje amenaza con bloquear su cuenta o exige actuar de inmediato para que no lo piense dos veces.',
     icono: 'reloj',
   },
   TXT_PIDE_CREDENCIAL: {
-    titulo: 'Pide tu contraseña o PIN',
-    explicacion: 'Ninguna entidad seria pide tu contraseña, PIN o código de verificación por mensaje.',
+    titulo: 'Pide su contraseña o PIN',
+    explicacion: 'Ninguna entidad seria pide su contraseña, PIN o código de verificación por mensaje.',
     icono: 'llave',
   },
   TXT_PREMIO: {
     titulo: 'Promete premios',
-    explicacion: 'Ofrece bonos, sorteos o regalos: un gancho clásico para que entregues tus datos.',
+    explicacion: 'Ofrece bonos, sorteos o regalos: un gancho clásico para que entregue sus datos.',
     icono: 'regalo',
   },
   MAIL_SPF_FALLA: {

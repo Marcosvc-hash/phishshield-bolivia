@@ -1011,6 +1011,16 @@ select.entrada {
   letter-spacing: 0.02em;
 }
 
+
+/* ------------------------------------------- Escala de riesgo (0-39, 40-69, 70-100) */
+
+.escala { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: var(--esp-2); }
+.tramo { padding: 6px 10px; border-radius: var(--radio-sm); border-left: 4px solid; font-size: var(--t-sm); }
+.tramo strong { display: inline-block; min-width: 64px; font-variant-numeric: tabular-nums; }
+.tramo.seguro { background: var(--exito-suave); border-color: var(--exito-solido); color: var(--exito); }
+.tramo.sospechoso { background: var(--alerta-suave); border-color: var(--alerta-solido); color: var(--alerta); }
+.tramo.phishing { background: var(--peligro-suave); border-color: var(--peligro-solido); color: var(--peligro); }
+
 /*
  * ------------------------------------------------ TRANSITORIO
  * Clases viejas que siguen usando las paginas aun no migradas. Se borran
