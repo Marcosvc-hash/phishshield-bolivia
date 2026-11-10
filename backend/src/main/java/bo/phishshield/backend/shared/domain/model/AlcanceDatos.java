@@ -26,7 +26,26 @@ public record AlcanceDatos(Long idEmpresa) {
         };
     }
 
+    /**
+     * Solo el ADMIN: listas de dominios y registro de accesos son datos de
+     * toda la plataforma, no de una empresa.
+     */
+    public static AlcanceDatos soloPlataforma(UsuarioActual quien) {
+        if (quien.rol() != Rol.ADMIN) {
+            throw new AccesoDenegadoException("Esta seccion es solo para el administrador de la plataforma");
+        }
+        return new AlcanceDatos(null);
+    }
+
     public boolean esGlobal() {
         return idEmpresa == null;
+    }
+
+    /**
+     * Si un dato de esa empresa entra en el alcance. Un dato sin empresa
+     * (por ejemplo, un analisis anonimo) solo lo ve el alcance global.
+     */
+    public boolean incluye(Long idEmpresaDelDato) {
+        return esGlobal() || idEmpresa.equals(idEmpresaDelDato);
     }
 }

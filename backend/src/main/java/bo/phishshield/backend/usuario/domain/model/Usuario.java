@@ -17,7 +17,7 @@ public class Usuario {
     private final String apellidos;
     private final String email;
     private final String passwordHash;
-    private final Rol rol;
+    private Rol rol;
     private EstadoUsuario estado;
     private final boolean emailVerificado;
     private int intentosFallidos;
@@ -74,6 +74,28 @@ public class Usuario {
                                      String email, String passwordHash) {
         return new Usuario(null, null, null, nombres, apellidos, email, passwordHash,
                 Rol.USUARIO, EstadoUsuario.ACTIVO, false, 0, null, null);
+    }
+
+    /**
+     * Usuario que crea un administrador desde el panel, ya con su rol y su
+     * empresa. Quien puede crear que rol lo decide PoliticaGestionUsuarios
+     * antes de llegar aca.
+     */
+    public static Usuario creadoPorAdmin(String nombres, String apellidos, String email,
+                                         String passwordHash, Rol rol, Long idEmpresa) {
+        return new Usuario(null, null, idEmpresa, nombres, apellidos, email, passwordHash,
+                rol, EstadoUsuario.ACTIVO, false, 0, null, null);
+    }
+
+    /**
+     * El cambio rige desde la siguiente peticion de esa persona:
+     * JwtUsuarioActualConverter relee el rol de la base cada vez.
+     */
+    public void cambiarRol(Rol nuevo) {
+        if (nuevo == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+        this.rol = nuevo;
     }
 
     /**

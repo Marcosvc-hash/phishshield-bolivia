@@ -158,6 +158,7 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V6__lista_blanca_ende.sql` | Agrega `ende.bo` a la lista blanca (typosquatting lo confundía con `entel.bo`) |
 | `V7__entidad_ende.sql` | Agrega Ende a `entidades_suplantadas` (dominio oficial `ende.bo`) y vincula su fila de la lista blanca |
 | `V8__vistas_panel_admin.sql` | Crea las vistas `v_analisis_por_dia` y `v_top_entidades_suplantadas` y el índice `idx_analisis_fecha`, para el panel de administración. No toca tablas ni datos. En bases nuevas lo hace `initdb/03_vistas_panel_admin.sql` |
+| `V9__uuid_alertas_y_dominios.sql` | Agrega `uuid_publico` (con índice único) a `alertas` y `dominios_lista`, para que la gestión de alertas y de listas no exponga el BIGINT interno. Cada fila existente recibe un uuid distinto; no borra datos. **El módulo de administración la necesita**: sin ella, las páginas de alertas y de listas de dominios responden error |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -170,6 +171,7 @@ Get-Content database\migraciones\V5__modelo_ia_url.sql | docker exec -i phishshi
 Get-Content database\migraciones\V6__lista_blanca_ende.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V7__entidad_ende.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 Get-Content database\migraciones\V8__vistas_panel_admin.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V9__uuid_alertas_y_dominios.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 ```
 
 ```bash
@@ -181,6 +183,7 @@ docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migr
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V6__lista_blanca_ende.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield < database/migraciones/V7__entidad_ende.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V8__vistas_panel_admin.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V9__uuid_alertas_y_dominios.sql
 ```
 
 Si una migración falta, el backend lo avisa al arrancar con un `WARN` del tipo

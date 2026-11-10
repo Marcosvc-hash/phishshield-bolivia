@@ -2,6 +2,7 @@ package bo.phishshield.backend.analisis.infrastructure.config;
 
 import bo.phishshield.backend.analisis.application.AnalizarUrlUseCase;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.CambiosListasPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
@@ -52,7 +53,8 @@ public class AnalisisConfig {
             ListaNegraRepositoryPort listaNegraRepository,
             ListaBlancaRepositoryPort listaBlancaRepository,
             ModeloIaPort modeloIa,
-            ModeloIaRepositoryPort modeloIaRepository) {
+            ModeloIaRepositoryPort modeloIaRepository,
+            CambiosListasPort cambiosListas) {
 
         return new AnalizarUrlUseCase(
                 reglasUrlBase,
@@ -63,6 +65,7 @@ public class AnalisisConfig {
                 listaBlancaRepository,
                 modeloIa,
                 modeloIaRepository,
+                cambiosListas,
                 Clock.systemDefaultZone());
     }
 }

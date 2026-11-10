@@ -1,10 +1,65 @@
-<h1>Usuarios</h1>
-<p class="alcance">
-  @if (auth.tieneRol('ADMIN')) { Todos los usuarios de la plataforma } @else { Usuarios de su empresa }
-</p>
+<div class="cabecera">
+  <div>
+    <h1>Usuarios</h1>
+    <p class="alcance">
+      @if (auth.tieneRol('ADMIN')) { Todos los usuarios de la plataforma } @else { Usuarios de su empresa }
+    </p>
+  </div>
+  @if (!mostrarFormulario()) {
+    <button class="nuevo" (click)="abrirFormulario()">Nuevo usuario</button>
+  }
+</div>
+
+@if (mostrarFormulario()) {
+  <form class="formulario" (ngSubmit)="crear()">
+    <label>
+      Nombres
+      <input name="nombres" maxlength="80" required [(ngModel)]="nuevo.nombres">
+    </label>
+    <label>
+      Apellidos
+      <input name="apellidos" maxlength="80" [(ngModel)]="nuevo.apellidos">
+    </label>
+    <label>
+      Email
+      <input name="email" type="email" maxlength="150" required [(ngModel)]="nuevo.email">
+    </label>
+    <label>
+      Contrasena inicial
+      <input name="contrasena" type="password" minlength="8" maxlength="72" required autocomplete="new-password"
+             [(ngModel)]="nuevo.contrasena">
+    </label>
+    <label>
+      Rol
+      <select name="rol" [(ngModel)]="nuevo.rol">
+        @for (r of rolesAsignables(); track r) {
+          <option [value]="r">{{ nombreRol(r) }}</option>
+        }
+      </select>
+    </label>
+    @if (auth.tieneRol('ADMIN') && nuevo.rol !== 'ADMIN') {
+      <label>
+        Empresa
+        <select name="empresa" [(ngModel)]="nuevo.empresa">
+          <option [ngValue]="null">{{ nuevo.rol === 'ADMIN_EMPRESA' ? 'Elija una empresa' : 'Sin empresa' }}</option>
+          @for (e of empresas(); track e.id) {
+            <option [ngValue]="e.id">{{ e.nombre }}</option>
+          }
+        </select>
+      </label>
+    }
+    <div class="acciones">
+      <button type="submit" class="btn primario" [disabled]="creando()">Crear usuario</button>
+      <button type="button" class="btn" (click)="mostrarFormulario.set(false)">Cancelar</button>
+    </div>
+  </form>
+}
 
 @if (error()) {
   <p class="aviso error">{{ error() }}</p>
+}
+@if (aviso()) {
+  <p class="aviso ok">{{ aviso() }}</p>
 }
 
 @if (cargando()) {
@@ -28,7 +83,18 @@
           <tr [class.apagado]="u.estado !== 'activo'">
             <td>{{ u.nombreCompleto }}</td>
             <td>{{ u.email }}</td>
-            <td>{{ nombreRol(u.rol) }}</td>
+            <td>
+              @if (esUnoMismo(u)) {
+                {{ nombreRol(u.rol) }}
+              } @else {
+                <select class="rol" [attr.aria-label]="'Rol de ' + u.email" [disabled]="guardando() === u.id"
+                        (change)="cambiarRol(u, $any($event.target).value)">
+                  @for (r of rolesAsignables(); track r) {
+                    <option [value]="r" [selected]="r === u.rol">{{ nombreRol(r) }}</option>
+                  }
+                </select>
+              }
+            </td>
             <td>{{ u.empresa ?? '-' }}</td>
             <td><span class="estado" [class]="u.estado">{{ u.estado }}</span></td>
             <td class="fecha">{{ u.ultimoLogin ? (u.ultimoLogin | date: 'dd/MM/yyyy HH:mm') : 'nunca' }}</td>

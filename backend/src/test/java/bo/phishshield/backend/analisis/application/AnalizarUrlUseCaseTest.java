@@ -14,6 +14,7 @@ import bo.phishshield.backend.analisis.domain.model.Sha256;
 import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlInvalidaException;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.CambiosListasPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
@@ -192,12 +193,26 @@ class AnalizarUrlUseCaseTest {
         }
     }
 
+    /**
+     * Doble de la fecha del ultimo cambio de listas. Por defecto nunca hubo
+     * cambios, como una base recien creada.
+     */
+    static class CambiosListasEnMemoria implements CambiosListasPort {
+        OffsetDateTime ultimo;
+
+        @Override
+        public Optional<OffsetDateTime> ultimoCambio() {
+            return Optional.ofNullable(ultimo);
+        }
+    }
+
     // ---- Montaje ----
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
     private final ListaNegraEnMemoria listaNegra = new ListaNegraEnMemoria();
     private final ListaBlancaEnMemoria listaBlanca = new ListaBlancaEnMemoria();
     private final ModeloIaFalso modeloIa = new ModeloIaFalso();
+    private final CambiosListasEnMemoria cambiosListas = new CambiosListasEnMemoria();
 
     private AnalizarUrlUseCase casoDeUso() {
         List<ReglaUrl> base = List.of(
@@ -209,7 +224,7 @@ class AnalizarUrlUseCaseTest {
         );
         return new AnalizarUrlUseCase(base, repositorio, new PesosFijos(),
                 new DominiosFijos(), listaNegra, listaBlanca,
-                modeloIa, new ModelosRegistrados(), RELOJ);
+                modeloIa, new ModelosRegistrados(), cambiosListas, RELOJ);
     }
 
     private Analisis analizar(String url) {
@@ -318,6 +333,62 @@ class AnalizarUrlUseCaseTest {
 
         assertEquals(1, repositorio.guardados.size());
         assertSame(reciente, resultado);
+    }
+
+    // ---- Cache y cambios en las listas ----
+
+    /**
+     * El caso que motivo el cambio: alguien analiza una URL, sale sospechosa,
+     * despues un admin pone el dominio en la lista negra. Si se reutilizara
+     * el analisis guardado, la URL seguiria saliendo "sospechoso" hasta 24 h.
+     */
+    @Test
+    void el_analisis_guardado_se_invalida_al_cambiar_la_lista_negra() {
+        String url = "http://pagos-tigo-bo.xyz/recarga";
+        listaNegra.dominios.clear();
+
+        Analisis antes = analizar(url);
+        assertNotEquals(Resultado.PHISHING, antes.getResultado(), "Sin lista negra: " + detalle(antes));
+
+        // Un minuto despues, el admin agrega el dominio a la lista negra
+        listaNegra.dominios.add(new DominioListado("pagos-tigo-bo.xyz", "Reportado por un usuario"));
+        cambiosListas.ultimo = OffsetDateTime.now(RELOJ).plusMinutes(1);
+        Analisis despues = casoDeUso(Clock.offset(RELOJ, java.time.Duration.ofMinutes(2))).ejecutar(
+                new ComandoAnalizarUrl(url, OrigenAnalisis.WEB, 1L, 1L));
+
+        assertEquals(2, repositorio.guardados.size(), "Debio recalcular, no reutilizar");
+        assertNotSame(antes, despues);
+        assertEquals(Resultado.PHISHING, despues.getResultado());
+        assertTrue(despues.getIndicadores().stream().anyMatch(i -> i.codigoRegla().equals("URL_LISTA_NEGRA")));
+    }
+
+    @Test
+    void un_cambio_de_listas_anterior_al_analisis_no_lo_invalida() {
+        cambiosListas.ultimo = OffsetDateTime.now(RELOJ).minusHours(5);
+        Analisis reciente = filaDelSeed(OffsetDateTime.now(RELOJ).minusHours(2));
+        repositorio.guardados.add(reciente);
+
+        assertSame(reciente, analizar(URL_BNB_FALSO));
+        assertEquals(1, repositorio.guardados.size());
+    }
+
+    @Test
+    void un_cambio_de_listas_posterior_al_analisis_lo_invalida_aunque_tenga_menos_de_24_horas() {
+        Analisis reciente = filaDelSeed(OffsetDateTime.now(RELOJ).minusHours(2));
+        repositorio.guardados.add(reciente);
+        cambiosListas.ultimo = OffsetDateTime.now(RELOJ).minusHours(1);
+
+        Analisis resultado = analizar(URL_BNB_FALSO);
+
+        assertNotSame(reciente, resultado);
+        assertEquals(2, repositorio.guardados.size());
+    }
+
+    /** El mismo caso de uso con otro reloj, para simular el paso del tiempo. */
+    private AnalizarUrlUseCase casoDeUso(Clock reloj) {
+        return new AnalizarUrlUseCase(List.of(new ReglaSinHttps(), new ReglaTldSospechoso(), new ReglaRutaSensible()),
+                repositorio, new PesosFijos(), new DominiosFijos(), listaNegra, listaBlanca,
+                modeloIa, new ModelosRegistrados(), cambiosListas, reloj);
     }
 
     // ---- Ruta sensible ----
@@ -611,7 +682,8 @@ class AnalizarUrlUseCaseTest {
                         return Set.of();
                     }
                 },
-                new DominiosFijos(), listaNegra, listaBlanca, modeloIa, new ModelosRegistrados(), RELOJ);
+                new DominiosFijos(), listaNegra, listaBlanca, modeloIa, new ModelosRegistrados(),
+                cambiosListas, RELOJ);
 
         Analisis resultado = sinPesoIa.ejecutar(
                 new ComandoAnalizarUrl("https://pagos-cuenta-segura.com/", OrigenAnalisis.WEB, 1L, 1L));

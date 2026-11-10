@@ -5,6 +5,8 @@ import bo.phishshield.backend.empresa.domain.model.Empresa;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static bo.phishshield.backend.shared.infrastructure.web.dto.FechasLocales.enZonaLocal;
+
 public record EmpresaResponse(
         UUID id,
         String nombre,
@@ -24,7 +26,8 @@ public record EmpresaResponse(
                 empresa.getCiudad(),
                 empresa.getPlan(),
                 empresa.isActiva(),
-                empresa.getCreadoEn()
+                // La base la devuelve en UTC; se entrega en hora de Bolivia como el resto de la API
+                enZonaLocal(empresa.getCreadoEn())
         );
     }
 }

@@ -1,5 +1,6 @@
 package bo.phishshield.backend.empresa.infrastructure.web;
 
+import bo.phishshield.backend.empresa.domain.model.EmpresaNoEncontradaException;
 import bo.phishshield.backend.empresa.domain.model.EmpresaYaExisteException;
 import bo.phishshield.backend.shared.infrastructure.web.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,18 @@ public class EmpresaExceptionHandler {
                 ErrorResponse.simple(
                         HttpStatus.CONFLICT.value(),
                         HttpStatus.CONFLICT.getReasonPhrase(),
+                        ex.getMessage(),
+                        peticion.getRequestURI()));
+    }
+
+    @ExceptionHandler(EmpresaNoEncontradaException.class)
+    public ResponseEntity<ErrorResponse> empresaNoEncontrada(
+            EmpresaNoEncontradaException ex, HttpServletRequest peticion) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ErrorResponse.simple(
+                        HttpStatus.NOT_FOUND.value(),
+                        HttpStatus.NOT_FOUND.getReasonPhrase(),
                         ex.getMessage(),
                         peticion.getRequestURI()));
     }

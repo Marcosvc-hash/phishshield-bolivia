@@ -76,4 +76,28 @@ class SeguridadRutasTest {
         mvc.perform(get("/api/usuarios").header("Authorization", "Bearer " + tokenDe(Rol.ADMIN)))
                 .andExpect(status().isOk());
     }
+
+    /** Auditoria, dominios y entidades son de toda la plataforma: el admin de empresa no entra. */
+    @Test
+    void el_admin_de_empresa_no_entra_a_las_rutas_de_plataforma() throws Exception {
+        String token = tokenDe(Rol.ADMIN_EMPRESA);
+        for (String ruta : List.of("/api/admin/auditoria", "/api/admin/auditoria/acciones",
+                "/api/admin/dominios", "/api/admin/entidades")) {
+            mvc.perform(get(ruta).header("Authorization", "Bearer " + token))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    /**
+     * Las demas rutas de /api/admin si lo dejan pasar. Esta prueba solo carga
+     * UsuarioController, asi que pasar la seguridad se ve como un 404.
+     */
+    @Test
+    void el_admin_de_empresa_si_pasa_la_seguridad_en_alertas_e_historial() throws Exception {
+        String token = tokenDe(Rol.ADMIN_EMPRESA);
+        for (String ruta : List.of("/api/admin/alertas", "/api/admin/analisis")) {
+            mvc.perform(get(ruta).header("Authorization", "Bearer " + token))
+                    .andExpect(status().isNotFound());
+        }
+    }
 }

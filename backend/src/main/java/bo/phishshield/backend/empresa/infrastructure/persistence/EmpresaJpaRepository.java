@@ -9,5 +9,8 @@ public interface EmpresaJpaRepository extends JpaRepository<EmpresaEntity, Long>
 
     boolean existsByNit(String nit);
 
+    /** Spring Data arma el SQL a partir del nombre: WHERE nit = ? AND id_empresa <> ? */
+    boolean existsByNitAndIdEmpresaNot(String nit, Long idEmpresa);
+
     Optional<EmpresaEntity> findByUuidPublico(UUID uuidPublico);
 }

@@ -54,7 +54,7 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
 
     /**
      * Al actualizar solo se copian los campos que el dominio puede cambiar
-     * (estado, intentos, ultimo login); los demas quedan como estan en la base.
+     * (rol, estado, intentos, ultimo login); los demas quedan como estan en la base.
      */
     @Override
     @Transactional
@@ -70,7 +70,6 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
             entidad.setApellidos(usuario.getApellidos());
             entidad.setEmail(usuario.getEmail());
             entidad.setPasswordHash(usuario.getPasswordHash());
-            entidad.setRol(usuario.getRol().aValorBd());
             entidad.setEmailVerificado(usuario.isEmailVerificado());
             entidad.setCreadoEn(ahora);
         } else {
@@ -79,6 +78,7 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
                             "No existe el usuario con id " + usuario.getId()));
         }
 
+        entidad.setRol(usuario.getRol().aValorBd());
         entidad.setEstado(usuario.getEstado().aValorBd());
         entidad.setIntentosFallidos((short) usuario.getIntentosFallidos());
         entidad.setUltimoLogin(usuario.getUltimoLogin());

@@ -1,8 +1,12 @@
 package bo.phishshield.backend.usuario.infrastructure.config;
 
+import bo.phishshield.backend.empresa.domain.port.out.EmpresaRepositoryPort;
+import bo.phishshield.backend.shared.domain.port.out.AuditoriaPort;
 import bo.phishshield.backend.shared.infrastructure.security.JwtPropiedades;
 import bo.phishshield.backend.usuario.application.CambiarEstadoUsuarioUseCase;
+import bo.phishshield.backend.usuario.application.CambiarRolUsuarioUseCase;
 import bo.phishshield.backend.usuario.application.CerrarSesionUseCase;
+import bo.phishshield.backend.usuario.application.CrearUsuarioAdminUseCase;
 import bo.phishshield.backend.usuario.application.IniciarSesionUseCase;
 import bo.phishshield.backend.usuario.application.ListarUsuariosUseCase;
 import bo.phishshield.backend.usuario.application.RefrescarSesionUseCase;
@@ -61,7 +65,22 @@ public class UsuarioConfig {
     }
 
     @Bean
-    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepositoryPort usuarioRepository) {
-        return new CambiarEstadoUsuarioUseCase(usuarioRepository);
+    public CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase(UsuarioRepositoryPort usuarioRepository,
+                                                                   AuditoriaPort auditoria) {
+        return new CambiarEstadoUsuarioUseCase(usuarioRepository, auditoria);
+    }
+
+    @Bean
+    public CrearUsuarioAdminUseCase crearUsuarioAdminUseCase(UsuarioRepositoryPort usuarioRepository,
+                                                             PasswordHasherPort passwordHasher,
+                                                             EmpresaRepositoryPort empresaRepository,
+                                                             AuditoriaPort auditoria) {
+        return new CrearUsuarioAdminUseCase(usuarioRepository, passwordHasher, empresaRepository, auditoria);
+    }
+
+    @Bean
+    public CambiarRolUsuarioUseCase cambiarRolUsuarioUseCase(UsuarioRepositoryPort usuarioRepository,
+                                                             AuditoriaPort auditoria) {
+        return new CambiarRolUsuarioUseCase(usuarioRepository, auditoria);
     }
 }

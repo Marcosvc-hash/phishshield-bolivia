@@ -42,7 +42,8 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 
 ## Arquitectura hexagonal del backend
 
-Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`, `shared`.
+Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`,
+`historial`, `alerta`, `listas`, `auditoria` y `shared` (ver `docs/guia-modulo-admin.md`).
 Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
@@ -52,7 +53,7 @@ Cada vertical se divide así:
 | `domain/port/out` | Interfaces de salida (`*RepositoryPort`) | Sin Spring ni JPA (regla 4) |
 | `application` | Casos de uso (`*UseCase`) y comandos (`Comando*`) | **Sin anotaciones de Spring** |
 | `infrastructure/config` | Clases `@Configuration` que crean los casos de uso con `@Bean` | |
-| `infrastructure/persistence` | `*Entity` (sin Lombok en `analisis`), `*JpaRepository`, `*PersistenceAdapter` | |
+| `infrastructure/persistence` | `*Entity` (sin Lombok en `analisis`), `*JpaRepository`, `*PersistenceAdapter`; consultas con filtros en `*JdbcAdapter` (JdbcClient) | |
 | `infrastructure/web` | Controladores, DTOs y `*ExceptionHandler` | Los handlers llevan `@Order(HIGHEST_PRECEDENCE)` |
 | `infrastructure/ia` | Cliente HTTP (RestClient) hacia el servicio de IA | Si falla: `log.warn` y `Optional.empty()` |
 
@@ -63,7 +64,8 @@ Otros puntos del diseño:
   - Una regla en Java sin fila en la base aporta 0 puntos. `VerificacionReglasAlArrancar` lo avisa con un `WARN` al arrancar.
   - Las reglas sin estado van en `AnalisisConfig.reglasUrlBase()`. Typosquatting y lista negra se arman en cada ejecución dentro de `AnalizarUrlUseCase`.
   - Umbrales: sospechoso desde 40, phishing desde 70.
-  - La caché de análisis dura 24 h.
+  - La caché de análisis dura 24 h, pero un análisis anterior al último cambio de listas
+    (filas `DOMINIO_*` en `auditoria`, vía `CambiosListasPort`) ya no se reutiliza.
 - Modelo de IA (`ia/`, ver `ia/FICHA_MODELO.md`):
   - Solo mira el host: PhiUSIIL tiene sesgos de ruta y https (las legítimas no tienen ruta) y de IP (todas phishing).
   - Indicador `IA_MODELO_URL`: aporte = probabilidad × peso (40), solo si supera el umbral del modelo.
@@ -82,6 +84,16 @@ Otros puntos del diseño:
   - Tokens: el JWT dura 15 min. El de refresco es aleatorio, dura 7 días, se rota en cada uso y
     en `sesiones` solo se guarda su SHA-256.
   - Los accesos (`LOGIN_EXITOSO`, `LOGIN_FALLIDO`, `LOGOUT`) se escriben en `auditoria`.
+  - Las acciones administrativas también (`shared/domain/port/out/AuditoriaPort`, acciones en
+    `AccionAuditoria`). Si falla la escritura: `log.warn` y la acción no se deshace.
+  - `/api/admin/auditoria/**`, `/api/admin/dominios/**` y `/api/admin/entidades/**` son solo
+    ADMIN (y los casos de uso lo repiten con `AlcanceDatos.soloPlataforma`).
+- Panel de administración:
+  - Paginación: `shared/domain/model/Pagina` + `SolicitudPagina` (máximo 100), JSON `PaginaResponse`.
+  - Un dato fuera del alcance de un ADMIN_EMPRESA responde 404, igual que uno inexistente.
+  - Alertas: las transiciones válidas viven en `alerta/domain/model/EstadoAlerta`.
+  - Listas: "eliminar" es `activo = false`; nunca se borran filas de `dominios_lista`.
+  - Una empresa desactivada no recibe usuarios nuevos; sus usuarios actuales siguen entrando.
   - `POST /api/analisis` sigue siendo público. Con token, el análisis queda a nombre del
     usuario; los ids del cuerpo se ignoran.
 - Hash de una contraseña para la base: `backend/herramientas/GenerarHashBcrypt.java` (ver su
@@ -119,6 +131,13 @@ Otros puntos del diseño:
   recibe `﻿x`). `GenerarHashBcrypt` ya lo descarta; tenerlo en cuenta con otras herramientas.
 - **`System.console()` en Java 22+:** ya no es `null` aunque la entrada venga redirigida; usar `isTerminal()`.
 - **Contraseña pública:** la de la base es el valor por defecto de `docker-compose.yml` y ya está en el historial público. Está pendiente rotarla.
+- **V9 aplicada en la base real (2026-11-10)**, con respaldo previo en `respaldo_antes_v9.dump`
+  (raíz del repo, ignorado por git; restaurar con `pg_restore`).
+- **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
+- **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
+  entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
+- **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.
+  Usar PowerShell o anteponer `MSYS_NO_PATHCONV=1`.
 
 ## Convenciones
 

@@ -1,49 +1,97 @@
-<h1>Empresas registradas</h1>
+<h1 class="titulo-admin">Empresas</h1>
+<p class="subtitulo-admin">Empresas cliente de la plataforma</p>
 
-@if (cargando()) {
-  <p class="aviso">Cargando empresas...</p>
-}
+<form class="formulario" (ngSubmit)="guardar()">
+  @if (editando(); as e) {
+    <p class="ancho titulo-form">Editando <strong>{{ e.nombre }}</strong></p>
+  }
+  <label>
+    Nombre
+    <input name="nombre" maxlength="150" required [(ngModel)]="formulario.nombre">
+  </label>
+  <label>
+    NIT (opcional)
+    <input name="nit" inputmode="numeric" maxlength="15" placeholder="7 a 15 digitos" [(ngModel)]="formulario.nit">
+  </label>
+  <label>
+    Sector
+    <input name="sector" maxlength="60" [(ngModel)]="formulario.sector">
+  </label>
+  <label>
+    Ciudad
+    <input name="ciudad" maxlength="60" [(ngModel)]="formulario.ciudad">
+  </label>
+  <label>
+    Plan
+    <select name="plan" [(ngModel)]="formulario.plan">
+      <option value="basico">Basico</option>
+      <option value="profesional">Profesional</option>
+      <option value="empresarial">Empresarial</option>
+    </select>
+  </label>
+  <div class="acciones">
+    <button type="submit" class="btn primario" [disabled]="guardando()">
+      {{ editando() ? 'Guardar cambios' : 'Registrar empresa' }}
+    </button>
+    @if (editando()) {
+      <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+    }
+  </div>
+</form>
 
 @if (error()) {
   <p class="aviso error">{{ error() }}</p>
 }
+@if (aviso()) {
+  <p class="aviso ok">{{ aviso() }}</p>
+}
 
-@if (!cargando() && !error()) {
-
+@if (cargando()) {
+  <p class="aviso">Cargando empresas...</p>
+} @else {
   <p class="conteo">{{ empresas().length }} empresa(s) registrada(s)</p>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>NIT</th>
-        <th>Sector</th>
-        <th>Ciudad</th>
-        <th>Plan</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (empresa of empresas(); track empresa.id) {
+  <div class="tarjeta-admin">
+    <table>
+      <thead>
         <tr>
-          <td>{{ empresa.nombre }}</td>
-          <td>{{ empresa.nit }}</td>
-          <td>{{ empresa.sector }}</td>
-          <td>{{ empresa.ciudad }}</td>
-          <td><span class="plan">{{ empresa.plan }}</span></td>
-          <td>
-            @if (empresa.activa) {
-              <span class="activa">Activa</span>
-            } @else {
-              <span class="inactiva">Inactiva</span>
-            }
-          </td>
+          <th>Nombre</th>
+          <th>NIT</th>
+          <th>Sector</th>
+          <th>Ciudad</th>
+          <th>Plan</th>
+          <th>Estado</th>
+          <th></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (empresa of empresas(); track empresa.id) {
+          <tr [class.apagado]="!empresa.activa">
+            <td>{{ empresa.nombre }}</td>
+            <td>{{ empresa.nit ?? '-' }}</td>
+            <td>{{ empresa.sector ?? '-' }}</td>
+            <td>{{ empresa.ciudad ?? '-' }}</td>
+            <td><span class="plan">{{ empresa.plan }}</span></td>
+            <td>
+              @if (empresa.activa) {
+                <span class="activa">Activa</span>
+              } @else {
+                <span class="inactiva">Inactiva</span>
+              }
+            </td>
+            <td class="botones">
+              <button class="btn" (click)="empezarEdicion(empresa)">Editar</button>
+              <button class="btn" [class.peligro]="empresa.activa" (click)="alternar(empresa)">
+                {{ empresa.activa ? 'Desactivar' : 'Activar' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
 
-  @if (empresas().length === 0) {
-    <p class="aviso">No hay empresas registradas todavia.</p>
-  }
+    @if (empresas().length === 0) {
+      <p class="aviso">No hay empresas registradas todavia.</p>
+    }
+  </div>
 }

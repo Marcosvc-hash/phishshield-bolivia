@@ -14,7 +14,11 @@ public interface EmpresaRepositoryPort {
 
     Optional<Empresa> buscarPorUuid(UUID uuidPublico);
 
+    /** Inserta si no tiene id; si lo tiene, actualiza la fila existente. */
     Empresa guardar(Empresa empresa);
 
     boolean existeNit(String nit);
+
+    /** Si otra empresa (no la indicada) ya usa ese NIT. Sirve al editar. */
+    boolean existeNitEnOtra(String nit, Long idEmpresa);
 }

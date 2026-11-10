@@ -33,6 +33,26 @@ export const routes: Routes = [
         canActivate: [rolGuard('ADMIN')],
         loadComponent: () => import('./paginas/admin/empresas/empresas').then((m) => m.Empresas)
       },
+      {
+        path: 'historial',
+        canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
+        loadComponent: () => import('./paginas/admin/historial/historial').then((m) => m.Historial)
+      },
+      {
+        path: 'alertas',
+        canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
+        loadComponent: () => import('./paginas/admin/alertas/alertas').then((m) => m.Alertas)
+      },
+      {
+        path: 'dominios',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/dominios/dominios').then((m) => m.Dominios)
+      },
+      {
+        path: 'auditoria',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/auditoria/auditoria').then((m) => m.Auditoria)
+      },
     ]
   },
   { path: '**', redirectTo: '' }

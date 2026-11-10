@@ -59,6 +59,20 @@ nav a.activa {
   font-weight: 600;
 }
 
+/* Numero de alertas pendientes junto a "Alertas" */
+nav .insignia {
+  display: inline-block;
+  min-width: 1.4rem;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #fbbf24;
+  color: #1f2933;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 nav .pronto {
   color: #7c8fd1;
   cursor: default;
