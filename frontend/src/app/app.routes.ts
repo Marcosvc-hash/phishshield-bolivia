@@ -44,6 +44,11 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/admin/alertas/alertas').then((m) => m.Alertas)
       },
       {
+        path: 'dominios',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/dominios/dominios').then((m) => m.Dominios)
+      },
+      {
         path: 'auditoria',
         canActivate: [rolGuard('ADMIN')],
         loadComponent: () => import('./paginas/admin/auditoria/auditoria').then((m) => m.Auditoria)

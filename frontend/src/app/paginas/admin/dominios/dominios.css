@@ -1,0 +1,16 @@
+.titulo-form {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1e3a8a;
+}
+
+.dominio {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.botones {
+  display: flex;
+  gap: 0.4rem;
+  white-space: nowrap;
+}

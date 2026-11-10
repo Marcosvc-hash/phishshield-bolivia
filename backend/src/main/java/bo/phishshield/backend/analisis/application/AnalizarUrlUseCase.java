@@ -10,6 +10,7 @@ import bo.phishshield.backend.analisis.domain.model.Sha256;
 import bo.phishshield.backend.analisis.domain.model.TipoAnalisis;
 import bo.phishshield.backend.analisis.domain.model.UrlAnalizada;
 import bo.phishshield.backend.analisis.domain.port.out.AnalisisRepositoryPort;
+import bo.phishshield.backend.analisis.domain.port.out.CambiosListasPort;
 import bo.phishshield.backend.analisis.domain.port.out.DominioOficialRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaBlancaRepositoryPort;
 import bo.phishshield.backend.analisis.domain.port.out.ListaNegraRepositoryPort;
@@ -59,6 +60,7 @@ public class AnalizarUrlUseCase {
     private final ListaBlancaRepositoryPort listaBlancaRepository;
     private final ModeloIaPort modeloIa;
     private final ModeloIaRepositoryPort modeloIaRepository;
+    private final CambiosListasPort cambiosListas;
     private final Clock reloj;
 
     public AnalizarUrlUseCase(List<ReglaUrl> reglasBase,
@@ -69,6 +71,7 @@ public class AnalizarUrlUseCase {
                               ListaBlancaRepositoryPort listaBlancaRepository,
                               ModeloIaPort modeloIa,
                               ModeloIaRepositoryPort modeloIaRepository,
+                              CambiosListasPort cambiosListas,
                               Clock reloj) {
         this.reglasBase = List.copyOf(reglasBase);
         this.analisisRepository = analisisRepository;
@@ -78,6 +81,7 @@ public class AnalizarUrlUseCase {
         this.listaBlancaRepository = listaBlancaRepository;
         this.modeloIa = modeloIa;
         this.modeloIaRepository = modeloIaRepository;
+        this.cambiosListas = cambiosListas;
         this.reloj = reloj;
     }
 
@@ -166,13 +170,23 @@ public class AnalizarUrlUseCase {
      * Solo se reutiliza un analisis de URL con fecha conocida y dentro de la
      * vigencia. Asi las filas viejas (por ejemplo, las del seed) no se
      * devuelven para siempre.
+     *
+     * Ademas, si un administrador cambio una lista blanca o negra DESPUES de
+     * ese analisis, ya no sirve: se calculo con las listas viejas. Sin esto,
+     * un dominio recien agregado a la lista negra seguiria saliendo "seguro"
+     * hasta 24 h para quien ya lo hubiera analizado.
      */
     private boolean sigueVigente(Analisis previo) {
         if (previo.getTipo() != TipoAnalisis.URL || previo.getFechaAnalisis() == null) {
             return false;
         }
         OffsetDateTime limite = OffsetDateTime.now(reloj).minus(VIGENCIA_CACHE);
-        return previo.getFechaAnalisis().isAfter(limite);
+        if (!previo.getFechaAnalisis().isAfter(limite)) {
+            return false;
+        }
+        return cambiosListas.ultimoCambio()
+                .map(cambio -> previo.getFechaAnalisis().isAfter(cambio))
+                .orElse(true);
     }
 
     /**

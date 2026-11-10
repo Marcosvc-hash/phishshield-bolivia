@@ -1,0 +1,119 @@
+<h1 class="titulo-admin">Listas de dominios</h1>
+<p class="subtitulo-admin">
+  La lista negra marca un dominio como phishing; la blanca evita falsos positivos en sitios legitimos.
+  Cualquier cambio hace que el motor vuelva a calcular los analisis guardados.
+</p>
+
+<form class="formulario" (ngSubmit)="guardar()">
+  @if (editando(); as d) {
+    <p class="ancho titulo-form">Editando <strong>{{ d.dominio }}</strong> (lista {{ d.lista }})</p>
+  } @else {
+    <label>
+      Dominio
+      <input name="dominio" placeholder="ej. bnb-pagos.xyz" [(ngModel)]="formulario.dominio" required>
+    </label>
+    <label>
+      Lista
+      <select name="lista" [(ngModel)]="formulario.lista">
+        <option value="negra">Negra (maliciosos)</option>
+        <option value="blanca">Blanca (legitimos)</option>
+      </select>
+    </label>
+  }
+  <label>
+    Entidad suplantada (opcional)
+    <select name="entidad" [(ngModel)]="formulario.entidad">
+      <option value="">Ninguna</option>
+      @for (e of entidades(); track e.nombre) {
+        <option [value]="e.nombre">{{ e.nombre }}</option>
+      }
+    </select>
+  </label>
+  <label class="ancho">
+    Motivo
+    <input name="motivo" maxlength="500" placeholder="Por que se agrega" [(ngModel)]="formulario.motivo" required>
+  </label>
+  <div class="acciones">
+    <button type="submit" class="btn primario" [disabled]="guardando()">
+      {{ editando() ? 'Guardar cambios' : 'Agregar' }}
+    </button>
+    @if (editando()) {
+      <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+    }
+  </div>
+</form>
+
+@if (error()) {
+  <p class="aviso error">{{ error() }}</p>
+}
+@if (aviso()) {
+  <p class="aviso ok">{{ aviso() }}</p>
+}
+
+<form class="filtros" (ngSubmit)="buscar()">
+  <label>
+    Lista
+    <select name="fLista" [(ngModel)]="lista" (change)="buscar()">
+      <option value="">Todas</option>
+      <option value="negra">Negra</option>
+      <option value="blanca">Blanca</option>
+      <option value="gris">Gris</option>
+    </select>
+  </label>
+  <label>
+    Estado
+    <select name="fActivo" [(ngModel)]="activo" (change)="buscar()">
+      <option value="true">Activos</option>
+      <option value="false">Desactivados</option>
+      <option value="">Todos</option>
+    </select>
+  </label>
+  <label>
+    Buscar
+    <input type="search" name="q" placeholder="dominio o motivo" [(ngModel)]="q">
+  </label>
+  <button type="submit" class="btn">Buscar</button>
+</form>
+
+<div class="tarjeta-admin">
+  @if (cargando() && !pagina()) {
+    <p class="aviso">Cargando listas...</p>
+  } @else if (pagina(); as p) {
+    <table>
+      <thead>
+        <tr>
+          <th>Dominio</th>
+          <th>Lista</th>
+          <th>Entidad</th>
+          <th>Motivo</th>
+          <th>Fuente</th>
+          <th>Agregado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of p.contenido; track d.id) {
+          <tr [class.apagado]="!d.activo">
+            <td class="dominio">{{ d.dominio }}</td>
+            <td><span class="chip" [class]="d.lista">{{ d.lista }}</span></td>
+            <td>{{ d.entidad ?? '-' }}</td>
+            <td>{{ d.motivo ?? '-' }}</td>
+            <td>{{ d.fuente }}</td>
+            <td class="fecha">{{ d.creadoEn | date: 'dd/MM/yyyy' }}</td>
+            <td class="botones">
+              <button class="btn" (click)="empezarEdicion(d)">Editar</button>
+              <button class="btn" [class.peligro]="d.activo" (click)="alternar(d)">
+                {{ d.activo ? 'Eliminar' : 'Reactivar' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (p.contenido.length === 0) {
+      <p class="aviso">No hay dominios con esos filtros.</p>
+    }
+    <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas"
+                   [totalElementos]="p.totalElementos" (cambiar)="cargar($event)" />
+  }
+</div>
