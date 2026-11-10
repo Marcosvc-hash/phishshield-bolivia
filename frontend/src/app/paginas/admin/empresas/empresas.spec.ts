@@ -4,6 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { Empresas } from './empresas';
 import { Empresa } from '../../../empresa.model';
+import { ConfirmacionService } from '../../../core/ui/confirmacion.service';
+import { ToastService } from '../../../core/ui/toast.service';
 
 describe('Empresas', () => {
   const URL = 'http://localhost:8080/api/empresas';
@@ -31,8 +33,9 @@ describe('Empresas', () => {
 
   afterEach(() => http.verify());
 
-  const boton = (texto: string) => ([...fixture.nativeElement.querySelectorAll('tbody button')] as HTMLButtonElement[])
-    .find((b) => b.textContent?.includes(texto))!;
+  /** Los botones de la fila solo tienen icono: se buscan por su aria-label. */
+  const boton = (accion: string) => ([...fixture.nativeElement.querySelectorAll('tbody button')] as HTMLButtonElement[])
+    .find((b) => b.getAttribute('aria-label')?.startsWith(accion))!;
 
   it('editar llena el formulario y manda PUT a la misma empresa', async () => {
     boton('Editar').click();
@@ -48,11 +51,13 @@ describe('Empresas', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(1);
-    expect(fixture.nativeElement.querySelector('.plan')?.textContent).toContain('empresarial');
+    expect(fixture.nativeElement.querySelector('.plan')?.textContent).toContain('Empresarial');
   });
 
-  it('desactivar manda activo=false y marca la fila como inactiva', async () => {
+  it('desactivar pide confirmación, manda activo=false y marca la fila como inactiva', async () => {
     boton('Desactivar').click();
+    expect(TestBed.inject(ConfirmacionService).solicitud()?.mensaje).toContain('usuarios actuales seguirán entrando');
+    TestBed.inject(ConfirmacionService).responder(true);
 
     const patch = http.expectOne(`${URL}/e1/estado`);
     expect(patch.request.body).toEqual({ activo: false });
@@ -61,7 +66,7 @@ describe('Empresas', () => {
 
     expect(fixture.nativeElement.querySelector('.inactiva')).not.toBeNull();
     expect(boton('Activar')).toBeDefined();
-    expect(fixture.nativeElement.querySelector('.aviso.ok')?.textContent).toContain('usuarios');
+    expect(TestBed.inject(ToastService).toasts().at(-1)?.mensaje).toContain('usuarios');
   });
 
   it('crear agrega la empresa nueva a la tabla', async () => {
@@ -74,5 +79,16 @@ describe('Empresas', () => {
     await fixture.whenStable();
 
     expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(2);
+  });
+
+  it('el chip "Inactivas" deja solo las desactivadas', async () => {
+    const chip = ([...fixture.nativeElement.querySelectorAll('.chip-filtro')] as HTMLButtonElement[])
+      .find((b) => b.textContent?.trim() === 'Inactivas')!;
+    chip.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(0);
+    expect(fixture.nativeElement.textContent).toContain('Ninguna empresa coincide');
   });
 });

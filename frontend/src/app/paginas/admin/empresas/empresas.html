@@ -1,97 +1,144 @@
-<h1 class="titulo-admin">Empresas</h1>
-<p class="subtitulo-admin">Empresas cliente de la plataforma</p>
-
-<form class="formulario" (ngSubmit)="guardar()">
-  @if (editando(); as e) {
-    <p class="ancho titulo-form">Editando <strong>{{ e.nombre }}</strong></p>
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    Empresas cliente de la plataforma. Una empresa desactivada no recibe usuarios nuevos, pero sus usuarios
+    actuales siguen entrando.
+  </p>
+  @if (!mostrarFormulario()) {
+    <div class="pagina-acciones">
+      <button type="button" class="btn btn-primario" (click)="abrirFormulario()">
+        <app-icono nombre="mas" [tamano]="16" /> Nueva empresa
+      </button>
+    </div>
   }
-  <label>
-    Nombre
-    <input name="nombre" maxlength="150" required [(ngModel)]="formulario.nombre">
-  </label>
-  <label>
-    NIT (opcional)
-    <input name="nit" inputmode="numeric" maxlength="15" placeholder="7 a 15 digitos" [(ngModel)]="formulario.nit">
-  </label>
-  <label>
-    Sector
-    <input name="sector" maxlength="60" [(ngModel)]="formulario.sector">
-  </label>
-  <label>
-    Ciudad
-    <input name="ciudad" maxlength="60" [(ngModel)]="formulario.ciudad">
-  </label>
-  <label>
-    Plan
-    <select name="plan" [(ngModel)]="formulario.plan">
-      <option value="basico">Basico</option>
-      <option value="profesional">Profesional</option>
-      <option value="empresarial">Empresarial</option>
-    </select>
-  </label>
-  <div class="acciones">
-    <button type="submit" class="btn primario" [disabled]="guardando()">
-      {{ editando() ? 'Guardar cambios' : 'Registrar empresa' }}
-    </button>
-    @if (editando()) {
-      <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
-    }
-  </div>
-</form>
+</div>
+
+@if (mostrarFormulario()) {
+  <section class="tarjeta seccion" aria-labelledby="titulo-empresa">
+    <div class="tarjeta-cabecera">
+      <h2 id="titulo-empresa" class="tarjeta-titulo">
+        @if (editando(); as e) { Editar {{ e.nombre }} } @else { Registrar una empresa }
+      </h2>
+    </div>
+    <form class="formulario tarjeta-cuerpo" (ngSubmit)="guardar()">
+      <div class="campo">
+        <label class="campo-etiqueta" for="empresa-nombre">Nombre</label>
+        <input id="empresa-nombre" name="nombre" class="entrada" maxlength="150" required [(ngModel)]="formulario.nombre">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="empresa-nit">NIT <span class="opcional">(opcional)</span></label>
+        <input id="empresa-nit" name="nit" class="entrada" inputmode="numeric" maxlength="15" placeholder="7 a 15 dígitos"
+               [(ngModel)]="formulario.nit">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="empresa-sector">Sector</label>
+        <input id="empresa-sector" name="sector" class="entrada" maxlength="60" [(ngModel)]="formulario.sector">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="empresa-ciudad">Ciudad</label>
+        <input id="empresa-ciudad" name="ciudad" class="entrada" maxlength="60" [(ngModel)]="formulario.ciudad">
+      </div>
+      <div class="campo">
+        <label class="campo-etiqueta" for="empresa-plan">Plan</label>
+        <select id="empresa-plan" name="plan" class="entrada" [(ngModel)]="formulario.plan">
+          <option value="basico">Básico</option>
+          <option value="profesional">Profesional</option>
+          <option value="empresarial">Empresarial</option>
+        </select>
+      </div>
+      <div class="formulario-acciones">
+        <button type="submit" class="btn btn-primario" [disabled]="guardando()">
+          @if (guardando()) { <span class="girador" aria-hidden="true"></span> } @else { <app-icono nombre="guardar" [tamano]="16" /> }
+          {{ editando() ? 'Guardar cambios' : 'Registrar empresa' }}
+        </button>
+        <button type="button" class="btn btn-secundario" (click)="cancelar()">Cancelar</button>
+      </div>
+    </form>
+  </section>
+}
 
 @if (error()) {
-  <p class="aviso error">{{ error() }}</p>
-}
-@if (aviso()) {
-  <p class="aviso ok">{{ aviso() }}</p>
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
 }
 
-@if (cargando()) {
-  <p class="aviso">Cargando empresas...</p>
-} @else {
-  <p class="conteo">{{ empresas().length }} empresa(s) registrada(s)</p>
-
-  <div class="tarjeta-admin">
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>NIT</th>
-          <th>Sector</th>
-          <th>Ciudad</th>
-          <th>Plan</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (empresa of empresas(); track empresa.id) {
-          <tr [class.apagado]="!empresa.activa">
-            <td>{{ empresa.nombre }}</td>
-            <td>{{ empresa.nit ?? '-' }}</td>
-            <td>{{ empresa.sector ?? '-' }}</td>
-            <td>{{ empresa.ciudad ?? '-' }}</td>
-            <td><span class="plan">{{ empresa.plan }}</span></td>
-            <td>
-              @if (empresa.activa) {
-                <span class="activa">Activa</span>
-              } @else {
-                <span class="inactiva">Inactiva</span>
-              }
-            </td>
-            <td class="botones">
-              <button class="btn" (click)="empezarEdicion(empresa)">Editar</button>
-              <button class="btn" [class.peligro]="empresa.activa" (click)="alternar(empresa)">
-                {{ empresa.activa ? 'Desactivar' : 'Activar' }}
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-
-    @if (empresas().length === 0) {
-      <p class="aviso">No hay empresas registradas todavia.</p>
-    }
+<section class="tarjeta" aria-label="Empresas">
+  <div class="barra-filtros">
+    <div class="barra-filtros-fila">
+      <div class="campo buscador">
+        <label class="campo-etiqueta" for="filtro-empresas">Buscar</label>
+        <div class="entrada-con-icono">
+          <app-icono nombre="buscar" [tamano]="18" />
+          <input id="filtro-empresas" type="search" class="entrada" placeholder="Nombre, NIT, sector o ciudad"
+                 [ngModel]="busqueda()" (ngModelChange)="buscarTexto($event)">
+        </div>
+      </div>
+    </div>
+    <fieldset class="grupo-chips">
+      <legend>Estado</legend>
+      @for (e of estados; track e.valor) {
+        <button type="button" class="chip-filtro" [attr.aria-pressed]="filtroEstado() === e.valor" (click)="elegirEstado(e.valor)">{{ e.nombre }}</button>
+      }
+    </fieldset>
   </div>
-}
+
+  @if (cargando()) {
+    <app-skeleton tipo="tabla" [cantidad]="4" etiqueta="Cargando empresas…" />
+  } @else {
+    @if (pagina().totalElementos === 0) {
+      <app-estado-vacio icono="empresa"
+                        [titulo]="empresas().length === 0 ? 'No hay empresas registradas todavía' : 'Ninguna empresa coincide'"
+                        [descripcion]="empresas().length === 0 ? 'Registre la primera con “Nueva empresa”.' : 'Pruebe con otra búsqueda o estado.'" />
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">NIT</th>
+              <th scope="col">Sector</th>
+              <th scope="col">Ciudad</th>
+              <th scope="col">Plan</th>
+              <th scope="col">Estado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (empresa of pagina().contenido; track empresa.id) {
+              <tr [class.apagado]="!empresa.activa">
+                <td data-etiqueta="Nombre">
+                  <span class="nombre">{{ empresa.nombre }}</span>
+                  <span class="alta">Desde {{ empresa.creadoEn | date: 'MM/yyyy' }}</span>
+                </td>
+                <td data-etiqueta="NIT" class="numero">{{ empresa.nit ?? '—' }}</td>
+                <td data-etiqueta="Sector">{{ empresa.sector ?? '—' }}</td>
+                <td data-etiqueta="Ciudad">{{ empresa.ciudad ?? '—' }}</td>
+                <td data-etiqueta="Plan"><span class="badge badge-acento sin-punto plan">{{ nombrePlan(empresa.plan) }}</span></td>
+                <td data-etiqueta="Estado">
+                  @if (empresa.activa) {
+                    <span class="badge activa">Activa</span>
+                  } @else {
+                    <span class="badge inactiva">Inactiva</span>
+                  }
+                </td>
+                <td>
+                  <div class="acciones-fila">
+                    <button type="button" class="btn btn-icono" [attr.aria-label]="'Editar ' + empresa.nombre" data-tooltip="Editar"
+                            (click)="empezarEdicion(empresa)">
+                      <app-icono nombre="editar" [tamano]="18" />
+                    </button>
+                    <button type="button" class="btn btn-icono" [class.peligro]="empresa.activa"
+                            [attr.aria-label]="(empresa.activa ? 'Desactivar ' : 'Activar ') + empresa.nombre"
+                            [attr.data-tooltip]="empresa.activa ? 'Desactivar' : 'Activar'" (click)="alternar(empresa)">
+                      <app-icono [nombre]="empresa.activa ? 'apagar' : 'refrescar'" [tamano]="18" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <app-paginador [pagina]="pagina().pagina" [totalPaginas]="pagina().totalPaginas" [tamano]="pagina().tamano"
+                   [totalElementos]="pagina().totalElementos" (cambiar)="numeroPagina.set($event)" />
+  }
+</section>
