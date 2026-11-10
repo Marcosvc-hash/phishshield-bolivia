@@ -18,6 +18,17 @@ export interface UsuarioAdmin {
   creadoEn: string;
 }
 
+/** Cuerpo de POST /api/admin/usuarios (CrearUsuarioRequest). */
+export interface NuevoUsuario {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  contrasena: string;
+  rol: Rol;
+  /** id de la empresa; null = sin empresa (o la propia, para un admin de empresa) */
+  empresa: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsuariosService {
 
@@ -28,7 +39,15 @@ export class UsuariosService {
     return this.http.get<UsuarioAdmin[]>(this.url);
   }
 
+  crear(datos: NuevoUsuario): Observable<UsuarioAdmin> {
+    return this.http.post<UsuarioAdmin>(this.url, datos);
+  }
+
   cambiarEstado(id: string, activo: boolean): Observable<UsuarioAdmin> {
     return this.http.patch<UsuarioAdmin>(`${this.url}/${id}/estado`, { activo });
+  }
+
+  cambiarRol(id: string, rol: Rol): Observable<UsuarioAdmin> {
+    return this.http.patch<UsuarioAdmin>(`${this.url}/${id}/rol`, { rol });
   }
 }

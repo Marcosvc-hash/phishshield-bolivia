@@ -61,4 +61,92 @@ describe('Usuarios', () => {
 
     expect(botonDe('carlos@x.bo').textContent?.trim()).toBe('Activar');
   });
+
+  function selectorDeRol(email: string): HTMLSelectElement | null {
+    const filas = [...fixture.nativeElement.querySelectorAll('tbody tr')] as HTMLElement[];
+    return filas.find((f) => f.textContent?.includes(email))!.querySelector('select.rol');
+  }
+
+  it('el propio rol no se puede cambiar; el de otro manda PATCH /rol', async () => {
+    expect(selectorDeRol('admin@x.bo')).toBeNull();
+
+    const selector = selectorDeRol('carlos@x.bo')!;
+    expect([...selector.options].map((o) => o.value)).toEqual(['USUARIO', 'ADMIN_EMPRESA', 'ADMIN']);
+    selector.value = 'ADMIN_EMPRESA';
+    selector.dispatchEvent(new Event('change'));
+
+    const peticion = http.expectOne(`${URL}/c1/rol`);
+    expect(peticion.request.method).toBe('PATCH');
+    expect(peticion.request.body).toEqual({ rol: 'ADMIN_EMPRESA' });
+    peticion.flush({ ...fila('c1', 'carlos@x.bo', 'activo'), rol: 'ADMIN_EMPRESA' });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.aviso.ok')?.textContent).toContain('Admin. de empresa');
+  });
+
+  it('el admin crea un usuario eligiendo una empresa activa', async () => {
+    (fixture.nativeElement.querySelector('button.nuevo') as HTMLButtonElement).click();
+    http.expectOne('http://localhost:8080/api/empresas').flush([
+      { id: 'e1', nombre: 'Andina', nit: null, sector: null, ciudad: null, plan: 'basico', activa: true, creadoEn: '' },
+      { id: 'e2', nombre: 'Cerrada', nit: null, sector: null, ciudad: null, plan: 'basico', activa: false, creadoEn: '' },
+    ]);
+    await fixture.whenStable();
+    expect(fixture.componentInstance.empresas().map((e) => e.nombre)).toEqual(['Andina']);
+
+    fixture.componentInstance.nuevo = {
+      nombres: 'Pedro', apellidos: '', email: 'pedro@andina.bo', contrasena: 'ClaveInicial1', rol: 'USUARIO', empresa: 'e1',
+    };
+    fixture.componentInstance.crear();
+
+    const post = http.expectOne(URL);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body.empresa).toBe('e1');
+    post.flush(fila('p1', 'pedro@andina.bo', 'activo'));
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(3);
+  });
+
+  it('al crear un ADMIN no se manda empresa', () => {
+    fixture.componentInstance.nuevo = {
+      nombres: 'Ana', apellidos: '', email: 'ana@x.bo', contrasena: 'ClaveInicial1', rol: 'ADMIN', empresa: 'e1',
+    };
+    fixture.componentInstance.crear();
+
+    const post = http.expectOne(URL);
+    expect(post.request.body.empresa).toBeNull();
+    post.flush(fila('a1', 'ana@x.bo', 'activo'));
+  });
+});
+
+describe('Usuarios como admin de empresa', () => {
+  const URL = 'http://localhost:8080/api/admin/usuarios';
+
+  it('no ofrece el rol ADMIN ni pide la lista de empresas', async () => {
+    localStorage.clear();
+    localStorage.setItem('phishshield.tokenAcceso', 't');
+    localStorage.setItem('phishshield.usuario',
+      JSON.stringify({ id: 'yo', nombreCompleto: 'Maria', email: 'maria@andina.bo', rol: 'ADMIN_EMPRESA' }));
+
+    await TestBed.configureTestingModule({
+      imports: [Usuarios],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    }).compileComponents();
+    const http = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(Usuarios);
+    fixture.detectChanges();
+    http.expectOne(URL).flush([]);
+    await fixture.whenStable();
+
+    (fixture.nativeElement.querySelector('button.nuevo') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const opciones = [...fixture.nativeElement.querySelectorAll('select[name="rol"] option')]
+      .map((o) => (o as HTMLOptionElement).value);
+    expect(opciones).toEqual(['USUARIO', 'ADMIN_EMPRESA']);
+    expect(fixture.nativeElement.querySelector('select[name="empresa"]')).toBeNull();
+    http.verify();   // no hubo GET /api/empresas
+    localStorage.clear();
+  });
 });

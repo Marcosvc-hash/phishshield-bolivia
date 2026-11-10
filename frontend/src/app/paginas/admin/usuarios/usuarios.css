@@ -4,6 +4,25 @@ h1 {
   color: #1e3a8a;
 }
 
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+button.nuevo {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+select.rol {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
 .alcance {
   margin: 0.2rem 0 1.25rem;
   color: #52514e;

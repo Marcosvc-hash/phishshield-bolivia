@@ -26,6 +26,18 @@ public enum Rol {
         return valorBd;
     }
 
+    /** Desde el nombre que usa la API y el frontend: "ADMIN", "ADMIN_EMPRESA" o "USUARIO". */
+    public static Rol desdeNombre(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+        try {
+            return valueOf(nombre.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Rol invalido: " + nombre + " (use ADMIN, ADMIN_EMPRESA o USUARIO)");
+        }
+    }
+
     public static Rol desdeValorBd(String valor) {
         for (Rol rol : values()) {
             if (rol.valorBd.equals(valor)) {
