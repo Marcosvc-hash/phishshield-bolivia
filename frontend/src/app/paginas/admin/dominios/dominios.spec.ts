@@ -4,6 +4,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { Dominios } from './dominios';
 import { DominioListado } from './dominios.service';
+import { ConfirmacionService } from '../../../core/ui/confirmacion.service';
+import { ToastService } from '../../../core/ui/toast.service';
 
 describe('Dominios', () => {
   const URL = 'http://localhost:8080/api/admin/dominios';
@@ -56,16 +58,20 @@ describe('Dominios', () => {
     http.expectOne((r) => r.url === URL && r.method === 'GET').flush(pagina([fila]));
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('.aviso.ok')?.textContent).toContain('bnb-pagos.xyz');
+    const toast = TestBed.inject(ToastService).toasts().at(-1);
+    expect(toast?.tipo).toBe('exito');
+    expect(toast?.mensaje).toContain('bnb-pagos.xyz');
   });
 
-  it('"Eliminar" manda activo=false (desactiva, no borra)', async () => {
+  it('"Desactivar" pide confirmación y manda activo=false (desactiva, no borra)', async () => {
     http.expectOne((r) => r.url === URL).flush(pagina([fila]));
     await fixture.whenStable();
 
-    const eliminar = [...fixture.nativeElement.querySelectorAll('tbody button')]
-      .find((b: HTMLButtonElement) => b.textContent?.includes('Eliminar')) as HTMLButtonElement;
-    eliminar.click();
+    const desactivar = fixture.nativeElement
+      .querySelector('button[aria-label="Desactivar bnb-bo-seguro.com"]') as HTMLButtonElement;
+    expect(desactivar.getAttribute('data-tooltip')).toBe('Desactivar');
+    desactivar.click();
+    TestBed.inject(ConfirmacionService).responder(true);
 
     const patch = http.expectOne(`${URL}/d1/estado`);
     expect(patch.request.method).toBe('PATCH');
@@ -82,9 +88,11 @@ describe('Dominios', () => {
     fixture.componentInstance.guardar();
 
     http.expectOne((r) => r.method === 'POST').flush(
-      { mensaje: 'visa.com esta activo en la lista blanca.' }, { status: 409, statusText: 'Conflict' });
+      { mensaje: 'visa.com está activo en la lista blanca.' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('.aviso.error')?.textContent).toContain('lista blanca');
+    const toast = TestBed.inject(ToastService).toasts().at(-1);
+    expect(toast?.tipo).toBe('error');
+    expect(toast?.mensaje).toContain('lista blanca');
   });
 });
