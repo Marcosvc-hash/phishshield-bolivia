@@ -171,6 +171,6 @@ alineados con los cuatro hitos de evaluación del curso.
 
 | Integrante | Rol |
 |---|---|
-| Marcos Vargas | Desarrollo completo (backend, frontend, base de datos e IA) |
+| Marcos Javier Vargas Callizaya | Desarrollo completo (backend, frontend, base de datos e IA) |
 
 Docente: Ing. Gabriel Alejandro Choque Callizaya
