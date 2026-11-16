@@ -136,6 +136,8 @@ Otros puntos del diseño:
 - **Contraseña pública:** la de la base es el valor por defecto de `docker-compose.yml` y ya está en el historial público. Está pendiente rotarla.
 - **V9 aplicada en la base real (2026-11-10)**, con respaldo previo en `respaldo_antes_v9.dump`
   (raíz del repo, ignorado por git; restaurar con `pg_restore`).
+- **V10 y V11 aplicadas en la base real (2026-11-16)**. Antes de V11 se guardó
+  `respaldo_antes_v11.dump` (mismo lugar). Sin V11 el backend no arranca (`ddl-auto: validate`).
 - **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
