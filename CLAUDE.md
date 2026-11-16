@@ -66,6 +66,9 @@ Otros puntos del diseño:
   - Umbrales: sospechoso desde 40, phishing desde 70.
   - La caché de análisis dura 24 h, pero un análisis anterior al último cambio de listas
     (filas `DOMINIO_*` en `auditoria`, vía `CambiosListasPort`) ya no se reutiliza.
+  - Si la caché la pide otro usuario u otra empresa, se guarda una fila nueva a su nombre con
+    los indicadores copiados (`Analisis.reutilizando`), con su propia alerta si no es segura. La
+    vigencia se mide desde `calculado_en` (V11), para que una copia no la renueve.
 - Modelo de IA (`ia/`, ver `ia/FICHA_MODELO.md`):
   - Solo mira el host: PhiUSIIL tiene sesgos de ruta y https (las legítimas no tienen ruta) y de IP (todas phishing).
   - Indicador `IA_MODELO_URL`: aporte = probabilidad × peso (40), solo si supera el umbral del modelo.

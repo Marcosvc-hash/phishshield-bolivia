@@ -218,12 +218,18 @@ CREATE TABLE analisis (
     tiempo_ms      INTEGER,
     ip_origen      INET,
     fecha_analisis TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    -- Solo en copias de la cache: cuando se calcularon los indicadores que se
+    -- copiaron. NULL si este analisis los calculo. La vigencia de 24 h se mide
+    -- desde aqui, asi una copia no la renueva (ver migracion V11).
+    calculado_en   TIMESTAMPTZ,
 
     CONSTRAINT chk_analisis_tipo      CHECK (tipo IN ('url', 'correo', 'imagen')),
     CONSTRAINT chk_analisis_origen    CHECK (origen IN ('extension', 'plugin_correo', 'web', 'api')),
     CONSTRAINT chk_analisis_resultado CHECK (resultado IN ('seguro', 'sospechoso', 'phishing')),
     CONSTRAINT chk_analisis_riesgo    CHECK (nivel_riesgo BETWEEN 0 AND 100),
     CONSTRAINT chk_analisis_tiempo    CHECK (tiempo_ms IS NULL OR tiempo_ms >= 0),
+    -- Una copia no puede ser anterior al calculo que copia
+    CONSTRAINT chk_analisis_calculado_en CHECK (calculado_en IS NULL OR calculado_en <= fecha_analisis),
     -- El veredicto y el puntaje no pueden contradecirse
     CONSTRAINT chk_analisis_coherencia CHECK (
         (resultado = 'seguro'     AND nivel_riesgo <  40) OR

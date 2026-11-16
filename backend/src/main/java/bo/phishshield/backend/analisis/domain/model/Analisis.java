@@ -22,6 +22,11 @@ public final class Analisis {
     private Long idModelo;
     private Integer tiempoMs;
     private OffsetDateTime fechaAnalisis;
+    /**
+     * Si los indicadores se copiaron de un analisis anterior (cache), cuando
+     * se calcularon. Es null cuando este analisis los calculo el mismo.
+     */
+    private OffsetDateTime calculadoEn;
 
     private final TipoAnalisis tipo;
     private final OrigenAnalisis origen;
@@ -76,6 +81,33 @@ public final class Analisis {
         );
     }
 
+    /**
+     * Fabrica para la cache: registra el pedido de otro usuario o empresa sin
+     * recalcular. Copia la URL, los indicadores y el puntaje del analisis
+     * previo, y recuerda cuando se hizo ese calculo. El usuario, la empresa y
+     * el modelo de IA los asigna despues el caso de uso (asignarContexto).
+     *
+     * La vigencia de la cache se mide desde el calculo y no desde la fecha de
+     * la copia: si cada copia la renovara, una URL consultada todos los dias
+     * por personas distintas no se recalcularia nunca. Por eso la copia de
+     * una copia conserva la fecha del calculo original.
+     */
+    public static Analisis reutilizando(Analisis previo, OrigenAnalisis origen) {
+        if (previo == null) {
+            throw new IllegalArgumentException("El análisis previo es obligatorio");
+        }
+        if (origen == null) {
+            throw new IllegalArgumentException("El origen del análisis es obligatorio");
+        }
+        if (previo.momentoDelCalculo() == null) {
+            throw new IllegalArgumentException("Solo se puede reutilizar un análisis ya guardado");
+        }
+        Analisis copia = new Analisis(previo.tipo, origen, previo.contenido, previo.contenidoHash,
+                previo.dominio, previo.nivelRiesgo, previo.indicadores);
+        copia.calculadoEn = previo.momentoDelCalculo();
+        return copia;
+    }
+
     /** Reconstruye un analisis leido de la base de datos. Lo usa el adaptador de persistencia. */
     public static Analisis desdePersistencia(Long id, UUID uuidPublico, Long idUsuario,
                                              Long idEmpresa, Long idModelo,
@@ -83,6 +115,7 @@ public final class Analisis {
                                              String contenido, String contenidoHash,
                                              String dominio, BigDecimal nivelRiesgo,
                                              Integer tiempoMs, OffsetDateTime fechaAnalisis,
+                                             OffsetDateTime calculadoEn,
                                              List<Indicador> indicadores) {
         Analisis a = new Analisis(tipo, origen, contenido, contenidoHash,
                 dominio, nivelRiesgo, indicadores);
@@ -93,11 +126,21 @@ public final class Analisis {
         a.idModelo = idModelo;
         a.tiempoMs = tiempoMs;
         a.fechaAnalisis = fechaAnalisis;
+        a.calculadoEn = calculadoEn;
         return a;
     }
 
     public boolean requiereAlerta() {
         return resultado != Resultado.SEGURO;
+    }
+
+    /**
+     * Cuando se calcularon de verdad los indicadores: la fecha del calculo
+     * original si es una copia de la cache, o la propia si no. Es null en un
+     * analisis que todavia no se guardo.
+     */
+    public OffsetDateTime momentoDelCalculo() {
+        return calculadoEn != null ? calculadoEn : fechaAnalisis;
     }
 
     // ---- Contexto que asigna la infraestructura, no el dominio ----
@@ -138,4 +181,5 @@ public final class Analisis {
     public List<Indicador> getIndicadores() { return indicadores; }
     public Integer getTiempoMs() { return tiempoMs; }
     public OffsetDateTime getFechaAnalisis() { return fechaAnalisis; }
+    public OffsetDateTime getCalculadoEn() { return calculadoEn; }
 }

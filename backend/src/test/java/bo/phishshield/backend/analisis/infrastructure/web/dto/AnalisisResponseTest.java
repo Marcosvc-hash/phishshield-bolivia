@@ -20,7 +20,7 @@ class AnalisisResponseTest {
                 1L, UUID.randomUUID(), null, null, null,
                 TipoAnalisis.URL, OrigenAnalisis.WEB,
                 "https://ejemplo.com", "a".repeat(64), "ejemplo.com",
-                BigDecimal.ZERO, 5, fecha, List.of());
+                BigDecimal.ZERO, 5, fecha, null, List.of());
     }
 
     @Test

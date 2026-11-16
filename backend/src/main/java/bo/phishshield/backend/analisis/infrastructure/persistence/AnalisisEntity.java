@@ -59,6 +59,10 @@ public class AnalisisEntity {
     @Column(name = "fecha_analisis", nullable = false)
     private OffsetDateTime fechaAnalisis;
 
+    /** Solo en copias de la cache: cuando se calcularon los indicadores (V11). */
+    @Column(name = "calculado_en")
+    private OffsetDateTime calculadoEn;
+
     public Long getIdAnalisis() { return idAnalisis; }
     public void setIdAnalisis(Long idAnalisis) { this.idAnalisis = idAnalisis; }
 
@@ -100,4 +104,7 @@ public class AnalisisEntity {
 
     public OffsetDateTime getFechaAnalisis() { return fechaAnalisis; }
     public void setFechaAnalisis(OffsetDateTime fechaAnalisis) { this.fechaAnalisis = fechaAnalisis; }
+
+    public OffsetDateTime getCalculadoEn() { return calculadoEn; }
+    public void setCalculadoEn(OffsetDateTime calculadoEn) { this.calculadoEn = calculadoEn; }
 }

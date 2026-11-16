@@ -3,7 +3,10 @@ package bo.phishshield.backend.analisis.domain.model;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -114,5 +117,74 @@ class AnalisisTest {
         assertEquals("impuestos.gob.bo", UrlAnalizada.de("https://www.impuestos.gob.bo/tramites").getDominioRegistrable());
         assertEquals("bnb-bo-seguro.com", UrlAnalizada.de("http://bnb-bo-seguro.com/login").getDominioRegistrable());
         assertEquals("premios-tigo-bo.xyz", UrlAnalizada.de("https://premios-tigo-bo.xyz/sorteo").getDominioRegistrable());
+    }
+
+    // ---- Reutilizar un analisis de la cache (hallazgo 12) ----
+
+    private static final OffsetDateTime CALCULO = OffsetDateTime.of(2026, 11, 16, 9, 0, 0, 0, ZoneOffset.ofHours(-4));
+
+    /** Un analisis ya guardado, calculado por el usuario 1 de la empresa 1. */
+    private static Analisis guardadoPorUsuario1() {
+        Analisis original = Analisis.deUrl(
+                UrlAnalizada.de("http://bnb-bo-seguro.com/login"), OrigenAnalisis.WEB,
+                List.of(new Indicador("URL_LISTA_NEGRA", "bnb-bo-seguro.com", new BigDecimal("70.00")),
+                        new Indicador("URL_SIN_HTTPS", "esquema http", new BigDecimal("8.00"))));
+        original.asignarContexto(1L, 1L, 4L);
+        original.asignarIdentidad(10L, UUID.randomUUID(), CALCULO);
+        return original;
+    }
+
+    @Test
+    void reutilizar_copia_indicadores_puntaje_y_veredicto_pero_no_la_identidad() {
+        Analisis original = guardadoPorUsuario1();
+
+        Analisis copia = Analisis.reutilizando(original, OrigenAnalisis.EXTENSION);
+
+        assertEquals(original.getIndicadores(), copia.getIndicadores());
+        assertEquals(original.getNivelRiesgo(), copia.getNivelRiesgo());
+        assertEquals(Resultado.PHISHING, copia.getResultado());
+        assertEquals(original.getContenidoHash(), copia.getContenidoHash());
+        assertEquals(OrigenAnalisis.EXTENSION, copia.getOrigen(), "El origen es el del pedido nuevo");
+        // Es una fila nueva: sin id, sin usuario ni empresa hasta que el caso de uso los asigne
+        assertNull(copia.getId());
+        assertNull(copia.getIdUsuario());
+        assertNull(copia.getIdEmpresa());
+        assertNull(copia.getFechaAnalisis());
+    }
+
+    @Test
+    void la_copia_recuerda_cuando_se_calculo_el_original() {
+        Analisis copia = Analisis.reutilizando(guardadoPorUsuario1(), OrigenAnalisis.WEB);
+
+        assertEquals(CALCULO, copia.getCalculadoEn());
+        assertEquals(CALCULO, copia.momentoDelCalculo());
+    }
+
+    /** Si la copia de una copia tomara la fecha de la primera copia, la vigencia se renovaria sin recalcular. */
+    @Test
+    void la_copia_de_una_copia_conserva_la_fecha_del_calculo_original() {
+        Analisis primeraCopia = Analisis.reutilizando(guardadoPorUsuario1(), OrigenAnalisis.WEB);
+        primeraCopia.asignarIdentidad(11L, UUID.randomUUID(), CALCULO.plusHours(20));
+
+        Analisis segundaCopia = Analisis.reutilizando(primeraCopia, OrigenAnalisis.WEB);
+
+        assertEquals(CALCULO, segundaCopia.momentoDelCalculo());
+    }
+
+    @Test
+    void un_analisis_calculado_no_tiene_calculado_en_y_su_calculo_es_su_fecha() {
+        Analisis original = guardadoPorUsuario1();
+
+        assertNull(original.getCalculadoEn());
+        assertEquals(CALCULO, original.momentoDelCalculo());
+    }
+
+    @Test
+    void no_se_reutiliza_un_analisis_sin_guardar() {
+        Analisis sinGuardar = Analisis.deUrl(UrlAnalizada.de("https://ejemplo.com"), OrigenAnalisis.WEB, List.of());
+
+        assertThrows(IllegalArgumentException.class, () -> Analisis.reutilizando(sinGuardar, OrigenAnalisis.WEB));
+        assertThrows(IllegalArgumentException.class, () -> Analisis.reutilizando(null, OrigenAnalisis.WEB));
+        assertThrows(IllegalArgumentException.class, () -> Analisis.reutilizando(guardadoPorUsuario1(), null));
     }
 }

@@ -59,11 +59,13 @@ class AnalizarUrlUseCaseTest {
         final List<Analisis> guardados = new ArrayList<>();
         /** Alertas por id de analisis, como alertas.id_analisis UNIQUE. */
         final Map<Long, Alerta> alertas = new HashMap<>();
+        /** Hora con la que se guarda cada fila; las pruebas la adelantan para simular el paso del tiempo. */
+        Clock reloj = RELOJ;
 
         @Override
         public Analisis guardar(Analisis analisis) {
             analisis.asignarIdentidad((long) (guardados.size() + 1),
-                    UUID.randomUUID(), OffsetDateTime.now(RELOJ));
+                    UUID.randomUUID(), OffsetDateTime.now(reloj));
             guardados.add(analisis);
             return analisis;
         }
@@ -77,12 +79,12 @@ class AnalizarUrlUseCaseTest {
             return guardado;
         }
 
-        /** Igual que el adaptador real: el mas reciente con ese hash. */
+        /** Igual que el adaptador real: el mas reciente con ese hash (a igual fecha, el ultimo guardado). */
         @Override
         public Optional<Analisis> buscarPorHash(String contenidoHash) {
             return guardados.stream()
                     .filter(a -> a.getContenidoHash().equals(contenidoHash))
-                    .max(Comparator.comparing(Analisis::getFechaAnalisis));
+                    .max(Comparator.comparing(Analisis::getFechaAnalisis).thenComparing(Analisis::getId));
         }
 
         @Override
@@ -228,8 +230,12 @@ class AnalizarUrlUseCaseTest {
     }
 
     private Analisis analizar(String url) {
+        return analizarComo(url, 1L, 1L);
+    }
+
+    private Analisis analizarComo(String url, Long idUsuario, Long idEmpresa) {
         return casoDeUso().ejecutar(
-                new ComandoAnalizarUrl(url, OrigenAnalisis.WEB, 1L, 1L));
+                new ComandoAnalizarUrl(url, OrigenAnalisis.WEB, idUsuario, idEmpresa));
     }
 
     private static String detalle(Analisis analisis) {
@@ -239,13 +245,17 @@ class AnalizarUrlUseCaseTest {
                 .toString();
     }
 
+    /** Usuario y empresa de la fila del seed: quien la "analizo". */
+    private static final long USUARIO_SEED = 3L;
+    private static final long EMPRESA_SEED = 1L;
+
     /** Simula la fila escrita a mano en 02_seed.sql, con la fecha indicada. */
     private Analisis filaDelSeed(OffsetDateTime fecha) {
         return Analisis.desdePersistencia(
-                1L, UUID.randomUUID(), 3L, 1L, 2L,
+                1L, UUID.randomUUID(), USUARIO_SEED, EMPRESA_SEED, 2L,
                 TipoAnalisis.URL, OrigenAnalisis.EXTENSION,
                 URL_BNB_FALSO, Sha256.de(URL_BNB_FALSO), "bnb-bo-seguro.com",
-                new BigDecimal("94.50"), 180, fecha,
+                new BigDecimal("94.50"), 180, fecha, null,
                 List.of(
                         new Indicador("URL_TYPOSQUATTING", "bnb-bo-seguro.com ≈ bnb.com.bo", new BigDecimal("25.00")),
                         new Indicador("URL_SIN_HTTPS", "esquema http", new BigDecimal("8.00")),
@@ -341,12 +351,13 @@ class AnalizarUrlUseCaseTest {
                 "URL_DOMINIO_NUEVO no esta implementada; venia del seed: " + detalle(resultado));
     }
 
+    /** El mismo usuario de la misma empresa vuelve a analizar: se le devuelve su fila. */
     @Test
     void un_analisis_reciente_se_reutiliza() {
         Analisis reciente = filaDelSeed(OffsetDateTime.now(RELOJ).minusHours(2));
         repositorio.guardados.add(reciente);
 
-        Analisis resultado = analizar(URL_BNB_FALSO);
+        Analisis resultado = analizarComo(URL_BNB_FALSO, USUARIO_SEED, EMPRESA_SEED);
 
         assertEquals(1, repositorio.guardados.size());
         assertSame(reciente, resultado);
@@ -385,7 +396,7 @@ class AnalizarUrlUseCaseTest {
         Analisis reciente = filaDelSeed(OffsetDateTime.now(RELOJ).minusHours(2));
         repositorio.guardados.add(reciente);
 
-        assertSame(reciente, analizar(URL_BNB_FALSO));
+        assertSame(reciente, analizarComo(URL_BNB_FALSO, USUARIO_SEED, EMPRESA_SEED));
         assertEquals(1, repositorio.guardados.size());
     }
 
@@ -399,6 +410,115 @@ class AnalizarUrlUseCaseTest {
 
         assertNotSame(reciente, resultado);
         assertEquals(2, repositorio.guardados.size());
+    }
+
+    // ---- Cache con otro usuario u otra empresa (hallazgo 12) ----
+
+    /**
+     * El caso del hallazgo: antes el segundo usuario recibia la fila del
+     * primero, y su analisis no quedaba ni en su historial ni en el panel de
+     * su empresa. Ahora tiene su propia fila, con los mismos indicadores.
+     */
+    @Test
+    void otro_usuario_recibe_su_propia_fila_con_los_indicadores_de_la_cache() {
+        modeloIa.responder("0.90", "el dominio tiene 2 guiones");
+        Analisis delPrimero = analizarComo(URL_BNB_FALSO, 1L, 1L);
+
+        Analisis delSegundo = analizarComo(URL_BNB_FALSO, 2L, 2L);
+
+        assertEquals(2, repositorio.guardados.size(), "Debio guardar una fila para el segundo usuario");
+        assertNotEquals(delPrimero.getId(), delSegundo.getId());
+        assertEquals(2L, delSegundo.getIdUsuario());
+        assertEquals(2L, delSegundo.getIdEmpresa());
+        // Mismo resultado, sin recalcular: la IA se consulto una sola vez
+        assertEquals(delPrimero.getIndicadores(), delSegundo.getIndicadores());
+        assertEquals(delPrimero.getNivelRiesgo(), delSegundo.getNivelRiesgo());
+        assertEquals(1, modeloIa.consultadas.size(), "La copia no debe volver a consultar la IA");
+        assertEquals(ID_MODELO_REAL, delSegundo.getIdModelo(), "Conserva el modelo que hizo el calculo");
+        assertEquals(delPrimero.getFechaAnalisis(), delSegundo.getCalculadoEn());
+        // La fila del primero no cambia de dueno
+        assertEquals(1L, delPrimero.getIdUsuario());
+    }
+
+    /** Un usuario que cambio de empresa: el analisis nuevo debe contar para la empresa actual. */
+    @Test
+    void el_mismo_usuario_en_otra_empresa_tambien_recibe_su_propia_fila() {
+        analizarComo(URL_BNB_FALSO, 1L, 1L);
+
+        Analisis enOtraEmpresa = analizarComo(URL_BNB_FALSO, 1L, 2L);
+
+        assertEquals(2, repositorio.guardados.size());
+        assertEquals(2L, enOtraEmpresa.getIdEmpresa());
+    }
+
+    /** Cada fila no segura tiene su alerta: el admin de la segunda empresa debe enterarse. */
+    @Test
+    void la_copia_de_un_phishing_crea_la_alerta_de_la_nueva_empresa() {
+        Analisis delPrimero = analizarComo(URL_BNB_FALSO, 1L, 1L);
+
+        Analisis delSegundo = casoDeUso().ejecutar(
+                new ComandoAnalizarUrl(URL_BNB_FALSO, OrigenAnalisis.PLUGIN_CORREO, 2L, 2L));
+
+        assertEquals(2, repositorio.alertas.size());
+        assertNotNull(repositorio.alertas.get(delPrimero.getId()));
+        Alerta alertaSegundo = repositorio.alertas.get(delSegundo.getId());
+        assertEquals(Severidad.CRITICA, alertaSegundo.severidad());
+        assertEquals(CanalAlerta.EMAIL, alertaSegundo.canal(), "El canal sale del origen del pedido nuevo");
+    }
+
+    @Test
+    void la_copia_de_un_sitio_seguro_no_crea_alerta() {
+        analizarComo("https://www.bnb.com.bo/", 1L, 1L);
+        analizarComo("https://www.bnb.com.bo/", 2L, 2L);
+
+        assertEquals(2, repositorio.guardados.size());
+        assertTrue(repositorio.alertas.isEmpty());
+    }
+
+    /** Sin usuario ni empresa no hay a nombre de quien registrar: los anonimos comparten la fila. */
+    @Test
+    void dos_visitantes_anonimos_comparten_la_misma_fila() {
+        Analisis primero = analizarComo(URL_BNB_FALSO, null, null);
+        Analisis segundo = analizarComo(URL_BNB_FALSO, null, null);
+
+        assertSame(primero, segundo);
+        assertEquals(1, repositorio.guardados.size());
+        assertEquals(1, repositorio.alertas.size());
+    }
+
+    @Test
+    void un_usuario_con_sesion_despues_de_un_anonimo_recibe_su_propia_fila() {
+        analizarComo(URL_BNB_FALSO, null, null);
+
+        Analisis conSesion = analizarComo(URL_BNB_FALSO, 1L, 1L);
+
+        assertEquals(2, repositorio.guardados.size());
+        assertEquals(1L, conSesion.getIdUsuario());
+    }
+
+    /**
+     * Por que existe calculado_en: la copia se guarda con la fecha de hoy. Si la
+     * vigencia se midiera desde esa fecha, cada copia renovaria las 24 h y una
+     * URL consultada a diario por personas distintas no se recalcularia nunca.
+     */
+    @Test
+    void las_copias_no_renuevan_la_vigencia_de_24_horas() {
+        modeloIa.responder("0.90");
+        analizarComo(URL_BNB_FALSO, 1L, 1L);                       // calculo a las 0 h
+
+        repositorio.reloj = Clock.offset(RELOJ, java.time.Duration.ofHours(20));
+        Analisis copia = casoDeUso(repositorio.reloj).ejecutar(
+                new ComandoAnalizarUrl(URL_BNB_FALSO, OrigenAnalisis.WEB, 2L, 2L));   // copia a las 20 h
+        assertEquals(OffsetDateTime.now(RELOJ), copia.getCalculadoEn());
+        assertEquals(1, modeloIa.consultadas.size());
+
+        repositorio.reloj = Clock.offset(RELOJ, java.time.Duration.ofHours(25));
+        Analisis aLas25 = casoDeUso(repositorio.reloj).ejecutar(
+                new ComandoAnalizarUrl(URL_BNB_FALSO, OrigenAnalisis.WEB, 3L, 3L));   // 25 h desde el calculo
+
+        assertEquals(3, repositorio.guardados.size());
+        assertNull(aLas25.getCalculadoEn(), "A las 25 h debio recalcular, no copiar la copia");
+        assertEquals(2, modeloIa.consultadas.size(), "Recalcular vuelve a consultar la IA");
     }
 
     /** El mismo caso de uso con otro reloj, para simular el paso del tiempo. */

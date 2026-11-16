@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -91,11 +92,12 @@ public class AnalizarUrlUseCase {
         // 1. Parsear y normalizar. Si la URL es invalida, revienta aca.
         UrlAnalizada url = UrlAnalizada.de(comando.url());
 
-        // 2. Cache por hash: si ya analizamos esta URL hace poco, lo devolvemos
+        // 2. Cache por hash: si ya analizamos esta URL hace poco, no se recalcula
         String hash = Sha256.de(url.getOriginal());
-        Optional<Analisis> previo = analisisRepository.buscarPorHash(hash);
-        if (previo.isPresent() && sigueVigente(previo.get())) {
-            return previo.get();
+        Optional<Analisis> previo = analisisRepository.buscarPorHash(hash)
+                .filter(this::sigueVigente);
+        if (previo.isPresent()) {
+            return reutilizar(previo.get(), comando, inicio);
         }
 
         // 3. Armar el motor con los datos de referencia de la base
@@ -121,14 +123,49 @@ public class AnalizarUrlUseCase {
         // 5. Construir el agregado: el veredicto sale solo del puntaje
         Analisis analisis = Analisis.deUrl(url, comando.origen(), indicadores);
         analisis.asignarContexto(comando.idUsuario(), comando.idEmpresa(), idModelo);
-        analisis.registrarTiempo((int) ((System.nanoTime() - inicio) / 1_000_000));
+        analisis.registrarTiempo(milisegundosDesde(inicio));
 
-        // 6. Persistir analisis + indicadores, y la alerta si no es seguro.
-        //    Solo pasa con analisis nuevos: lo que sale de la cache ya
-        //    tiene su alerta (alertas.id_analisis es UNIQUE).
+        // 6. Persistir analisis + indicadores, y la alerta si no es seguro
+        return persistir(analisis);
+    }
+
+    /**
+     * Cache: los indicadores no se recalculan, pero cada usuario o empresa
+     * deja su propia fila. Antes se devolvia la fila de quien analizo
+     * primero, y el analisis no aparecia en el historial del segundo usuario
+     * ni en el panel de su empresa, ni su empresa recibia la alerta.
+     *
+     * Si quien pide es el mismo de la fila previa (mismo usuario y misma
+     * empresa; los anonimos cuentan como uno solo), se devuelve esa fila sin
+     * escribir nada: repetir la consulta no duplica analisis ni alertas.
+     */
+    private Analisis reutilizar(Analisis previo, ComandoAnalizarUrl comando, long inicio) {
+        boolean mismoSolicitante = Objects.equals(previo.getIdUsuario(), comando.idUsuario())
+                && Objects.equals(previo.getIdEmpresa(), comando.idEmpresa());
+        if (mismoSolicitante) {
+            return previo;
+        }
+        Analisis copia = Analisis.reutilizando(previo, comando.origen());
+        // El modelo de IA es parte del calculo que se copia
+        copia.asignarContexto(comando.idUsuario(), comando.idEmpresa(), previo.getIdModelo());
+        copia.registrarTiempo(milisegundosDesde(inicio));
+        return persistir(copia);
+    }
+
+    /**
+     * Guarda el analisis con sus indicadores y, si no es seguro, su alerta,
+     * en una sola transaccion. Cada fila nueva (calculada o copiada de la
+     * cache) tiene su propia alerta: alertas.id_analisis es UNIQUE, y la
+     * alerta de otra empresa no la ve el admin de esta.
+     */
+    private Analisis persistir(Analisis analisis) {
         return Alerta.para(analisis)
                 .map(alerta -> analisisRepository.guardarConAlerta(analisis, alerta))
                 .orElseGet(() -> analisisRepository.guardar(analisis));
+    }
+
+    private static int milisegundosDesde(long inicioNanos) {
+        return (int) ((System.nanoTime() - inicioNanos) / 1_000_000);
     }
 
     /**
@@ -175,17 +212,22 @@ public class AnalizarUrlUseCase {
      * ese analisis, ya no sirve: se calculo con las listas viejas. Sin esto,
      * un dominio recien agregado a la lista negra seguiria saliendo "seguro"
      * hasta 24 h para quien ya lo hubiera analizado.
+     *
+     * Las dos comparaciones usan el momento del CALCULO, no la fecha de la
+     * fila: si la fila es una copia de la cache, cuenta cuando se calcularon
+     * sus indicadores (ver Analisis.reutilizando).
      */
     private boolean sigueVigente(Analisis previo) {
-        if (previo.getTipo() != TipoAnalisis.URL || previo.getFechaAnalisis() == null) {
+        OffsetDateTime calculo = previo.momentoDelCalculo();
+        if (previo.getTipo() != TipoAnalisis.URL || calculo == null) {
             return false;
         }
         OffsetDateTime limite = OffsetDateTime.now(reloj).minus(VIGENCIA_CACHE);
-        if (!previo.getFechaAnalisis().isAfter(limite)) {
+        if (!calculo.isAfter(limite)) {
             return false;
         }
         return cambiosListas.ultimoCambio()
-                .map(cambio -> previo.getFechaAnalisis().isAfter(cambio))
+                .map(calculo::isAfter)
                 .orElse(true);
     }
 
