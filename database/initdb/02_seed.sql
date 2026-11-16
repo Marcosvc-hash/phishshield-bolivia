@@ -70,15 +70,15 @@ INSERT INTO reglas_deteccion (codigo, descripcion, categoria, peso) VALUES
 -- ---------------------------------------------------------------------
 -- ATENCIÓN: las filas 'phishshield-url' y 'phishshield-texto' son de EJEMPLO.
 -- Sus métricas y fechas son ilustrativas: no hay ningún modelo entrenado
--- detrás de ellas.
+-- detrás de ellas. Por eso van todas inactivas (activo = FALSE; ver V10).
 --
 -- 'phishshield-url-ia' 1.0.0 SÍ es real (ia/): sus métricas son las de la
 -- evaluación única en prueba (ia/reporte_metricas.md); las columnas *_val
--- guardan métricas de prueba. Es el único modelo de URL activo.
+-- guardan métricas de prueba. Es el único modelo activo.
 INSERT INTO modelos_ia (nombre, version, tipo, algoritmo, exactitud, precision_val, recall_val, f1_val, umbral_phishing, activo, entrenado_en) VALUES
     ('phishshield-url',    '0.1.0', 'url',   'Random Forest',      88.40, 86.10, 84.70, 85.39, 70.00, FALSE, DATE '2026-10-05'),
     ('phishshield-url',    '0.2.0', 'url',   'XGBoost + features', 93.20, 92.00, 90.80, 91.40, 70.00, FALSE, DATE '2026-10-20'),
-    ('phishshield-texto',  '0.1.0', 'texto', 'BERT multilingüe',   91.70, 90.30, 89.10, 89.70, 70.00, TRUE,  DATE '2026-10-22'),
+    ('phishshield-texto',  '0.1.0', 'texto', 'BERT multilingüe',   91.70, 90.30, 89.10, 89.70, 70.00, FALSE, DATE '2026-10-22'),
     ('phishshield-url-ia', '1.0.0', 'url',   'Regresion Logistica + Platt (solo host)', 89.55, 96.10, 80.57, 87.66, 55.27, TRUE, DATE '2026-10-12');
 
 -- ---------------------------------------------------------------------
