@@ -13,7 +13,7 @@ Proyecto universitario — La Paz, Bolivia, 2026.
 |---|---|---|
 | Hito 1 | Documento de avance: problema, objetivos, alcance | Completado |
 | Hito 2 | Arquitectura definida + diseño de base de datos | Completado |
-| Hito 3 | Primera presentación funcional (backend + frontend + IA base) | En curso: análisis de URL por reglas, empresas y usuarios funcionando; todavía sin IA ni autenticación |
+| Hito 3 | Primera presentación funcional (backend + frontend + IA base) | En curso: análisis de URL por reglas y modelo de IA, autenticación con JWT y panel de administración funcionando |
 | Hito 4 | Sistema integrado listo para demo | Pendiente |
 
 ---
@@ -32,8 +32,8 @@ phishshield-bolivia/
 │       ├── usuario/     Consulta de usuarios
 │       └── shared/      CORS y manejo global de errores
 ├── frontend/        Aplicación Angular (analizador de URL + listado de empresas)
-├── ia/              Modelos de detección en Python (pendiente, aún no existe)
-└── docs/            Documento de avance, cronograma, diagramas (pendiente, aún no existe)
+├── ia/              Modelo de detección de URL en Python (scikit-learn) y servicio de predicción (FastAPI)
+└── docs/            Guía de la demo, guía del módulo de administración e informe del modelo de IA
 ```
 
 ---
@@ -45,15 +45,16 @@ phishshield-bolivia/
 | Backend | Java 25, Spring Boot 4.1 (Web MVC, Data JPA, Validation), Maven Wrapper |
 | Base de datos | PostgreSQL 18 (Docker), pgAdmin 4 |
 | Frontend | Angular 22, TypeScript 6, pruebas con Vitest |
-| Seguridad | Pendiente (planificado: Spring Security + JWT) |
-| IA | Pendiente (planificado: Python 3.11+) |
+| Seguridad | Spring Security + JWT (HS256), contraseñas con BCrypt |
+| IA | Python 3.11+ con scikit-learn; servicio de predicción con FastAPI |
 | Infraestructura | Docker y Docker Compose |
 
 ---
 
 ## Cómo levantar el entorno
 
-Requisitos: Docker Desktop en ejecución, JDK 25 y Node.js con npm.
+Requisitos: Docker Desktop en ejecución, JDK 25, Node.js con npm y Python 3.11 o
+superior (para el servicio de IA).
 
 ### 1. Base de datos
 
@@ -80,32 +81,63 @@ Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker e
 
 Se aplican en orden y son idempotentes: ejecutarlas dos veces no hace daño.
 
-### 3. Backend (puerto 8080)
+### 3. Servicio de IA (puerto 8000)
 
-El backend lee la contraseña de la base desde la variable de entorno
-`DB_PASSWORD` (el valor de `POSTGRES_PASSWORD` en `database/.env`). Nunca la
-escriba en `application.yml`.
+El backend consulta a este servicio en cada análisis de URL. Si está apagado, el
+análisis sigue funcionando solo con las reglas y el backend deja un `WARN` en su
+consola.
+
+El modelo entrenado (`ia/modelos/1.0.0/modelo.joblib`) y el dataset no están en el
+repositorio: se generan la primera vez con `descargar_datos.py` y `entrenar.py`.
+
+```powershell
+cd ia
+python -m venv .venv                                            # la primera vez
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt   # la primera vez
+.\.venv\Scripts\python.exe descargar_datos.py                   # la primera vez: descarga el dataset
+.\.venv\Scripts\python.exe entrenar.py                          # la primera vez: genera el modelo (varios minutos)
+.\.venv\Scripts\python.exe -m uvicorn servicio:app --port 8000
+```
+
+Para comprobar que responde: `Invoke-RestMethod http://localhost:8000/salud` debe
+devolver `estado = ok`. El detalle está en [`ia/README.md`](ia/README.md) y las
+métricas del modelo en [`ia/FICHA_MODELO.md`](ia/FICHA_MODELO.md).
+
+### 4. Backend (puerto 8080)
+
+El backend necesita dos variables de entorno y no arranca si falta alguna:
+
+- `DB_PASSWORD`: la contraseña de la base (el valor de `POSTGRES_PASSWORD` en
+  `database/.env`). Nunca la escriba en `application.yaml`.
+- `JWT_SECRET`: la clave con la que se firman los tokens de sesión (JWT). Debe
+  tener al menos 32 caracteres y tampoco se escribe en ningún archivo del
+  repositorio.
 
 **PowerShell:**
 
 ```powershell
 cd backend
 $env:DB_PASSWORD = "su-contraseña"
+# Clave aleatoria para firmar los tokens
+$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $env:JWT_SECRET = [Convert]::ToBase64String($b)
 .\mvnw.cmd spring-boot:run
 ```
 
-La variable vale solo para esa ventana de PowerShell. Las pruebas se ejecutan
-con `.\mvnw.cmd test` (la prueba `contextLoads` también necesita la base y
-`DB_PASSWORD`).
+Las variables valen solo para esa ventana de PowerShell. Como la clave se genera
+de nuevo en cada ventana, las sesiones abiertas antes dejan de valer y hay que
+volver a iniciar sesión. Las pruebas se ejecutan con `.\mvnw.cmd test` (la prueba
+`contextLoads` también necesita la base y `DB_PASSWORD`; para `JWT_SECRET` usan
+una clave falsa de prueba).
 
 **IntelliJ IDEA:** *Run → Edit Configurations… → BackendApplication →
-Environment variables* → `DB_PASSWORD=su-contraseña`. Haga lo mismo en la
-plantilla de JUnit si va a ejecutar las pruebas desde el IDE.
+Environment variables* → `DB_PASSWORD=su-contraseña;JWT_SECRET=una-clave-de-al-menos-32-caracteres`.
+Haga lo mismo con `DB_PASSWORD` en la plantilla de JUnit si va a ejecutar las
+pruebas desde el IDE.
 
 Hay peticiones de ejemplo en `backend/analisis.http` y `backend/empresas.http`
 (se ejecutan desde IntelliJ).
 
-### 4. Frontend (puerto 4200)
+### 5. Frontend (puerto 4200)
 
 ```powershell
 cd frontend
