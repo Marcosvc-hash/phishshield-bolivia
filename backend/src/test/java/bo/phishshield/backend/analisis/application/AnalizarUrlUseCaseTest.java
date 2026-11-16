@@ -289,6 +289,23 @@ class AnalizarUrlUseCaseTest {
     }
 
     /**
+     * "bnb-bo-seguro.com." (con un punto al final) es el mismo sitio para el
+     * navegador. Antes ese punto evitaba la lista negra y el veredicto bajaba
+     * de phishing a sospechoso.
+     */
+    @Test
+    void el_punto_final_del_dominio_no_evita_la_lista_negra() {
+        Analisis resultado = analizar("http://bnb-bo-seguro.com./login");
+
+        assertEquals(Resultado.PHISHING, resultado.getResultado(),
+                "Riesgo=" + resultado.getNivelRiesgo() + " Indicadores: " + detalle(resultado));
+        assertTrue(resultado.getIndicadores().stream()
+                        .anyMatch(i -> i.codigoRegla().equals("URL_LISTA_NEGRA")),
+                "Indicadores: " + detalle(resultado));
+        assertEquals("bnb-bo-seguro.com", resultado.getDominio());
+    }
+
+    /**
      * Documenta una limitacion conocida: sin la lista negra, imitar a un banco
      * solo suma typosquatting (45 puntos desde la migracion V3; antes 25, que
      * daba seguro). Queda en sospechoso, nunca en phishing.

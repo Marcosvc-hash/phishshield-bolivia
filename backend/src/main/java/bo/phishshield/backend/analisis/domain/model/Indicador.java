@@ -13,7 +13,7 @@ public record Indicador(String codigoRegla, String valor, BigDecimal aporte) {
 
     public Indicador {
         if (codigoRegla == null || codigoRegla.isBlank()) {
-            throw new IllegalArgumentException("El indicador necesita un codigo de regla");
+            throw new IllegalArgumentException("El indicador necesita un código de regla");
         }
         if (aporte == null) {
             throw new IllegalArgumentException("El aporte no puede ser nulo");

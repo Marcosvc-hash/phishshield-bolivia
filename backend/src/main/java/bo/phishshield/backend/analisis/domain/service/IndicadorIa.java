@@ -37,7 +37,7 @@ public final class IndicadorIa {
     }
 
     /**
-     * "Modelo de IA 1.0.0: 97% de probabilidad de phishing. Senales: a; b; c".
+     * "Modelo de IA 1.0.0: 97% de probabilidad de phishing. Señales: a; b; c".
      * Si no entra en 255 caracteres, se quitan senales desde la mas debil.
      */
     static String evidencia(PrediccionIa p) {
@@ -46,7 +46,7 @@ public final class IndicadorIa {
 
         List<String> senales = p.senales().stream().limit(MAX_SENALES).toList();
         for (int n = senales.size(); n > 0; n--) {
-            String texto = base + ". Senales: " + String.join("; ", senales.subList(0, n));
+            String texto = base + ". Señales: " + String.join("; ", senales.subList(0, n));
             if (texto.length() <= LARGO_MAXIMO) {
                 return texto;
             }

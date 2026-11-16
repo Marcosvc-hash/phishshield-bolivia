@@ -37,7 +37,7 @@ class IndicadorIaTest {
     void la_evidencia_tiene_porcentaje_y_hasta_3_senales() {
         Indicador i = IndicadorIa.desde(prediccion("0.97", "a", "b", "c", "d"), PESO).orElseThrow();
 
-        assertEquals("Modelo de IA 1.0.0: 97% de probabilidad de phishing. Senales: a; b; c", i.valor());
+        assertEquals("Modelo de IA 1.0.0: 97% de probabilidad de phishing. Señales: a; b; c", i.valor());
     }
 
     @Test

@@ -8,6 +8,6 @@ package bo.phishshield.backend.alerta.domain.model;
 public class AlertaModificadaException extends RuntimeException {
 
     public AlertaModificadaException() {
-        super("Otra persona cambio esta alerta mientras la editaba. Vuelva a cargarla e intente de nuevo.");
+        super("Otra persona cambió esta alerta mientras la editaba. Vuelva a cargarla e intente de nuevo.");
     }
 }

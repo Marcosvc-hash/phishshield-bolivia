@@ -175,18 +175,18 @@ def describir(nombre: str, valor: float, u: UrlNormalizada, hacia_phishing: bool
         case "guiones_host":
             return f"el dominio tiene {v} guion{'es' if v != 1 else ''}" if v else "el dominio no tiene guiones"
         case "digitos_host":
-            return f"el dominio tiene {v} digito{'s' if v != 1 else ''}" if v else "el dominio no tiene digitos"
+            return f"el dominio tiene {v} dígito{'s' if v != 1 else ''}" if v else "el dominio no tiene dígitos"
         case "especiales_host":
-            return f"el dominio tiene {v} caracter{'es' if v != 1 else ''} poco comun{'es' if v != 1 else ''}"
+            return f"el dominio tiene {v} {'carácter poco común' if v == 1 else 'caracteres poco comunes'}"
         case "subdominios":
             return f"tiene {v} subdominio{'s' if v != 1 else ''} ({u.subdominio})" if v else "no tiene subdominios"
         case "usa_ip":
-            return "usa una direccion IP en lugar de un dominio" if v else "usa un nombre de dominio, no una IP"
+            return "usa una dirección IP en lugar de un dominio" if v else "usa un nombre de dominio, no una IP"
         case "tld_abusado":
-            return f"la extension .{u.sufijo} se usa mucho en phishing" if v else f"la extension .{u.sufijo} no es de las abusadas"
+            return f"la extensión .{u.sufijo} se usa mucho en phishing" if v else f"la extensión .{u.sufijo} no es de las abusadas"
         case "entropia_host":
-            return (f"el dominio parece aleatorio (entropia {v:.2f})" if hacia_phishing
-                    else f"el dominio no parece aleatorio (entropia {v:.2f})")
+            return (f"el dominio parece aleatorio (entropía {v:.2f})" if hacia_phishing
+                    else f"el dominio no parece aleatorio (entropía {v:.2f})")
         case "palabras_sensibles_host":
             palabras = ", ".join(f"'{p}'" for p in _palabras_en(u.host))
             return f"el dominio contiene {palabras}" if v else "el dominio no contiene palabras sensibles"

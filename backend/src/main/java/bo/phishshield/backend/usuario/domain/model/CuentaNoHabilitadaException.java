@@ -4,6 +4,6 @@ package bo.phishshield.backend.usuario.domain.model;
 public class CuentaNoHabilitadaException extends RuntimeException {
 
     public CuentaNoHabilitadaException(EstadoUsuario estado) {
-        super("La cuenta no esta habilitada (estado: " + estado.aValorBd() + ")");
+        super("La cuenta no está habilitada (estado: " + estado.aValorBd() + ")");
     }
 }

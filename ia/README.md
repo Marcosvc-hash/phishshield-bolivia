@@ -80,7 +80,7 @@ responde (respuesta real del modelo 1.0.0):
   "umbral": 0.5527,
   "senales": [
     {"texto": "tiene 5 subdominios (bnb.com.bo.verificar.cuenta)", "aporte": 16.538, "direccion": "phishing"},
-    {"texto": "la extension .xyz se usa mucho en phishing", "aporte": 3.034, "direccion": "phishing"},
+    {"texto": "la extensión .xyz se usa mucho en phishing", "aporte": 3.034, "direccion": "phishing"},
     {"texto": "el dominio contiene 'login', 'verificar', 'cuenta'", "aporte": 2.79, "direccion": "phishing"},
     {"texto": "el dominio es largo (44 caracteres)", "aporte": 1.805, "direccion": "phishing"},
     {"texto": "el dominio contiene '.bo', secuencia frecuente en phishing", "aporte": 0.303, "direccion": "phishing"}

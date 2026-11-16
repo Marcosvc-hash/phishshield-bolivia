@@ -4,6 +4,6 @@ package bo.phishshield.backend.usuario.domain.model;
 public class SesionInvalidaException extends RuntimeException {
 
     public SesionInvalidaException() {
-        super("La sesion expiro o fue cerrada; inicie sesion de nuevo");
+        super("La sesión expiró o fue cerrada; inicie sesión de nuevo");
     }
 }

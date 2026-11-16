@@ -34,8 +34,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(
                 ErrorResponse.conCampos(
                         HttpStatus.BAD_REQUEST.value(),
-                        "Solicitud invalida",
-                        "Hay " + campos.size() + " campo(s) con errores de validacion",
+                        "Solicitud inválida",
+                        "Hay " + campos.size() + " campo(s) con errores de validación",
                         peticion.getRequestURI(),
                         campos));
     }
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
                 ErrorResponse.simple(
                         HttpStatus.CONFLICT.value(),
                         "Conflicto de datos",
-                        "La operacion contradice datos existentes; revise que las referencias "
+                        "La operación contradice datos existentes; revise que las referencias "
                                 + "(usuario, empresa) existan y que no haya duplicados.",
                         peticion.getRequestURI()));
     }
@@ -93,8 +93,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(
                 ErrorResponse.simple(
                         HttpStatus.BAD_REQUEST.value(),
-                        "Solicitud invalida",
-                        "El cuerpo de la peticion no es un JSON valido",
+                        "Solicitud inválida",
+                        "El cuerpo de la petición no es un JSON válido",
                         peticion.getRequestURI()));
     }
 
@@ -106,8 +106,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(
                 ErrorResponse.simple(
                         HttpStatus.BAD_REQUEST.value(),
-                        "Solicitud invalida",
-                        "El parametro '" + ex.getName() + "' tiene un formato invalido",
+                        "Solicitud inválida",
+                        "El parámetro '" + ex.getName() + "' tiene un formato inválido",
                         peticion.getRequestURI()));
     }
 
@@ -135,7 +135,7 @@ public class GlobalExceptionHandler {
                 ErrorResponse.simple(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         "Error interno",
-                        "Ocurrio un error inesperado. Revise el registro del servidor.",
+                        "Ocurrió un error inesperado. Revise el registro del servidor.",
                         peticion.getRequestURI()));
     }
 }

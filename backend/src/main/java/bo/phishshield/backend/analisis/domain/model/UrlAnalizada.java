@@ -41,7 +41,7 @@ public final class UrlAnalizada {
 
     public static UrlAnalizada de(String texto) {
         if (texto == null || texto.isBlank()) {
-            throw new UrlInvalidaException("La URL no puede estar vacia");
+            throw new UrlInvalidaException("La URL no puede estar vacía");
         }
 
         String limpia = texto.trim();
@@ -58,7 +58,13 @@ public final class UrlAnalizada {
                 throw new UrlInvalidaException("Esquema no soportado: " + esquema);
             }
 
-            String host = uri.getHost().toLowerCase();
+            // "bnb-bo-seguro.com." (con un punto al final) es el mismo sitio para
+            // el navegador. Si el punto se quedara, la lista negra y la regla del
+            // TLD compararian contra "com." y no reconocerian el dominio.
+            String host = sinPuntoFinal(uri.getHost().toLowerCase());
+            if (host.isEmpty()) {
+                throw new UrlInvalidaException("URL sin esquema o sin host: " + limpia);
+            }
             if (host.length() > 255) {
                 throw new UrlInvalidaException("Dominio demasiado largo");
             }
@@ -70,6 +76,15 @@ public final class UrlAnalizada {
         } catch (URISyntaxException e) {
             throw new UrlInvalidaException("URL mal formada: " + limpia);
         }
+    }
+
+    /** "bnb.com.bo." devuelve "bnb.com.bo"; un host sin punto final queda igual. */
+    private static String sinPuntoFinal(String host) {
+        String resultado = host;
+        while (resultado.endsWith(".")) {
+            resultado = resultado.substring(0, resultado.length() - 1);
+        }
+        return resultado;
     }
 
     // ---- Preguntas que haran las reglas heuristicas ----

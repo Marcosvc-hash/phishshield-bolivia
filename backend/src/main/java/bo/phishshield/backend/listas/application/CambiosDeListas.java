@@ -50,8 +50,8 @@ final class CambiosDeListas {
             return;
         }
         if (dominios.buscar(dominio, opuesta).filter(DominioEnLista::isActivo).isPresent()) {
-            throw new ConflictoListaException(dominio + " esta activo en la lista " + opuesta.aValorBd()
-                    + ". Desactivelo alli primero: no puede ser legitimo y malicioso a la vez.");
+            throw new ConflictoListaException(dominio + " está activo en la lista " + opuesta.aValorBd()
+                    + ". Desactívelo allí primero: no puede ser legítimo y malicioso a la vez.");
         }
     }
 

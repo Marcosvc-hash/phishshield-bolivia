@@ -23,12 +23,12 @@ public record CrearUsuarioRequest(
         String apellidos,
 
         @NotBlank(message = "El email es obligatorio")
-        @Email(message = "El email no tiene un formato valido")
+        @Email(message = "El email no tiene un formato válido")
         @Size(max = 150, message = "El email no puede pasar de 150 caracteres")
         String email,
 
-        @NotBlank(message = "La contrasena inicial es obligatoria")
-        @Size(min = 8, max = 72, message = "La contrasena debe tener entre 8 y 72 caracteres")
+        @NotBlank(message = "La contraseña inicial es obligatoria")
+        @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
         String contrasena,
 
         @NotBlank(message = "El rol es obligatorio")

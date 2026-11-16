@@ -22,7 +22,7 @@ public record EventoAuditoria(AccionAuditoria accion,
 
     public EventoAuditoria {
         if (accion == null) {
-            throw new IllegalArgumentException("El evento de auditoria necesita una accion");
+            throw new IllegalArgumentException("El evento de auditoría necesita una acción");
         }
         // LinkedHashMap y no Map.copyOf: conserva el orden y admite valores null
         detalle = detalle == null ? Map.of() : new LinkedHashMap<>(detalle);

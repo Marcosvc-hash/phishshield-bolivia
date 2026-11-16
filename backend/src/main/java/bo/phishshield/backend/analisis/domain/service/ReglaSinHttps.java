@@ -15,7 +15,7 @@ public class ReglaSinHttps implements ReglaUrl {
     @Override
     public Optional<String> evaluar(UrlAnalizada url) {
         if (!url.usaHttps()) {
-            return Optional.of("La conexion no esta cifrada (esquema " + url.getEsquema() + ")");
+            return Optional.of("La conexión no está cifrada (esquema " + url.getEsquema() + ")");
         }
         return Optional.empty();
     }

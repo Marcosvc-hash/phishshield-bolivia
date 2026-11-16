@@ -223,4 +223,28 @@ class MotorReglasUrlTest {
         assertTrue(indicadorListaNegra("https://bnb-bo-seguro.com.ejemplo.net").isEmpty());
         assertTrue(indicadorListaNegra("https://www.bnb.com.bo/").isEmpty());
     }
+
+    // ---- Punto final en el dominio ("dominio.com.") ----
+    // Para el navegador es el mismo sitio, asi que las reglas no deben perderlo.
+
+    @Test
+    void el_punto_final_no_evita_la_lista_negra() {
+        Indicador conPunto = indicadorListaNegra("http://bnb-bo-seguro.com./login").orElseThrow();
+        assertEquals(new BigDecimal("70.00"), conPunto.aporte());
+
+        assertTrue(indicadorListaNegra("https://login.bnb-bo-seguro.com./x").isPresent());
+    }
+
+    @Test
+    void el_punto_final_no_evita_la_regla_del_tld() {
+        assertTrue(codigosDisparados("https://premios-tigo-bo.xyz./sorteo")
+                .contains("URL_TLD_SOSPECHOSO"));
+    }
+
+    @Test
+    void el_punto_final_dispara_las_mismas_reglas_que_la_url_normal() {
+        assertEquals(codigosDisparados("http://bnb-bo-seguro.com/login"),
+                codigosDisparados("http://bnb-bo-seguro.com./login"));
+        assertTrue(codigosDisparados("https://www.bnb.com.bo./").isEmpty());
+    }
 }

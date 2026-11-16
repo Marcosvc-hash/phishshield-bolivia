@@ -280,7 +280,7 @@ lista: su dominio registrable es `segura-login.xyz`.
 Por debajo del umbral la IA no suma nada, pero tampoco resta. Lo decidí a propósito: un modelo
 estadístico no debería poder "limpiar" lo que encontró una regla concreta, como la lista negra.
 La evidencia que se guarda es un texto como "Modelo de IA 1.0.0: 100% de probabilidad de
-phishing. Senales: …" (así, sin eñe, como está en `IndicadorIa.evidencia()`), con hasta 3 señales y recortado para entrar en los 255 caracteres de
+phishing. Señales: …" (lo arma `IndicadorIa.evidencia()`), con hasta 3 señales y recortado para entrar en los 255 caracteres de
 `analisis_indicadores.valor`.
 
 **Base de datos.** Se usan tres tablas de `01_schema.sql`: `reglas_deteccion` guarda el peso de

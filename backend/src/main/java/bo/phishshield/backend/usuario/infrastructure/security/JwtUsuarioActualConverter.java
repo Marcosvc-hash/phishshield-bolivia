@@ -36,12 +36,12 @@ public class JwtUsuarioActualConverter implements Converter<Jwt, AbstractAuthent
         try {
             uuid = UUID.fromString(jwt.getSubject());
         } catch (IllegalArgumentException | NullPointerException ex) {
-            throw new BadCredentialsException("El token no identifica a un usuario valido");
+            throw new BadCredentialsException("El token no identifica a un usuario válido");
         }
 
         Usuario usuario = usuarioRepository.buscarPorUuid(uuid)
                 .filter(Usuario::puedeIniciarSesion)
-                .orElseThrow(() -> new DisabledException("La cuenta ya no esta habilitada"));
+                .orElseThrow(() -> new DisabledException("La cuenta ya no está habilitada"));
 
         return new UsuarioActualToken(
                 new UsuarioActual(usuario.getId(), usuario.getUuidPublico(), usuario.getEmail(),

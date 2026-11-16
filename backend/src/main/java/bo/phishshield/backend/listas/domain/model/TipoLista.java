@@ -38,7 +38,7 @@ public enum TipoLista {
         try {
             return valueOf(valor.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Lista invalida: " + valor + " (use blanca o negra)");
+            throw new IllegalArgumentException("Lista inválida: " + valor + " (use blanca o negra)");
         }
     }
 }

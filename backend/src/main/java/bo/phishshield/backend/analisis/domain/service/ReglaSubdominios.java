@@ -22,7 +22,7 @@ public class ReglaSubdominios implements ReglaUrl {
     public Optional<String> evaluar(UrlAnalizada url) {
         int cantidad = url.getCantidadSubdominios();
         if (cantidad >= UMBRAL) {
-            return Optional.of("Cantidad anomala de subdominios: " + cantidad);
+            return Optional.of("Cantidad anómala de subdominios: " + cantidad);
         }
         return Optional.empty();
     }

@@ -34,7 +34,7 @@ public enum Rol {
         try {
             return valueOf(nombre.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Rol invalido: " + nombre + " (use ADMIN, ADMIN_EMPRESA o USUARIO)");
+            throw new IllegalArgumentException("Rol inválido: " + nombre + " (use ADMIN, ADMIN_EMPRESA o USUARIO)");
         }
     }
 

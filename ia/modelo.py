@@ -110,6 +110,6 @@ class Detector:
                         continue
                     ngramas_usados.append(clave)
                     texto = (f"el dominio contiene '{clave.strip()}', secuencia "
-                             f"{'frecuente en phishing' if hacia_phishing else 'propia de sitios legitimos'}")
+                             f"{'frecuente en phishing' if hacia_phishing else 'propia de sitios legítimos'}")
                 elegidas.append(Senal(texto, round(aporte, 3), "phishing" if hacia_phishing else "legitimo"))
         return elegidas

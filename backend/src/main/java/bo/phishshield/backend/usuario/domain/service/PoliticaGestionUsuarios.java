@@ -73,7 +73,7 @@ public final class PoliticaGestionUsuarios {
     public static void validarEmpresaActiva(boolean activa, String nombreEmpresa) {
         if (!activa) {
             throw new IllegalArgumentException("La empresa " + nombreEmpresa
-                    + " esta desactivada: no se le pueden crear usuarios");
+                    + " está desactivada: no se le pueden crear usuarios");
         }
     }
 

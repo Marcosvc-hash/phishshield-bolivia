@@ -68,7 +68,7 @@ public record NombreDominio(String valor) {
         }
         if (!valor.chars().allMatch(c -> c < 128)) {
             throw new IllegalArgumentException(
-                    "El dominio tiene caracteres no ASCII; escribalo en punycode (xn--...)");
+                    "El dominio tiene caracteres no ASCII; escríbalo en punycode (xn--...)");
         }
         if (valor.length() > LARGO_MAXIMO) {
             throw new IllegalArgumentException("El dominio no puede superar los " + LARGO_MAXIMO + " caracteres");
@@ -76,19 +76,19 @@ public record NombreDominio(String valor) {
 
         String[] etiquetas = valor.split("\\.", -1);
         if (etiquetas.length < 2) {
-            throw new IllegalArgumentException("Falta la extension del dominio (ejemplo: .com o .com.bo): " + valor);
+            throw new IllegalArgumentException("Falta la extensión del dominio (ejemplo: .com o .com.bo): " + valor);
         }
         for (String etiqueta : etiquetas) {
             if (!ETIQUETA.matcher(etiqueta).matches()) {
-                throw new IllegalArgumentException("Formato de dominio invalido: " + valor);
+                throw new IllegalArgumentException("Formato de dominio inválido: " + valor);
             }
         }
         if (!TLD.matcher(etiquetas[etiquetas.length - 1]).matches()) {
             throw new IllegalArgumentException(
-                    "La extension debe tener letras (las direcciones IP no se aceptan): " + valor);
+                    "La extensión debe tener letras (las direcciones IP no se aceptan): " + valor);
         }
         if (UrlAnalizada.de("https://" + valor).getSufijoPublico().equals(valor)) {
-            throw new IllegalArgumentException(valor + " es una extension publica completa, no un dominio");
+            throw new IllegalArgumentException(valor + " es una extensión pública completa, no un dominio");
         }
     }
 

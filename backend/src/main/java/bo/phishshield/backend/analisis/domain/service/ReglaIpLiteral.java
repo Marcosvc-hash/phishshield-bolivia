@@ -15,7 +15,7 @@ public class ReglaIpLiteral implements ReglaUrl {
     @Override
     public Optional<String> evaluar(UrlAnalizada url) {
         if (url.hostEsIpLiteral()) {
-            return Optional.of("La direccion usa la IP " + url.getHost() + " en lugar de un dominio");
+            return Optional.of("La dirección usa la IP " + url.getHost() + " en lugar de un dominio");
         }
         return Optional.empty();
     }

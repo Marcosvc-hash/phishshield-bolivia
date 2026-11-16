@@ -36,13 +36,13 @@ public class Usuario {
             throw new IllegalArgumentException("El email es obligatorio");
         }
         if (!email.equals(email.toLowerCase())) {
-            throw new IllegalArgumentException("El email debe estar en minusculas: " + email);
+            throw new IllegalArgumentException("El email debe estar en minúsculas: " + email);
         }
         if (!email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
-            throw new IllegalArgumentException("Formato de email invalido: " + email);
+            throw new IllegalArgumentException("Formato de email inválido: " + email);
         }
         if (passwordHash == null || passwordHash.isBlank()) {
-            throw new IllegalArgumentException("El usuario necesita una contrasena");
+            throw new IllegalArgumentException("El usuario necesita una contraseña");
         }
         if (rol == null) {
             throw new IllegalArgumentException("El rol es obligatorio");

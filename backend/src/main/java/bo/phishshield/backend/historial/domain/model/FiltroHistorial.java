@@ -26,7 +26,7 @@ public record FiltroHistorial(Resultado resultado, RangoFechas fechas, String te
         try {
             return Resultado.desdeValorBd(valor.trim());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Resultado invalido: " + valor
+            throw new IllegalArgumentException("Resultado inválido: " + valor
                     + " (use seguro, sospechoso o phishing)");
         }
     }

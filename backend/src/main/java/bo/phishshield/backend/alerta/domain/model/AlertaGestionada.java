@@ -54,7 +54,7 @@ public class AlertaGestionada {
         }
         if (estado.esFinal()) {
             throw new TransicionAlertaInvalidaException(
-                    "La alerta ya esta " + estado.aValorBd() + " y no se puede modificar");
+                    "La alerta ya está " + estado.aValorBd() + " y no se puede modificar");
         }
         if (!estado.puedePasarA(destino)) {
             throw new TransicionAlertaInvalidaException(
@@ -74,7 +74,7 @@ public class AlertaGestionada {
     public void anotar(String texto) {
         if (estado.esFinal()) {
             throw new TransicionAlertaInvalidaException(
-                    "La alerta ya esta " + estado.aValorBd() + " y no se puede modificar");
+                    "La alerta ya está " + estado.aValorBd() + " y no se puede modificar");
         }
         String limpio = texto == null || texto.isBlank() ? null : texto.strip();
         if (limpio != null && limpio.length() > MAXIMO_NOTAS) {

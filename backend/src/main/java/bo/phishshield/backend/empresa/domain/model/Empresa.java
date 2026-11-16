@@ -69,10 +69,10 @@ public class Empresa {
         }
         String nitLimpio = opcional(nit);
         if (nitLimpio != null && !nitLimpio.matches(FORMATO_NIT)) {
-            throw new IllegalArgumentException("El NIT debe tener entre 7 y 15 digitos");
+            throw new IllegalArgumentException("El NIT debe tener entre 7 y 15 dígitos");
         }
         if (plan != null && !plan.matches(PLANES)) {
-            throw new IllegalArgumentException("Plan invalido: " + plan);
+            throw new IllegalArgumentException("Plan inválido: " + plan);
         }
         this.nombre = nombre.strip();
         this.nit = nitLimpio;
