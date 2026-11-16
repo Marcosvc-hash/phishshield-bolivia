@@ -7,6 +7,6 @@ package bo.phishshield.backend.usuario.domain.model;
 public class CredencialesInvalidasException extends RuntimeException {
 
     public CredencialesInvalidasException() {
-        super("Email o contrasena incorrectos");
+        super("Email o contraseña incorrectos");
     }
 }

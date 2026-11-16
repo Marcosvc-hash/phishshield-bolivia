@@ -22,7 +22,7 @@ public class ReglaTldSospechoso implements ReglaUrl {
     public Optional<String> evaluar(UrlAnalizada url) {
         String tld = url.getTld();
         if (TLDS_ABUSADOS.contains(tld)) {
-            return Optional.of("Extension de dominio asociada a abuso: " + tld);
+            return Optional.of("Extensión de dominio asociada a abuso: " + tld);
         }
         return Optional.empty();
     }

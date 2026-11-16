@@ -43,7 +43,7 @@ public class AgregarDominioUseCase {
 
         Optional<DominioEnLista> existente = dominios.buscar(dominio, lista);
         if (existente.filter(DominioEnLista::isActivo).isPresent()) {
-            throw new ConflictoListaException(dominio + " ya esta en la lista " + lista.aValorBd());
+            throw new ConflictoListaException(dominio + " ya está en la lista " + lista.aValorBd());
         }
 
         DominioEnLista aGuardar;

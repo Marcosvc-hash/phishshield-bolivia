@@ -37,7 +37,7 @@ public class RespuestasSeguridad implements AuthenticationEntryPoint, AccessDeni
                          AuthenticationException ex) throws IOException {
         respuesta.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
         escribir(respuesta, HttpStatus.UNAUTHORIZED,
-                "Necesita iniciar sesion, o su sesion vencio", peticion.getRequestURI());
+                "Necesita iniciar sesión, o su sesión venció", peticion.getRequestURI());
     }
 
     /** 403: el token es valido, pero su rol no tiene permiso para esta ruta. */
@@ -45,7 +45,7 @@ public class RespuestasSeguridad implements AuthenticationEntryPoint, AccessDeni
     public void handle(HttpServletRequest peticion, HttpServletResponse respuesta,
                        AccessDeniedException ex) throws IOException {
         escribir(respuesta, HttpStatus.FORBIDDEN,
-                "Su rol no tiene permiso para esta operacion", peticion.getRequestURI());
+                "Su rol no tiene permiso para esta operación", peticion.getRequestURI());
     }
 
     private void escribir(HttpServletResponse respuesta, HttpStatus estado,

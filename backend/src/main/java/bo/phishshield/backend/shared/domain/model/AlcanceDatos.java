@@ -32,7 +32,7 @@ public record AlcanceDatos(Long idEmpresa) {
      */
     public static AlcanceDatos soloPlataforma(UsuarioActual quien) {
         if (quien.rol() != Rol.ADMIN) {
-            throw new AccesoDenegadoException("Esta seccion es solo para el administrador de la plataforma");
+            throw new AccesoDenegadoException("Esta sección es solo para el administrador de la plataforma");
         }
         return new AlcanceDatos(null);
     }

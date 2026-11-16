@@ -52,7 +52,7 @@ public final class Analisis {
             throw new IllegalArgumentException("La URL analizada es obligatoria");
         }
         if (origen == null) {
-            throw new IllegalArgumentException("El origen del analisis es obligatorio");
+            throw new IllegalArgumentException("El origen del análisis es obligatorio");
         }
         if (indicadores == null) {
             throw new IllegalArgumentException("La lista de indicadores no puede ser nula");
@@ -110,7 +110,7 @@ public final class Analisis {
 
     public void registrarTiempo(int milisegundos) {
         if (milisegundos < 0) {
-            throw new IllegalArgumentException("El tiempo de analisis no puede ser negativo");
+            throw new IllegalArgumentException("El tiempo de análisis no puede ser negativo");
         }
         this.tiempoMs = milisegundos;
     }

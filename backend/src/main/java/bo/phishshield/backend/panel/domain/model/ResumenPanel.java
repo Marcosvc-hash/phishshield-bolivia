@@ -14,7 +14,7 @@ public record ResumenPanel(long totalAnalisis,
             throw new IllegalArgumentException("Los totales del panel no pueden ser negativos");
         }
         if (totalPhishing > totalAnalisis) {
-            throw new IllegalArgumentException("No puede haber mas phishing que analisis");
+            throw new IllegalArgumentException("No puede haber más phishing que análisis");
         }
     }
 

@@ -19,14 +19,14 @@ public final class PoliticaContrasena {
     public static void validar(String contrasena) {
         if (contrasena == null || contrasena.length() < LARGO_MINIMO) {
             throw new IllegalArgumentException(
-                    "La contrasena debe tener al menos " + LARGO_MINIMO + " caracteres");
+                    "La contraseña debe tener al menos " + LARGO_MINIMO + " caracteres");
         }
         if (contrasena.getBytes(StandardCharsets.UTF_8).length > BYTES_MAXIMOS) {
             throw new IllegalArgumentException(
-                    "La contrasena es demasiado larga (maximo " + BYTES_MAXIMOS + " bytes)");
+                    "La contraseña es demasiado larga (máximo " + BYTES_MAXIMOS + " bytes)");
         }
         if (contrasena.isBlank()) {
-            throw new IllegalArgumentException("La contrasena no puede ser solo espacios");
+            throw new IllegalArgumentException("La contraseña no puede ser solo espacios");
         }
     }
 }

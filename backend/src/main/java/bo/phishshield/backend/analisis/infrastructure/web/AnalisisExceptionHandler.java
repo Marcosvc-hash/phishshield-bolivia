@@ -27,7 +27,7 @@ public class AnalisisExceptionHandler {
         return ResponseEntity.badRequest().body(
                 ErrorResponse.simple(
                         HttpStatus.BAD_REQUEST.value(),
-                        "URL invalida",
+                        "URL inválida",
                         ex.getMessage(),
                         peticion.getRequestURI()));
     }

@@ -5,6 +5,6 @@ import java.util.UUID;
 public class DominioNoEncontradoException extends RuntimeException {
 
     public DominioNoEncontradoException(UUID id) {
-        super("No se encontro el dominio " + id);
+        super("No se encontró el dominio " + id);
     }
 }

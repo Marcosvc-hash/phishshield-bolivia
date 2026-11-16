@@ -130,7 +130,7 @@ class IniciarSesionUseCaseTest {
         CredencialesInvalidasException ex = assertThrows(CredencialesInvalidasException.class,
                 () -> login("nadie@andina.bo", "lo-que-sea"));
 
-        assertEquals("Email o contrasena incorrectos", ex.getMessage());
+        assertEquals("Email o contraseña incorrectos", ex.getMessage());
         assertNull(accesos.get(0).idUsuario());
         assertEquals("email_no_registrado", accesos.get(0).motivo());
     }

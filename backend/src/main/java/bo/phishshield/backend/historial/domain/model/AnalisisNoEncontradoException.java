@@ -10,6 +10,6 @@ import java.util.UUID;
 public class AnalisisNoEncontradoException extends RuntimeException {
 
     public AnalisisNoEncontradoException(UUID id) {
-        super("No se encontro el analisis " + id);
+        super("No se encontró el análisis " + id);
     }
 }

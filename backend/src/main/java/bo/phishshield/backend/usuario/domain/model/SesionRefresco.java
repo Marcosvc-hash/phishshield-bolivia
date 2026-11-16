@@ -15,7 +15,7 @@ public record SesionRefresco(Long id,
 
     public SesionRefresco {
         if (idUsuario == null || hashToken == null || expiraEn == null) {
-            throw new IllegalArgumentException("La sesion necesita usuario, hash y vencimiento");
+            throw new IllegalArgumentException("La sesión necesita usuario, hash y vencimiento");
         }
     }
 

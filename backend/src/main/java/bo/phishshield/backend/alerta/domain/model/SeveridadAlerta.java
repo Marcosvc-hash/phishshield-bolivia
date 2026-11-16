@@ -23,7 +23,7 @@ public enum SeveridadAlerta {
         try {
             return valueOf(valor.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Severidad invalida: " + valor
+            throw new IllegalArgumentException("Severidad inválida: " + valor
                     + " (use baja, media, alta o critica)");
         }
     }

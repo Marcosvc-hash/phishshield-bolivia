@@ -9,6 +9,6 @@ import java.util.UUID;
 public class AlertaNoEncontradaException extends RuntimeException {
 
     public AlertaNoEncontradaException(UUID id) {
-        super("No se encontro la alerta " + id);
+        super("No se encontró la alerta " + id);
     }
 }

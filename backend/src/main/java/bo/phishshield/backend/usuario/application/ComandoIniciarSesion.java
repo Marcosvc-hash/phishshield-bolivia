@@ -13,7 +13,7 @@ public record ComandoIniciarSesion(String email,
 
     public ComandoIniciarSesion {
         if (email == null || email.isBlank() || contrasena == null || contrasena.isEmpty()) {
-            throw new IllegalArgumentException("Email y contrasena son obligatorios");
+            throw new IllegalArgumentException("Email y contraseña son obligatorios");
         }
         email = email.trim().toLowerCase(Locale.ROOT);
     }

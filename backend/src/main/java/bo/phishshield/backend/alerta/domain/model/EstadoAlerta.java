@@ -46,7 +46,7 @@ public enum EstadoAlerta {
         try {
             return valueOf(valor.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Estado de alerta invalido: " + valor
+            throw new IllegalArgumentException("Estado de alerta inválido: " + valor
                     + " (use pendiente, en_revision, revisada o descartada)");
         }
     }

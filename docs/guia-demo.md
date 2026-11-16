@@ -86,8 +86,8 @@ Pegarlas en el analizador del frontend, en este orden. "IA" es el aporte del ind
 
 En la tarjeta del resultado, bajo "Por que se marco asi", el indicador de la IA muestra su
 porcentaje y sus señales. Este es el texto real de la fila 6:
-*"Modelo de IA 1.0.0: 100% de probabilidad de phishing. Senales: tiene 5 subdominios
-(bnb.com.bo.verificar.cuenta); la extension .xyz se usa mucho en phishing; el dominio contiene
+*"Modelo de IA 1.0.0: 100% de probabilidad de phishing. Señales: tiene 5 subdominios
+(bnb.com.bo.verificar.cuenta); la extensión .xyz se usa mucho en phishing; el dominio contiene
 'login', 'verificar', 'cuenta'"* (+40).
 
 En la fila 10, typosquatting muestra: *"El dominio usa la marca 'ende' de Ende sin ser su

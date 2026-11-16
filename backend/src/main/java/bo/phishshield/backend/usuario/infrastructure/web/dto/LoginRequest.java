@@ -8,7 +8,7 @@ public record LoginRequest(
         @NotBlank(message = "El email es obligatorio")
         String email,
 
-        @NotBlank(message = "La contrasena es obligatoria")
+        @NotBlank(message = "La contraseña es obligatoria")
         String contrasena
 ) {
 }

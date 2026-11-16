@@ -41,7 +41,7 @@ public final class UrlAnalizada {
 
     public static UrlAnalizada de(String texto) {
         if (texto == null || texto.isBlank()) {
-            throw new UrlInvalidaException("La URL no puede estar vacia");
+            throw new UrlInvalidaException("La URL no puede estar vacía");
         }
 
         String limpia = texto.trim();
