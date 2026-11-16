@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
-import { authGuard, rolGuard } from './auth.guard';
+import { authGuard, invitadoGuard, rolGuard } from './auth.guard';
 
 describe('guards de autenticacion', () => {
   const ruta = {} as ActivatedRouteSnapshot;
@@ -40,16 +40,34 @@ describe('guards de autenticacion', () => {
     expect(ejecutar(authGuard)).toBe(true);
   });
 
-  it('rolGuard rechaza un rol que no esta en la lista', () => {
+  it('rolGuard manda al USUARIO rechazado al analizador del panel', () => {
     sesionGuardada('USUARIO');
     configurar();
     const resultado = ejecutar(rolGuard('ADMIN', 'ADMIN_EMPRESA'));
-    expect(resultado.toString()).toBe('/');
+    expect(resultado.toString()).toBe('/admin/analizar');
+  });
+
+  it('rolGuard manda al admin de empresa rechazado a su panel', () => {
+    sesionGuardada('ADMIN_EMPRESA');
+    configurar();
+    const resultado = ejecutar(rolGuard('ADMIN'));
+    expect(resultado.toString()).toBe('/admin/panel');
   });
 
   it('rolGuard acepta un rol de la lista', () => {
     sesionGuardada('ADMIN_EMPRESA');
     configurar();
     expect(ejecutar(rolGuard('ADMIN', 'ADMIN_EMPRESA'))).toBe(true);
+  });
+
+  it('invitadoGuard sin sesion deja ver la pagina publica', () => {
+    configurar();
+    expect(ejecutar(invitadoGuard)).toBe(true);
+  });
+
+  it.each(['ADMIN', 'ADMIN_EMPRESA', 'USUARIO'])('invitadoGuard con sesion de %s manda al analizador del panel', (rol) => {
+    sesionGuardada(rol);
+    configurar();
+    expect(ejecutar(invitadoGuard).toString()).toBe('/admin/analizar');
   });
 });

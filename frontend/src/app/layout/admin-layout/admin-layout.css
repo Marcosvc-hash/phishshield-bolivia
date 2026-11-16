@@ -13,12 +13,12 @@ nav { flex: 1; overflow-y: auto; padding: 4px 12px 16px; }
   margin: 20px 12px 6px; font-size: 0.6875rem; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase; color: #8193b5;
 }
-nav a, .ir-analizador {
+nav a {
   position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 12px; margin-bottom: 2px;
   border-radius: 8px; color: #c7d2e7; font-size: var(--t-sm); font-weight: 500; text-decoration: none;
   transition: background var(--transicion), color var(--transicion);
 }
-nav a:hover, .ir-analizador:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+nav a:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 nav a.activa { background: rgba(96, 165, 250, 0.16); color: #fff; font-weight: 600; }
 nav a.activa::before {
   content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px;
@@ -30,7 +30,6 @@ nav a.activa app-icono { color: #93c5fd; }
   min-width: 22px; padding: 1px 7px; border-radius: var(--radio-full); background: var(--alerta-solido);
   color: #1f1300; font-size: var(--t-xs); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums;
 }
-.ir-analizador { margin: 0 12px 16px; border: 1px solid rgba(255, 255, 255, 0.12); }
 .cerrar-menu { display: none; color: #c7d2e7; }
 .fondo-menu { display: none; }
 

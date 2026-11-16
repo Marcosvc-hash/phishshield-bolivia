@@ -19,6 +19,9 @@ const CLAVE_USUARIO = 'phishshield.usuario';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
+  static readonly RUTA_PANEL = '/admin/panel';
+  static readonly RUTA_ANALIZADOR = '/admin/analizar';
+
   private http = inject(HttpClient);
   private router = inject(Router);
   private readonly url = `${API_URL}/auth`;
@@ -84,9 +87,14 @@ export class AuthService {
     return usuario !== null && roles.includes(usuario.rol);
   }
 
-  /** Pagina a la que va cada rol despues del login. */
+  /**
+   * Pagina a la que va cada rol despues del login (y al entrar a /admin):
+   * los administradores, al panel; el USUARIO, al analizador, que es lo
+   * unico que puede usar. Devuelve rutas finales, nunca "/admin" a secas,
+   * porque /admin redirige con esta misma funcion (evita un bucle).
+   */
   inicioSegunRol(): string {
-    return this.tieneRol('ADMIN', 'ADMIN_EMPRESA') ? '/admin' : '/';
+    return this.tieneRol('ADMIN', 'ADMIN_EMPRESA') ? AuthService.RUTA_PANEL : AuthService.RUTA_ANALIZADOR;
   }
 
   limpiar(): void {

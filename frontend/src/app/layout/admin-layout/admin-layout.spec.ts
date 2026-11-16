@@ -63,6 +63,37 @@ describe('AdminLayout', () => {
     expect(grupos).toEqual(['Monitoreo', 'Gestión']);
   });
 
+  it.each(['ADMIN', 'ADMIN_EMPRESA'])('para %s, "Analizar URL" es la primera opción de Monitoreo', async (rol) => {
+    await montarComo(rol);
+    http.expectOne(PENDIENTES).flush({ cantidad: 0 });
+    await fixture.whenStable();
+
+    const primera = fixture.nativeElement.querySelector('nav a') as HTMLAnchorElement;
+    expect(primera.textContent?.trim()).toBe('Analizar URL');
+    expect(primera.getAttribute('href')).toBe('/admin/analizar');
+    // Con el mismo icono de escudo que usa el boton "Analizar" del analizador
+    expect(primera.querySelector('app-icono')).not.toBeNull();
+  });
+
+  it('el USUARIO solo ve "Analizar URL" y no pide las alertas pendientes', async () => {
+    await montarComo('USUARIO');
+    // http.verify() del afterEach falla si se hubiera pedido /pendientes
+    await fixture.whenStable();
+
+    const opciones = ([...fixture.nativeElement.querySelectorAll('nav a')] as HTMLElement[]).map((a) => a.textContent?.trim());
+    expect(opciones).toEqual(['Analizar URL']);
+    const grupos = [...fixture.nativeElement.querySelectorAll('.grupo')].map((g: HTMLElement) => g.textContent?.trim());
+    expect(grupos).toEqual(['Monitoreo']);
+  });
+
+  it('ya no hay un enlace aparte "Ir al analizador" (quedó en el menú)', async () => {
+    await montarComo('ADMIN');
+    http.expectOne(PENDIENTES).flush({ cantidad: 0 });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Ir al analizador');
+  });
+
   it('el menú del usuario muestra nombre y rol y se cierra con Escape', async () => {
     await montarComo('ADMIN');
     http.expectOne(PENDIENTES).flush({ cantidad: 0 });

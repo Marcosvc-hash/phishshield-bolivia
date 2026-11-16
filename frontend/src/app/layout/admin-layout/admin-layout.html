@@ -4,7 +4,7 @@
 
   <aside id="menu-lateral" class="lateral" aria-label="Menú de administración">
     <div class="lateral-cabecera">
-      <a routerLink="/admin" class="enlace-marca" aria-label="PhishShield, ir al panel"><app-marca [claro]="true" /></a>
+      <a routerLink="/admin" class="enlace-marca" aria-label="PhishShield, ir al inicio"><app-marca [claro]="true" /></a>
       <button type="button" class="btn btn-icono cerrar-menu" aria-label="Cerrar menú" (click)="menuAbierto.set(false)">
         <app-icono nombre="x" />
       </button>
@@ -25,10 +25,6 @@
         }
       }
     </nav>
-
-    <a routerLink="/" class="ir-analizador">
-      <app-icono nombre="escudo-check" [tamano]="18" /> Ir al analizador
-    </a>
   </aside>
 
   <div class="fondo-menu" aria-hidden="true" (click)="menuAbierto.set(false)"></div>
@@ -61,7 +57,6 @@
                 <span class="email">{{ u.email }}</span>
                 <span class="badge badge-acento sin-punto">{{ nombreRol(u.rol) }}</span>
               </div>
-              <a routerLink="/" class="opcion"><app-icono nombre="escudo-check" [tamano]="16" /> Ir al analizador</a>
               <button type="button" class="opcion salir" (click)="auth.logout()">
                 <app-icono nombre="salir" [tamano]="16" /> Cerrar sesión
               </button>

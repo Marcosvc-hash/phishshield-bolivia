@@ -91,7 +91,8 @@ export class Registro {
     }).pipe(
       switchMap(() => this.auth.login(this.email, this.contrasena))
     ).subscribe({
-      next: () => this.router.navigateByUrl('/'),
+      // Ya hay sesion: se salta la pagina publica y va directo a su inicio
+      next: () => this.router.navigateByUrl(this.auth.inicioSegunRol()),
       error: (err) => {
         this.error.set(mensajeDeError(err, 'No se pudo crear la cuenta.'));
         this.enviando.set(false);
