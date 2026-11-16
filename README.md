@@ -1,6 +1,6 @@
 # PhishShield Bolivia
 
-Plataforma de detección, prevención y educación contra el phishing y el fraude
+Plataforma de detección y prevención contra el phishing y el fraude
 digital, basada en inteligencia artificial y adaptada al contexto boliviano.
 
 Proyecto universitario — La Paz, Bolivia, 2026.
@@ -171,6 +171,6 @@ alineados con los cuatro hitos de evaluación del curso.
 
 | Integrante | Rol |
 |---|---|
-| _(completar)_ | _(completar)_ |
+| Marcos Vargas | Desarrollo completo (backend, frontend, base de datos e IA) |
 
-Docente: _(completar)_
+Docente: Ing. Gabriel Alejandro Choque Callizaya
