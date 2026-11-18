@@ -36,8 +36,11 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 - `backend/`: Spring Boot 4.1 + Java 25, Maven Wrapper (`mvnw.cmd`).
 - `frontend/`: Angular 22 + TypeScript 6, pruebas con Vitest.
 - `database/`: PostgreSQL 18 en Docker (contenedor `phishshield-db`).
-  - `initdb/01_schema.sql` (15 tablas), `initdb/02_seed.sql` y `initdb/03_vistas_panel_admin.sql`
-    (vistas del panel, igual que V8): solo corren con el volumen vacío.
+  - `initdb/01_schema.sql` (15 tablas), `initdb/02_seed.sql`, `initdb/03_vistas_panel_admin.sql`
+    (vistas del panel, igual que V8) y `initdb/04_qa.sql` (6 tablas `qa_*`, igual que V12): solo
+    corren con el volumen vacío.
+  - V12 se generó desde `04_qa.sql` convirtiendo los textos con tildes a `U&'...'`: si se cambia el
+    catálogo QA, hacerlo en una migración nueva (V13+) y en `04_qa.sql`, con el mismo método.
   - `migraciones/V<n>__*.sql`: cambios para bases que ya existen.
 
 ## Arquitectura hexagonal del backend
@@ -138,7 +141,13 @@ Otros puntos del diseño:
   (raíz del repo, ignorado por git; restaurar con `pg_restore`).
 - **V10 y V11 aplicadas en la base real (2026-11-16)**. Antes de V11 se guardó
   `respaldo_antes_v11.dump` (mismo lugar). Sin V11 el backend no arranca (`ddl-auto: validate`).
-- **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
+- **V12 aplicada en la base real (2026-11-17)**, con respaldo previo en `respaldo_antes_v12.dump`.
+- **La base real tiene 19 tablas**: 13 de `01_schema.sql` (faltan las de educación) + 6 `qa_*`.
+- **Base `phishshield_qa`** (mismo contenedor, creada el 2026-11-17): la usa el Centro de Pruebas QA
+  para no ensuciar la real. Se levanta el backend contra ella con
+  `backend\herramientas\levantar-backend-qa.ps1` (pone `DB_URL`). Cómo recrearla: `database/README.md`.
+  El admin tiene la misma contraseña que en la base real (se copió el hash).
+- La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
 - **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.

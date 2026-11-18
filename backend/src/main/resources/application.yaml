@@ -2,7 +2,10 @@ spring:
   application:
     name: backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/phishshield
+    # Sin DB_URL se usa la base real. Para la demo del Centro de Pruebas QA:
+    # DB_URL=jdbc:postgresql://localhost:5432/phishshield_qa
+    # (lo hace herramientas/levantar-backend-qa.ps1)
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/phishshield}
     username: phishshield
     password: ${DB_PASSWORD}
   jpa:
