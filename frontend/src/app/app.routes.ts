@@ -1,12 +1,15 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { authGuard, rolGuard } from './core/auth/auth.guard';
+import { authGuard, invitadoGuard, rolGuard } from './core/auth/auth.guard';
+import { AuthService } from './core/auth/auth.service';
 import { Inicio } from './paginas/inicio/inicio';
 import { Login } from './paginas/login/login';
 import { Registro } from './paginas/registro/registro';
 import { AdminLayout } from './layout/admin-layout/admin-layout';
 
 export const routes: Routes = [
-  { path: '', component: Inicio },
+  // Pagina publica: solo para visitantes; con sesion se va al analizador del panel
+  { path: '', component: Inicio, canActivate: [invitadoGuard] },
   { path: 'login', component: Login, title: 'Iniciar sesión' },
   { path: 'registro', component: Registro, title: 'Crear cuenta' },
   {
@@ -17,7 +20,14 @@ export const routes: Routes = [
     // Carga diferida: el codigo de estas paginas (y chart.js) solo se
     // descarga cuando alguien entra; quien solo usa el analizador no lo baja
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'panel' },
+      // /admin a secas: cada rol a su pagina de inicio (panel o analizador)
+      { path: '', pathMatch: 'full', redirectTo: () => inject(AuthService).inicioSegunRol() },
+      {
+        // Sin rolGuard: cualquier usuario con sesion puede analizar
+        path: 'analizar',
+        title: 'Analizar URL',
+        loadComponent: () => import('./paginas/admin/analizar/analizar').then((m) => m.Analizar)
+      },
       {
         path: 'panel',
         title: 'Panel',

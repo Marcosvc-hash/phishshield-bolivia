@@ -1,7 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Analizador } from '../../analizador/analizador';
-import { AuthService } from '../../core/auth/auth.service';
 import { Icono, NombreIcono } from '../../core/ui/icono';
 import { Marca } from '../../core/ui/marca';
 
@@ -12,8 +11,10 @@ interface EntidadProtegida {
 }
 
 /**
- * Pagina publica: el analizador de URL (con o sin sesion), como funciona y
- * las entidades que el motor protege.
+ * Pagina publica para visitantes sin sesion: el analizador de URL, como
+ * funciona y las entidades que el motor protege. Quien ya inicio sesion no
+ * llega aca: invitadoGuard lo manda al analizador dentro del panel
+ * (/admin/analizar), que usa el mismo componente <app-analizador>.
  */
 @Component({
   selector: 'app-inicio',
@@ -22,8 +23,6 @@ interface EntidadProtegida {
   styleUrl: './inicio.css'
 })
 export class Inicio {
-  protected auth = inject(AuthService);
-
   protected readonly anio = new Date().getFullYear();
 
   /**

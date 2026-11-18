@@ -12,12 +12,22 @@ export const authGuard: CanActivateFn = (_ruta, estado) => {
 };
 
 /**
+ * Lo contrario de authGuard: deja pasar solo a quien NO tiene sesion. Lo usa
+ * la pagina publica; quien ya entro va al analizador dentro del panel.
+ */
+export const invitadoGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.autenticado() ? inject(Router).createUrlTree([AuthService.RUTA_ANALIZADOR]) : true;
+};
+
+/**
  * Deja pasar solo a ciertos roles. Es una comodidad de la interfaz: la
  * proteccion real esta en el backend, que responde 403 a los demas.
+ * A quien no tiene el rol lo manda a su pagina de inicio dentro del panel.
  */
 export function rolGuard(...roles: Rol[]): CanActivateFn {
   return () => {
     const auth = inject(AuthService);
-    return auth.tieneRol(...roles) ? true : inject(Router).createUrlTree(['/']);
+    return auth.tieneRol(...roles) ? true : inject(Router).createUrlTree([auth.inicioSegunRol()]);
   };
 }

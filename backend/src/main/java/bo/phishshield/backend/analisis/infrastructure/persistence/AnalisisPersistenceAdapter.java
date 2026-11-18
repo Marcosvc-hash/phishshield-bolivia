@@ -144,6 +144,7 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
                 analisis.getFechaAnalisis() != null
                         ? analisis.getFechaAnalisis()
                         : OffsetDateTime.now());
+        entidad.setCalculadoEn(analisis.getCalculadoEn());
         return entidad;
     }
 
@@ -190,6 +191,7 @@ public class AnalisisPersistenceAdapter implements AnalisisRepositoryPort {
                 entidad.getNivelRiesgo(),
                 entidad.getTiempoMs(),
                 entidad.getFechaAnalisis(),
+                entidad.getCalculadoEn(),
                 indicadores);
     }
 

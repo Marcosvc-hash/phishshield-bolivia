@@ -11,7 +11,6 @@
 .secciones a { color: var(--texto-2); font-size: var(--t-sm); font-weight: 500; text-decoration: none; }
 .secciones a:hover { color: var(--primario); }
 .sesion { display: flex; align-items: center; gap: var(--esp-2); }
-.saludo { font-size: var(--t-sm); color: var(--texto-2); margin-right: var(--esp-2); }
 
 .hero {
   padding: var(--esp-10) 0 var(--esp-9);
@@ -87,12 +86,11 @@
 }
 @media (max-width: 640px) {
   .contenedor { padding: 0 var(--esp-4); }
-  .saludo { display: none; }
   .hero .sobretitulo { font-size: 0.6875rem; letter-spacing: 0.03em; }
   .hero { padding: var(--esp-8) 0; }
   .seccion-inicio { padding: var(--esp-9) 0; }
   .pie .fila { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 480px) {
-  .crear-cuenta, .texto-boton { display: none; }
+  .crear-cuenta { display: none; }
 }

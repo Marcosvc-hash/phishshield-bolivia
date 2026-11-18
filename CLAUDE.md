@@ -66,6 +66,9 @@ Otros puntos del diseño:
   - Umbrales: sospechoso desde 40, phishing desde 70.
   - La caché de análisis dura 24 h, pero un análisis anterior al último cambio de listas
     (filas `DOMINIO_*` en `auditoria`, vía `CambiosListasPort`) ya no se reutiliza.
+  - Si la caché la pide otro usuario u otra empresa, se guarda una fila nueva a su nombre con
+    los indicadores copiados (`Analisis.reutilizando`), con su propia alerta si no es segura. La
+    vigencia se mide desde `calculado_en` (V11), para que una copia no la renueve.
 - Modelo de IA (`ia/`, ver `ia/FICHA_MODELO.md`):
   - Solo mira el host: PhiUSIIL tiene sesgos de ruta y https (las legítimas no tienen ruta) y de IP (todas phishing).
   - Indicador `IA_MODELO_URL`: aporte = probabilidad × peso (40), solo si supera el umbral del modelo.
@@ -133,6 +136,8 @@ Otros puntos del diseño:
 - **Contraseña pública:** la de la base es el valor por defecto de `docker-compose.yml` y ya está en el historial público. Está pendiente rotarla.
 - **V9 aplicada en la base real (2026-11-10)**, con respaldo previo en `respaldo_antes_v9.dump`
   (raíz del repo, ignorado por git; restaurar con `pg_restore`).
+- **V10 y V11 aplicadas en la base real (2026-11-16)**. Antes de V11 se guardó
+  `respaldo_antes_v11.dump` (mismo lugar). Sin V11 el backend no arranca (`ddl-auto: validate`).
 - **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.

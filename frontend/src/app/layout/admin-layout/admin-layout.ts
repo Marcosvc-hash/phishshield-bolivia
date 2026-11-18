@@ -48,6 +48,7 @@ export class AdminLayout implements OnInit {
     {
       titulo: 'Monitoreo',
       opciones: [
+        { etiqueta: 'Analizar URL', ruta: '/admin/analizar', icono: 'escudo-check', roles: ['ADMIN', 'ADMIN_EMPRESA', 'USUARIO'] },
         { etiqueta: 'Panel', ruta: '/admin/panel', icono: 'panel', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
         { etiqueta: 'Historial de análisis', ruta: '/admin/historial', icono: 'historial', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
         { etiqueta: 'Alertas', ruta: '/admin/alertas', icono: 'campana', roles: ['ADMIN', 'ADMIN_EMPRESA'], conPendientes: true },
