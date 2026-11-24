@@ -1,6 +1,9 @@
 package bo.phishshield.backend.qa.infrastructure.web;
 
+import bo.phishshield.backend.qa.application.AsistenteQaUseCase;
 import bo.phishshield.backend.qa.application.ComandoIniciarEjecucion;
+import bo.phishshield.backend.qa.domain.model.AnalisisFallo;
+import bo.phishshield.backend.qa.domain.model.CapacidadesQa;
 import bo.phishshield.backend.qa.application.DetenerEjecucionUseCase;
 import bo.phishshield.backend.qa.application.IniciarEjecucionUseCase;
 import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
@@ -35,6 +38,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -53,6 +57,7 @@ public class QaController {
     private final DetenerEjecucionUseCase detenerEjecucion;
     private final ObtenerReporteUseCase obtenerReporte;
     private final ObtenerEvidenciaUseCase obtenerEvidencia;
+    private final AsistenteQaUseCase asistente;
 
     public QaController(ListarCatalogoUseCase listarCatalogo,
                         IniciarEjecucionUseCase iniciarEjecucion,
@@ -60,8 +65,10 @@ public class QaController {
                         ObtenerDetalleEjecucionUseCase obtenerDetalle,
                         DetenerEjecucionUseCase detenerEjecucion,
                         ObtenerReporteUseCase obtenerReporte,
-                        ObtenerEvidenciaUseCase obtenerEvidencia) {
+                        ObtenerEvidenciaUseCase obtenerEvidencia,
+                        AsistenteQaUseCase asistente) {
         this.obtenerEvidencia = obtenerEvidencia;
+        this.asistente = asistente;
         this.listarCatalogo = listarCatalogo;
         this.iniciarEjecucion = iniciarEjecucion;
         this.listarEjecuciones = listarEjecuciones;
@@ -116,6 +123,31 @@ public class QaController {
     public ResponseEntity<byte[]> reporteHtml(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
         return descarga(obtenerReporte.ejecutar(quien, id, FormatoReporte.HTML), id, "html");
     }
+
+    /** Funciones opcionales activas: correo (MAIL_*) y asistente de IA (ANTHROPIC_API_KEY). */
+    @GetMapping("/capacidades")
+    public CapacidadesQa capacidades(@AuthenticationPrincipal UsuarioActual quien) {
+        return asistente.capacidades(quien);
+    }
+
+    /** Causa probable de un FAIL segun el asistente de IA. 503 si no esta configurado o no responde. */
+    @PostMapping("/ejecuciones/{id}/casos/{codigo}/analisis-ia")
+    public Map<String, String> analizarFallo(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id,
+                                             @PathVariable String codigo) {
+        AnalisisFallo analisis = asistente.analizarFallo(quien, id, codigo);
+        return Map.of("causaProbable", analisis.causaProbable(),
+                "evidencia", analisis.evidencia() == null ? "" : analisis.evidencia(),
+                "aviso", AVISO_IA);
+    }
+
+    /** Resumen ejecutivo de una ejecucion terminada segun el asistente de IA. */
+    @PostMapping("/ejecuciones/{id}/resumen-ia")
+    public Map<String, String> resumir(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
+        return Map.of("resumen", asistente.resumir(quien, id), "aviso", AVISO_IA);
+    }
+
+    private static final String AVISO_IA =
+            "Texto generado por un asistente de IA: es una ayuda para leer el resultado; el PASS o FAIL lo decide la prueba.";
 
     /** Captura de un paso: GET .../evidencias?ruta={id}/capturas/TC-SMK-005-01-....png */
     @GetMapping("/ejecuciones/{id}/evidencias")

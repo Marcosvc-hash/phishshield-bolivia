@@ -79,5 +79,17 @@ Authorization: Bearer {{tokenAcceso}}
 GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/evidencias?ruta={{idEjecucion}}/capturas/TC-SMK-005-01-abrir-la-pantalla-de-login.png
 Authorization: Bearer {{tokenAcceso}}
 
+### Funciones opcionales activas: {"correoConfigurado": ..., "asistenteDisponible": ...}
+GET http://localhost:8080/api/admin/qa/capacidades
+Authorization: Bearer {{tokenAcceso}}
+
+### Asistente de IA: causa probable de un caso en FAIL (503 si falta ANTHROPIC_API_KEY)
+POST http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/casos/TC-SAN-003/analisis-ia
+Authorization: Bearer {{tokenAcceso}}
+
+### Asistente de IA: resumen ejecutivo de una ejecucion terminada
+POST http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/resumen-ia
+Authorization: Bearer {{tokenAcceso}}
+
 ### Sin token: 401
 GET http://localhost:8080/api/admin/qa/casos

@@ -88,6 +88,11 @@
             <artifactId>rest-assured</artifactId>
             <version>${rest-assured.version}</version>
         </dependency>
+        <!-- Envio de los reportes del Centro de Pruebas por SMTP (opcional, variables MAIL_*) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <!-- Casos de interfaz del Centro de Pruebas (Chromium en modo headless) -->
         <dependency>
             <groupId>com.microsoft.playwright</groupId>

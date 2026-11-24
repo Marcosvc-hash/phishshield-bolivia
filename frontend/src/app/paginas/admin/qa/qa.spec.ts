@@ -63,10 +63,11 @@ describe('Qa (Centro de Pruebas)', () => {
 
   const pagina = (contenido: FilaEjecucion[]) => ({ contenido, pagina: 0, tamano: 10, totalElementos: contenido.length, totalPaginas: 1 });
 
-  /** Responde las dos peticiones iniciales: catalogo e historial. */
-  async function cargar(historial: FilaEjecucion[] = []) {
+  /** Responde las peticiones iniciales: catalogo, historial y capacidades opcionales. */
+  async function cargar(historial: FilaEjecucion[] = [], asistenteDisponible = false) {
     http.expectOne(`${URL}/casos`).flush(CATALOGO);
     http.expectOne((r) => r.url === `${URL}/ejecuciones` && r.method === 'GET').flush(pagina(historial));
+    http.expectOne(`${URL}/capacidades`).flush({ correoConfigurado: false, asistenteDisponible });
     fixture.detectChanges();
     await fixture.whenStable();
   }
@@ -263,6 +264,46 @@ describe('Qa (Centro de Pruebas)', () => {
     expect(peticion.request.responseType).toBe('blob');
     peticion.flush(new Blob(['%PDF']));
     expect(guardar).toHaveBeenCalledWith(expect.any(Blob), 'reporte-qa-smoke-e1.pdf');
+  });
+
+  it('sin asistente de IA no muestra sus botones y avisa que el correo no está configurado', async () => {
+    await cargar([fila('finalizada')]);
+    fixture.componentInstance.abrir(fila('finalizada'));
+    const conFail = ejecucion('finalizada', 1);
+    conFail.resultados[1] = { ...conFail.resultados[1], estado: 'fail', tipoFallo: 'funcional', observacionResumida: 'Fallo funcional' };
+    conFail.estadoCorreo = 'no_configurado';
+    http.expectOne(`${URL}/ejecuciones/e1`).flush(conFail);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('.resultado-fila')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.resumir-ia')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.analizar-ia')).toBeNull();
+    expect(texto('.linea-correo')).toContain('no configurado');
+    expect(texto('.lanzador')).toContain('MAIL_*');
+  });
+
+  it('con asistente, analiza un FAIL y resume la ejecución mostrando el aviso', async () => {
+    await cargar([fila('finalizada')], true);
+    fixture.componentInstance.abrir(fila('finalizada'));
+    const conFail = ejecucion('finalizada', 1);
+    conFail.resultados[1] = { ...conFail.resultados[1], estado: 'fail', tipoFallo: 'funcional', observacionResumida: 'Fallo funcional' };
+    http.expectOne(`${URL}/ejecuciones/e1`).flush(conFail);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('.resultado-fila')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.analizar-ia') as HTMLButtonElement).click();
+    http.expectOne(`${URL}/ejecuciones/e1/casos/TC-SMK-005/analisis-ia`)
+      .flush({ causaProbable: 'El frontend no estaba levantado', evidencia: 'Paso 1', aviso: 'La IA no decide PASS/FAIL' });
+    fixture.detectChanges();
+    expect(texto('app-qa-detalle-caso .ia')).toContain('El frontend no estaba levantado');
+
+    (fixture.nativeElement.querySelector('.resumir-ia') as HTMLButtonElement).click();
+    http.expectOne(`${URL}/ejecuciones/e1/resumen-ia`).flush({ resumen: 'Todo bien salvo un caso', aviso: 'La IA no decide PASS/FAIL' });
+    fixture.detectChanges();
+    expect(texto('.resumen-ia')).toContain('Todo bien salvo un caso');
+    expect(texto('.resumen-ia')).toContain('La IA no decide PASS/FAIL');
   });
 
   it('lee los parámetros "clave=valor" uno por línea', async () => {

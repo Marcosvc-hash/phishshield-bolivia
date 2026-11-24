@@ -46,3 +46,18 @@ phishshield:
     ambiente: ${QA_AMBIENTE:local}
     # Las pruebas crean datos: solo corren contra una base *_qa o prueba_*
     permitir-base-real: ${QA_PERMITIR_BASE_REAL:false}
+    # Envio de los reportes por correo (opcional). Sin MAIL_HOST, MAIL_PORT,
+    # MAIL_USERNAME y MAIL_PASSWORD el envio se omite (estado no_configurado).
+    correo:
+      host: ${MAIL_HOST:}
+      puerto: ${MAIL_PORT:}
+      usuario: ${MAIL_USERNAME:}
+      contrasena: ${MAIL_PASSWORD:}
+      remitente: ${MAIL_FROM:}
+      starttls: ${MAIL_STARTTLS:true}
+    # Asistente de IA (opcional, Claude). Sin ANTHROPIC_API_KEY la pantalla
+    # oculta sus funciones. Nunca decide PASS ni FAIL.
+    asistente:
+      clave: ${ANTHROPIC_API_KEY:}
+      modelo: ${QA_IA_MODELO:claude-opus-5-5}
+      url: ${QA_IA_API_URL:https://api.anthropic.com}

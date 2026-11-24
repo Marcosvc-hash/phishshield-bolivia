@@ -18,8 +18,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | 3 | Reportes PDF y HTML | Hecha (c7736b7) |
 | 4 | Pantalla "Centro de Pruebas" en Angular | Hecha (f0b2001) |
 | 5 | 7 casos de interfaz con Playwright | Hecha (0e9f02a) |
-| 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | **Hecha** |
-| 7 | Correo y asistente de IA (opcionales) | Pendiente |
+| 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Hecha (b6c2dc6) |
+| 7 | Correo y asistente de IA (opcionales) | **Hecha** |
 | 8 | CI, JaCoCo y documentación TQA | Pendiente |
 | 9 | HU-17 Reportes por empresa | Pendiente |
 
@@ -291,8 +291,55 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
 - TC-ROB-001 da 1,0 en parte porque las reglas y la lista blanca se ajustaron mirando este mismo
   lote boliviano: es una medida optimista; hace falta un lote nuevo para medir generalización.
 
+## Fase 7 — Correo y asistente de IA (opcionales) (2026-11-24)
+
+**Qué se hizo**
+
+- Dependencia aprobada: `spring-boot-starter-mail` (versión de Spring Boot 4.1.1).
+- `NotificadorCorreoSmtpAdapter`: arma su propio `JavaMailSenderImpl` con `MAIL_HOST`, `MAIL_PORT`,
+  `MAIL_USERNAME`, `MAIL_PASSWORD` (opcionales `MAIL_FROM` y `MAIL_STARTTLS`, por defecto true). No
+  se usa `spring.mail.*`: sin variables no existe ningún cliente de correo. `estaConfigurado()` es
+  false si falta alguna de las cuatro. Los mensajes de error nunca llevan la contraseña.
+- `PublicarResultadosUseCase` ahora, además de los reportes: sin SMTP marca `no_configurado`; con
+  SMTP envía al destinatario elegido al lanzar (por defecto, quien lanza) un correo con resumen,
+  casos en FAIL y los dos reportes adjuntos; un error queda en `error_correo` y los reportes siguen.
+- Asistente de IA (`AsistenteClaudeAdapter`, Messages API de Anthropic por HTTP con `RestClient`):
+  solo si existe `ANTHROPIC_API_KEY`; modelo `claude-opus-5-5` (cambiable con `QA_IA_MODELO`),
+  `anthropic-version: 2026-10-21`, respuesta en JSON con esquema fijo (`output_config.format`),
+  respaldo del servidor ante un rechazo (`fallbacks: "default"`, beta
+  `server-side-fallback-2026-07-01`). Si la API falla o rechaza: `log.warn` y vacío. **Nunca decide
+  PASS ni FAIL** (el prompt de sistema lo dice y el caso de uso no toca el estado).
+- `AsistenteQaUseCase`: capacidades, análisis de un caso en FAIL y resumen de una ejecución terminada.
+- Endpoints: `GET /capacidades`, `POST /ejecuciones/{id}/casos/{codigo}/analisis-ia` y
+  `POST /ejecuciones/{id}/resumen-ia` (503 si el asistente no está configurado o no responde).
+- Pantalla: estado del correo en el panel de la ejecución; aviso en el lanzador si no hay SMTP;
+  botones "Analizar con IA" (casos en FAIL) y "Resumen con IA", **ocultos si no hay asistente**,
+  siempre con el aviso de que la IA no decide el resultado.
+- Pruebas: `NotificadorCorreoSmtpAdapterTest` (manda correos reales con JavaMail a un SMTP falso
+  local escrito con sockets del JDK, `dobles/ServidorSmtpFalso`), `AsistenteClaudeAdapterTest` (servidor
+  local que imita la Messages API: encabezados, cuerpo, rechazo, JSON inválido y 401),
+  `AsistenteQaUseCaseTest` (5) y 3 desenlaces del correo en `ReportesQaTest`; 2 más en `qa.spec.ts`.
+
+**Decisión pendiente para el usuario**
+
+- La guía oficial de Anthropic recomienda el SDK de Java (`com.anthropic:anthropic-java`) en lugar de
+  HTTP directo. No estaba en la lista de dependencias aprobadas, así que se usó `RestClient` (ya
+  presente). Si se aprueba, el adaptador se puede pasar al SDK sin tocar el resto.
+
+**Verificación real (2026-11-24)**
+
+- En este equipo no hay variables `MAIL_*` ni clave de ningún LLM: `GET /capacidades` respondió
+  `asistenteDisponible: false` y el análisis con IA respondió 503, como corresponde.
+- Correo de punta a punta: se levantó el SMTP falso en el puerto 2525 y el backend con variables
+  `MAIL_*` de prueba (no son credenciales reales). La suite Integration con destinatario
+  `docente.testing@ejemplo.bo` quedó `aprobada` y con el correo `enviado`; el SMTP falso recibió el
+  mensaje con el asunto "Reporte de automatización – Integration – ...", 2 adjuntos y autenticación
+  con `MAIL_USERNAME`.
+- Al cerrar la fase: backend 361 pruebas en verde, frontend 109, IA 24; regla 4 sin coincidencias.
+
 ## Cómo continuar
 
-Siguiente fase: **7 — Correo y asistente de IA (opcionales)**. `NotificadorCorreoPort` con
-`spring-boot-starter-mail` y variables `MAIL_*` (si faltan, `estaConfigurado()` = false y se marca
-`no_configurado`); `AsistenteIAPort` solo si hay una variable con la clave de un proveedor de LLM.
+Siguiente fase: **8 — Calidad del proyecto y documentación TQA**: `.github/workflows/ci.yml` (mvnw test
+sin `contextLoads`, npm test, npm run build, pytest), JaCoCo con reporte HTML (anotar la cobertura),
+y en `docs/qa/`: PLAN_DE_PRUEBAS.md, MATRIZ_TRAZABILIDAD.md, REGISTRO_DEFECTOS.md (ya tiene DEF-001 y
+DEF-002) e INFORME_EJECUCION.md (una ejecución completa real); actualizar README.md y CLAUDE.md.

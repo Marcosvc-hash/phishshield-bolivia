@@ -13,8 +13,8 @@ import { Skeleton } from '../../../core/ui/skeleton';
 import { ToastService } from '../../../core/ui/toast.service';
 import { DetalleCaso } from './detalle-caso';
 import {
-  CasoQa, EjecucionQa, EstadoCaso, EstadoEjecucion, FilaEjecucion, FormatoReporte, PedidoEjecucion,
-  QaService, ResultadoGlobal
+  CapacidadesQa, CasoQa, EjecucionQa, EstadoCaso, EstadoEjecucion, FilaEjecucion, FormatoReporte, PedidoEjecucion,
+  QaService, ResultadoGlobal, ResumenIa
 } from './qa.service';
 
 interface GrupoSuite {
@@ -80,6 +80,11 @@ export class Qa implements OnInit {
   deteniendo = signal(false);
   descargando = signal<FormatoReporte | null>(null);
 
+  // Funciones opcionales (correo y asistente de IA): la pantalla oculta lo que no esta activo
+  capacidades = signal<CapacidadesQa | null>(null);
+  resumenIa = signal<ResumenIa | null>(null);
+  resumiendo = signal(false);
+
   private seguimiento: Subscription | null = null;
 
   /** Tipo -> suites -> casos, en el orden en que llegan del backend (catalogo ordenado). */
@@ -119,6 +124,33 @@ export class Qa implements OnInit {
     this.destruir.onDestroy(() => this.dejarDeSeguir());
     this.cargarCatalogo();
     this.cargarHistorial(0, true);
+    // Si falla, simplemente no se muestran las funciones opcionales
+    this.servicio.capacidades().subscribe({ next: (c) => this.capacidades.set(c), error: () => this.capacidades.set(null) });
+  }
+
+  /** Resumen ejecutivo de la ejecucion abierta, escrito por el asistente de IA. */
+  resumirConIa(e: EjecucionQa): void {
+    this.resumiendo.set(true);
+    this.servicio.resumirConIa(e.id).subscribe({
+      next: (r) => {
+        this.resumiendo.set(false);
+        this.resumenIa.set(r);
+      },
+      error: (err) => {
+        this.resumiendo.set(false);
+        this.toast.error(mensajeDeError(err, 'El asistente de IA no respondió.'));
+      }
+    });
+  }
+
+  /** "Enviado a docente@... ", "No configurado"... para la linea de correo del panel. */
+  textoCorreo(e: EjecucionQa): string {
+    switch (e.estadoCorreo) {
+      case 'enviado': return `Reportes enviados a ${e.correo}`;
+      case 'no_configurado': return 'Envío por correo no configurado en el servidor (MAIL_*)';
+      case 'error': return `No se pudo enviar el correo: ${e.errorCorreo ?? 'error desconocido'}`;
+      default: return `Pendiente de envío a ${e.correo}`;
+    }
   }
 
   // ------------------------------------------------------------------
@@ -260,6 +292,7 @@ export class Qa implements OnInit {
   private mostrar(ejecucion: EjecucionQa): void {
     if (this.detalle()?.id !== ejecucion.id) {
       this.casoAbierto.set(null);
+      this.resumenIa.set(null);
     }
     this.detalle.set(ejecucion);
     if (ejecucion.activa) {

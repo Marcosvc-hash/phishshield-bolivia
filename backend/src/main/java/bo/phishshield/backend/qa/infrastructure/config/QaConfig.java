@@ -1,6 +1,11 @@
 package bo.phishshield.backend.qa.infrastructure.config;
 
+import bo.phishshield.backend.qa.application.AsistenteQaUseCase;
 import bo.phishshield.backend.qa.application.CorrerEjecucionUseCase;
+import bo.phishshield.backend.qa.domain.port.out.AsistenteIAPort;
+import bo.phishshield.backend.qa.domain.port.out.NotificadorCorreoPort;
+import bo.phishshield.backend.qa.infrastructure.correo.NotificadorCorreoSmtpAdapter;
+import bo.phishshield.backend.qa.infrastructure.ia.AsistenteClaudeAdapter;
 import bo.phishshield.backend.qa.application.DetenerEjecucionUseCase;
 import bo.phishshield.backend.qa.application.IniciarEjecucionUseCase;
 import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
@@ -31,6 +36,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.time.Clock;
+import java.time.ZoneId;
 
 /**
  * Cablea la vertical qa sin anotar la capa application.
@@ -41,13 +47,14 @@ import java.time.Clock;
  */
 @Configuration
 @EnableAsync
-@EnableConfigurationProperties(QaPropiedades.class)
+@EnableConfigurationProperties({QaPropiedades.class, CorreoPropiedades.class, AsistentePropiedades.class})
 public class QaConfig {
 
     /** Nombre del pool propio de las ejecuciones (se usa en @Async("...")). */
     public static final String POOL_EJECUCIONES = "qaPoolEjecuciones";
 
     private static final Clock RELOJ = Clock.systemDefaultZone();
+    private static final ZoneId ZONA = ZoneId.of("America/La_Paz");
 
     /**
      * Un solo hilo: las ejecuciones nunca corren en paralelo (una prueba de
@@ -94,10 +101,27 @@ public class QaConfig {
         return new EvidenciasArchivoAdapter(carpeta);
     }
 
-    /** Al terminar cada ejecucion: generar el PDF y el HTML. */
     @Bean
-    public TrasEjecucion trasEjecucion(EjecucionRepositoryPort ejecuciones, GeneradorReportePort generador) {
-        return new PublicarResultadosUseCase(ejecuciones, generador);
+    public NotificadorCorreoPort notificadorCorreo(CorreoPropiedades propiedades, CarpetaEvidencias carpeta) {
+        return new NotificadorCorreoSmtpAdapter(propiedades, carpeta);
+    }
+
+    @Bean
+    public AsistenteIAPort asistenteIA(AsistentePropiedades propiedades) {
+        return new AsistenteClaudeAdapter(propiedades);
+    }
+
+    /** Al terminar cada ejecucion: generar el PDF y el HTML y, si hay SMTP, enviarlos. */
+    @Bean
+    public TrasEjecucion trasEjecucion(EjecucionRepositoryPort ejecuciones, GeneradorReportePort generador,
+                                       NotificadorCorreoPort notificador) {
+        return new PublicarResultadosUseCase(ejecuciones, generador, notificador, RELOJ, ZONA);
+    }
+
+    @Bean
+    public AsistenteQaUseCase asistenteQaUseCase(EjecucionRepositoryPort ejecuciones, AsistenteIAPort asistente,
+                                                 NotificadorCorreoPort notificador) {
+        return new AsistenteQaUseCase(ejecuciones, asistente, notificador);
     }
 
     @Bean

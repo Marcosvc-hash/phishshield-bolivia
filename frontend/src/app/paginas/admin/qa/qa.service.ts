@@ -126,6 +126,23 @@ export interface PedidoEjecucion {
   parametros?: Record<string, string>;
 }
 
+export interface CapacidadesQa {
+  correoConfigurado: boolean;
+  asistenteDisponible: boolean;
+}
+
+/** Respuesta del asistente de IA: una ayuda para leer el fallo, nunca decide PASS/FAIL. */
+export interface AnalisisIa {
+  causaProbable: string;
+  evidencia: string;
+  aviso: string;
+}
+
+export interface ResumenIa {
+  resumen: string;
+  aviso: string;
+}
+
 /** Centro de Pruebas QA (solo ADMIN). */
 @Injectable({ providedIn: 'root' })
 export class QaService {
@@ -151,6 +168,19 @@ export class QaService {
 
   detener(id: string): Observable<EjecucionQa> {
     return this.http.post<EjecucionQa>(`${this.url}/ejecuciones/${id}/detener`, {});
+  }
+
+  /** Funciones opcionales activas en el backend: correo (MAIL_*) y asistente de IA. */
+  capacidades(): Observable<CapacidadesQa> {
+    return this.http.get<CapacidadesQa>(`${this.url}/capacidades`);
+  }
+
+  analizarFalloConIa(id: string, codigo: string): Observable<AnalisisIa> {
+    return this.http.post<AnalisisIa>(`${this.url}/ejecuciones/${id}/casos/${codigo}/analisis-ia`, {});
+  }
+
+  resumirConIa(id: string): Observable<ResumenIa> {
+    return this.http.post<ResumenIa>(`${this.url}/ejecuciones/${id}/resumen-ia`, {});
   }
 
   /** Captura de un paso (PNG), por su ruta relativa ({id}/capturas/...). */

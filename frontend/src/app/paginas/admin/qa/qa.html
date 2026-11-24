@@ -69,7 +69,11 @@
             <label class="campo-etiqueta" for="qa-correo">Enviar los reportes a (opcional)</label>
             <input id="qa-correo" type="email" class="entrada" name="correo" [(ngModel)]="correo" maxlength="150"
                    [placeholder]="auth.usuario()?.email ?? 'nombre@dominio.com'" autocomplete="email" />
-            <p class="campo-ayuda">Si lo deja vacío, se usa su correo.</p>
+            <p class="campo-ayuda">Si lo deja vacío, se usa su correo.
+              @if (capacidades() && !capacidades()!.correoConfigurado) {
+                El envío por correo no está configurado en el servidor (MAIL_*): los reportes quedan para descargar aquí.
+              }
+            </p>
           </div>
           <details class="avanzado">
             <summary>Parámetros de la ejecución</summary>
@@ -121,6 +125,11 @@
             <button type="button" class="btn btn-secundario btn-sm" [disabled]="descargando() !== null" (click)="descargar(e, 'html')">
               <app-icono nombre="globo" [tamano]="14" />{{ descargando() === 'html' ? 'Descargando…' : 'Resumen HTML' }}
             </button>
+            @if (capacidades()?.asistenteDisponible) {
+              <button type="button" class="btn btn-secundario btn-sm resumir-ia" [disabled]="resumiendo()" (click)="resumirConIa(e)">
+                <app-icono nombre="ia" [tamano]="14" />{{ resumiendo() ? 'Pensando…' : 'Resumen con IA' }}
+              </button>
+            }
           }
         </div>
       </div>
@@ -132,10 +141,21 @@
           </span>
           @if (!e.activa) { <span class="badge sin-punto">{{ nombreEstado(e.estado) }}</span> }
           <span class="texto-secundario">Duración: {{ duracion(e.duracionMs) }}</span>
+          @if (!e.activa) {
+            <span class="texto-secundario linea-correo" [style.color]="e.estadoCorreo === 'error' ? 'var(--peligro)' : null">
+              <app-icono nombre="correo" [tamano]="14" /> {{ textoCorreo(e) }}
+            </span>
+          }
         </div>
 
         @if (e.mensajeError) {
           <p class="aviso"><app-icono nombre="info" [tamano]="16" /> {{ e.mensajeError }}</p>
+        }
+        @if (resumenIa(); as ia) {
+          <div class="aviso info resumen-ia" role="note">
+            <app-icono nombre="ia" [tamano]="16" />
+            <div><strong>Resumen del asistente de IA.</strong> {{ ia.resumen }}<br /><small>{{ ia.aviso }}</small></div>
+          </div>
         }
 
         <div class="avance" role="progressbar" aria-label="Avance de la ejecución" aria-valuemin="0" aria-valuemax="100"
@@ -166,7 +186,7 @@
                 <app-icono nombre="chevron-abajo" [tamano]="16" class="flecha" />
               </button>
               @if (casoAbierto() === r.codigo) {
-                <app-qa-detalle-caso [resultado]="r" [idEjecucion]="e.id" />
+                <app-qa-detalle-caso [resultado]="r" [idEjecucion]="e.id" [asistente]="capacidades()?.asistenteDisponible ?? false" />
               }
             </li>
           }

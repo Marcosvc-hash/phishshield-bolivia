@@ -1,5 +1,6 @@
 package bo.phishshield.backend.qa.infrastructure.web;
 
+import bo.phishshield.backend.qa.domain.model.AsistenteNoDisponibleException;
 import bo.phishshield.backend.qa.domain.model.CorreoInvalidoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionEnCursoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionNoEncontradaException;
@@ -39,6 +40,12 @@ public class QaExceptionHandler {
             ReporteNoDisponibleException.class})
     public ResponseEntity<ErrorResponse> conflicto(RuntimeException ex, HttpServletRequest peticion) {
         return respuesta(HttpStatus.CONFLICT, ex, peticion);
+    }
+
+    /** 503: el asistente de IA no esta configurado o no respondio (las pruebas funcionan igual). */
+    @ExceptionHandler(AsistenteNoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> asistenteNoDisponible(RuntimeException ex, HttpServletRequest peticion) {
+        return respuesta(HttpStatus.SERVICE_UNAVAILABLE, ex, peticion);
     }
 
     private static ResponseEntity<ErrorResponse> respuesta(HttpStatus estado, RuntimeException ex,

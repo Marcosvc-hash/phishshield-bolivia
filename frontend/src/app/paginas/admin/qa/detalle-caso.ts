@@ -2,7 +2,8 @@ import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Icono } from '../../../core/ui/icono';
-import { QaService, ResultadoQa } from './qa.service';
+import { mensajeDeError } from '../../../core/errores';
+import { AnalisisIa, QaService, ResultadoQa } from './qa.service';
 
 /**
  * Detalle de un caso dentro de una ejecucion: la observacion, el tipo de
@@ -20,6 +21,20 @@ import { QaService, ResultadoQa } from './qa.service';
         <dd>{{ r.tipoFallo === 'funcional' ? 'Funcional (posible defecto)' : 'Infraestructura (algo no respondió)' }}</dd>
         @if (r.pasoFallido) { <dt>Paso fallido</dt><dd>{{ r.pasoFallido }}</dd> }
       </dl>
+    }
+    @if (r.estado === 'fail' && asistente()) {
+      @if (analisis(); as ia) {
+        <div class="aviso info ia" role="note">
+          <app-icono nombre="ia" [tamano]="16" />
+          <div><strong>Causa probable:</strong> {{ ia.causaProbable }}<br /><strong>Evidencia:</strong> {{ ia.evidencia }}
+            <br /><small>{{ ia.aviso }}</small></div>
+        </div>
+      } @else {
+        <button type="button" class="btn btn-secundario btn-sm analizar-ia" [disabled]="analizando()" (click)="analizarConIa()">
+          <app-icono nombre="ia" [tamano]="14" />{{ analizando() ? 'Analizando…' : 'Analizar con IA' }}
+        </button>
+        @if (errorIa()) { <p class="aviso error ia">{{ errorIa() }}</p> }
+      }
     }
     @if (r.pasos.length > 0) {
       <h3 class="subtitulo-seccion">Pasos</h3>
@@ -79,6 +94,7 @@ import { QaService, ResultadoQa } from './qa.service';
     :host { display: block; padding: 0 var(--esp-4) var(--esp-4); }
     .observacion { font-size: var(--t-sm); color: var(--texto-2); margin-bottom: var(--esp-3); }
     .observacion.fallo { color: var(--peligro); }
+    .ia { margin: var(--esp-2) 0; }
     .subtitulo-seccion { margin: var(--esp-3) 0 var(--esp-2); }
     .pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--esp-2); }
     .paso { border-left: 3px solid var(--exito-borde); padding: var(--esp-1) var(--esp-3); }
@@ -103,6 +119,27 @@ import { QaService, ResultadoQa } from './qa.service';
 export class DetalleCaso {
   readonly resultado = input.required<ResultadoQa>();
   readonly idEjecucion = input.required<string>();
+  /** Solo si el backend tiene el asistente de IA configurado. */
+  readonly asistente = input(false);
+
+  protected analisis = signal<AnalisisIa | null>(null);
+  protected analizando = signal(false);
+  protected errorIa = signal<string | null>(null);
+
+  analizarConIa(): void {
+    this.analizando.set(true);
+    this.errorIa.set(null);
+    this.servicio.analizarFalloConIa(this.idEjecucion(), this.resultado().codigo).subscribe({
+      next: (r) => {
+        this.analizando.set(false);
+        this.analisis.set(r);
+      },
+      error: (err) => {
+        this.analizando.set(false);
+        this.errorIa.set(mensajeDeError(err, 'El asistente de IA no respondió.'));
+      }
+    });
+  }
 
   private servicio = inject(QaService);
   private saneador = inject(DomSanitizer);
