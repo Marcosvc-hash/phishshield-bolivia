@@ -14,8 +14,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | Fase | Qué | Estado |
 |---|---|---|
 | 1 | Base `qa_*` (04_qa.sql / V12), dominio y puertos | Hecha (d60d8ba) |
-| 2 | Motor de ejecución y 14 casos de API | **Hecha** |
-| 3 | Reportes PDF y HTML | Pendiente |
+| 2 | Motor de ejecución y 14 casos de API | Hecha (5a67d2b) |
+| 3 | Reportes PDF y HTML | **Hecha** |
 | 4 | Pantalla "Centro de Pruebas" en Angular | Pendiente |
 | 5 | 7 casos de interfaz con Playwright | Pendiente |
 | 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Pendiente |
@@ -113,8 +113,43 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
 - PowerShell 5.1 muestra mal las tildes de las respuestas JSON (`Invoke-RestMethod` asume
   ISO-8859-1 cuando la respuesta no trae charset). Solo afecta a la consola; los datos están bien.
 
+## Fase 3 — Reportes de la ejecución (2026-11-24)
+
+**Qué se hizo**
+
+- Dependencia aprobada: `openpdf` 3.0.6 (paquete `org.openpdf.text`, licencia LGPL/MPL).
+- Dominio: `FormatoReporte` (PDF/HTML), `ArchivoEvidencia`, `ReporteNoDisponibleException` y el
+  puerto `EvidenciasPort` (lee archivos de la carpeta de evidencias; una ruta con `../` se trata
+  como inexistente).
+- `qa/application`: `PublicarResultadosUseCase` (es el `TrasEjecucion`: genera los dos reportes al
+  terminar cada ejecución y guarda sus rutas; nunca lanza excepciones) y `ObtenerReporteUseCase`
+  (descarga; si el archivo falta lo genera en ese momento; 409 si la ejecución sigue activa).
+- `qa/infrastructure/reporte`:
+  - `ReportePdf` (detallado): portada con resultado global y conteos, resumen por tipo y suite,
+    por herramienta y por tipo de fallo, tabla de casos, métricas no funcionales y una página por
+    caso con sus metadatos del catálogo, pasos, evidencia de API y capturas. Si una captura no
+    está en disco, escribe "Captura no disponible: ..." y el reporte se genera igual.
+  - `ReporteHtml` (resumido): un solo archivo con CSS en línea, sin scripts ni recursos externos;
+    escapa todo el texto (un mensaje con `<script>` se muestra, no se ejecuta).
+  - `GeneradorReporteAdapter` (escribe en `qa-evidencias/{uuid}/reporte-detallado.pdf` y
+    `reporte-resumen.html`, primero en un `.tmp` y luego renombra), `EvidenciasArchivoAdapter` y
+    `CarpetaEvidencias`.
+- Endpoints: `GET /api/admin/qa/ejecuciones/{id}/reporte.pdf` y `/reporte.html` (descarga con
+  `Content-Disposition: attachment`).
+- Pruebas nuevas: `ReportesQaTest` (6, dobles en memoria) y `GeneradorReporteAdapterTest` (genera
+  los archivos de verdad en una carpeta temporal, lee el texto del PDF y revisa el HTML; incluye
+  una captura presente y otra faltante, una métrica que no cumple y la protección contra `../`).
+
+**Verificación real (2026-11-24, contra `phishshield_qa`)**
+
+- Suite Sanity: al terminar se generaron solos los dos reportes; las descargas por la API
+  respondieron 200 con `application/pdf` (11,9 KB, 5 páginas) y `text/html` (5,2 KB). Se revisó
+  el PDF página por página: portada, resumen, tabla y detalle del FAIL de TC-SAN-003 con su
+  evidencia.
+- Al cerrar la fase: backend 332 pruebas en verde, frontend 94, IA 24; regla 4 sin coincidencias.
+
 ## Cómo continuar
 
-Siguiente fase: **3 — Reportes**. Implementar `GeneradorReportePort` (PDF con OpenPDF y HTML
-autocontenido), conectarlo como `TrasEjecucion` en `QaConfig` y agregar los endpoints
-`/reporte.pdf` y `/reporte.html`. Los archivos van a `QA_EVIDENCIAS_DIR` (ignorada por git).
+Siguiente fase: **4 — Pantalla "Centro de Pruebas"** en Angular (`/admin/qa`, solo ADMIN, entrada
+en el menú del AdminLayout, polling cada 2 s mientras la ejecución está activa, descargas PDF/HTML,
+pruebas con Vitest).

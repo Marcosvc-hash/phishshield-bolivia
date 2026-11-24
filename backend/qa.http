@@ -67,5 +67,13 @@ Authorization: Bearer {{tokenAcceso}}
 POST http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/detener
 Authorization: Bearer {{tokenAcceso}}
 
+### Reporte detallado en PDF (se genera solo al terminar; 409 si la ejecucion sigue activa)
+GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/reporte.pdf
+Authorization: Bearer {{tokenAcceso}}
+
+### Reporte resumido en HTML autocontenido
+GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/reporte.html
+Authorization: Bearer {{tokenAcceso}}
+
 ### Sin token: 401
 GET http://localhost:8080/api/admin/qa/casos

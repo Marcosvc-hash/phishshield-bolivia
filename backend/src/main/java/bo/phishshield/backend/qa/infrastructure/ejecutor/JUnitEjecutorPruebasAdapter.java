@@ -7,6 +7,7 @@ import bo.phishshield.backend.qa.domain.model.TipoFallo;
 import bo.phishshield.backend.qa.domain.port.out.EjecutorPruebasPort;
 import bo.phishshield.backend.qa.domain.port.out.OyenteEjecucion;
 import bo.phishshield.backend.qa.infrastructure.config.QaPropiedades;
+import bo.phishshield.backend.qa.infrastructure.reporte.CarpetaEvidencias;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -23,7 +24,6 @@ import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Locale;
@@ -196,10 +196,8 @@ public class JUnitEjecutorPruebasAdapter implements EjecutorPruebasPort {
     }
 
     private EntornoQA entorno() {
-        String carpeta = propiedades.carpetaEvidencias() == null || propiedades.carpetaEvidencias().isBlank()
-                ? "qa-evidencias" : propiedades.carpetaEvidencias();
         return new EntornoQA(propiedades.baseUrl(), propiedades.frontendUrl(), propiedades.usuario(),
-                propiedades.contrasena(), iaUrl, Path.of(carpeta).toAbsolutePath());
+                propiedades.contrasena(), iaUrl, CarpetaEvidencias.desde(propiedades).base());
     }
 
     /**

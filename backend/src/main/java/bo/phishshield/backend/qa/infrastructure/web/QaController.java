@@ -6,6 +6,9 @@ import bo.phishshield.backend.qa.application.IniciarEjecucionUseCase;
 import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
 import bo.phishshield.backend.qa.application.ListarEjecucionesUseCase;
 import bo.phishshield.backend.qa.application.ObtenerDetalleEjecucionUseCase;
+import bo.phishshield.backend.qa.application.ObtenerReporteUseCase;
+import bo.phishshield.backend.qa.domain.model.ArchivoEvidencia;
+import bo.phishshield.backend.qa.domain.model.FormatoReporte;
 import bo.phishshield.backend.qa.domain.model.Suite;
 import bo.phishshield.backend.qa.infrastructure.web.dto.CasoResponse;
 import bo.phishshield.backend.qa.infrastructure.web.dto.EjecucionResponse;
@@ -15,7 +18,11 @@ import bo.phishshield.backend.shared.domain.model.SolicitudPagina;
 import bo.phishshield.backend.shared.domain.model.UsuarioActual;
 import bo.phishshield.backend.shared.infrastructure.web.dto.PaginaResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,17 +50,20 @@ public class QaController {
     private final ListarEjecucionesUseCase listarEjecuciones;
     private final ObtenerDetalleEjecucionUseCase obtenerDetalle;
     private final DetenerEjecucionUseCase detenerEjecucion;
+    private final ObtenerReporteUseCase obtenerReporte;
 
     public QaController(ListarCatalogoUseCase listarCatalogo,
                         IniciarEjecucionUseCase iniciarEjecucion,
                         ListarEjecucionesUseCase listarEjecuciones,
                         ObtenerDetalleEjecucionUseCase obtenerDetalle,
-                        DetenerEjecucionUseCase detenerEjecucion) {
+                        DetenerEjecucionUseCase detenerEjecucion,
+                        ObtenerReporteUseCase obtenerReporte) {
         this.listarCatalogo = listarCatalogo;
         this.iniciarEjecucion = iniciarEjecucion;
         this.listarEjecuciones = listarEjecuciones;
         this.obtenerDetalle = obtenerDetalle;
         this.detenerEjecucion = detenerEjecucion;
+        this.obtenerReporte = obtenerReporte;
     }
 
     @GetMapping("/casos")
@@ -89,5 +99,27 @@ public class QaController {
     @PostMapping("/ejecuciones/{id}/detener")
     public EjecucionResponse detener(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
         return EjecucionResponse.desde(detenerEjecucion.ejecutar(quien, id));
+    }
+
+    /** Reporte detallado (PDF). 409 mientras la ejecucion sigue activa. */
+    @GetMapping("/ejecuciones/{id}/reporte.pdf")
+    public ResponseEntity<byte[]> reportePdf(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
+        return descarga(obtenerReporte.ejecutar(quien, id, FormatoReporte.PDF), id, "pdf");
+    }
+
+    /** Reporte resumido (HTML autocontenido). 409 mientras la ejecucion sigue activa. */
+    @GetMapping("/ejecuciones/{id}/reporte.html")
+    public ResponseEntity<byte[]> reporteHtml(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
+        return descarga(obtenerReporte.ejecutar(quien, id, FormatoReporte.HTML), id, "html");
+    }
+
+    private static ResponseEntity<byte[]> descarga(ArchivoEvidencia archivo, UUID id, String extension) {
+        String nombre = "reporte-qa-" + id.toString().substring(0, 8) + "." + extension;
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(archivo.tipoMime()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(nombre).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(archivo.contenido());
     }
 }

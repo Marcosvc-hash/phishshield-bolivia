@@ -3,6 +3,7 @@ package bo.phishshield.backend.qa.infrastructure.web;
 import bo.phishshield.backend.qa.domain.model.CorreoInvalidoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionEnCursoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionNoEncontradaException;
+import bo.phishshield.backend.qa.domain.model.ReporteNoDisponibleException;
 import bo.phishshield.backend.qa.domain.model.SeleccionInvalidaException;
 import bo.phishshield.backend.qa.domain.model.TransicionEjecucionInvalidaException;
 import bo.phishshield.backend.shared.infrastructure.web.dto.ErrorResponse;
@@ -32,8 +33,9 @@ public class QaExceptionHandler {
         return respuesta(HttpStatus.BAD_REQUEST, ex, peticion);
     }
 
-    /** 409: ya hay una ejecucion activa, o la ejecucion ya termino. */
-    @ExceptionHandler({EjecucionEnCursoException.class, TransicionEjecucionInvalidaException.class})
+    /** 409: ya hay una ejecucion activa, la ejecucion ya termino, o todavia no tiene reportes. */
+    @ExceptionHandler({EjecucionEnCursoException.class, TransicionEjecucionInvalidaException.class,
+            ReporteNoDisponibleException.class})
     public ResponseEntity<ErrorResponse> conflicto(RuntimeException ex, HttpServletRequest peticion) {
         return respuesta(HttpStatus.CONFLICT, ex, peticion);
     }

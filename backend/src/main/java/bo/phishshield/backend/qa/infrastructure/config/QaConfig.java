@@ -7,13 +7,20 @@ import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
 import bo.phishshield.backend.qa.application.ListarEjecucionesUseCase;
 import bo.phishshield.backend.qa.application.MarcarInterrumpidasAlArrancarUseCase;
 import bo.phishshield.backend.qa.application.ObtenerDetalleEjecucionUseCase;
+import bo.phishshield.backend.qa.application.ObtenerReporteUseCase;
+import bo.phishshield.backend.qa.application.PublicarResultadosUseCase;
 import bo.phishshield.backend.qa.application.TrasEjecucion;
 import bo.phishshield.backend.qa.domain.port.out.CatalogoCasosPort;
 import bo.phishshield.backend.qa.domain.port.out.EjecucionRepositoryPort;
 import bo.phishshield.backend.qa.domain.port.out.EjecutorPruebasPort;
+import bo.phishshield.backend.qa.domain.port.out.EvidenciasPort;
+import bo.phishshield.backend.qa.domain.port.out.GeneradorReportePort;
 import bo.phishshield.backend.qa.domain.port.out.PlanificadorEjecucionPort;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.JUnitEjecutorPruebasAdapter;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.RegistroCasosQA;
+import bo.phishshield.backend.qa.infrastructure.reporte.CarpetaEvidencias;
+import bo.phishshield.backend.qa.infrastructure.reporte.EvidenciasArchivoAdapter;
+import bo.phishshield.backend.qa.infrastructure.reporte.GeneradorReporteAdapter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -69,10 +76,31 @@ public class QaConfig {
         return new JUnitEjecutorPruebasAdapter(registro, propiedades, iaUrl, urlBaseDatos, RELOJ);
     }
 
-    /** En la fase 3 se reemplaza por la generacion de reportes (y en la 7, el correo). */
     @Bean
-    public TrasEjecucion trasEjecucion() {
-        return TrasEjecucion.NADA;
+    public CarpetaEvidencias carpetaEvidencias(QaPropiedades propiedades) {
+        return CarpetaEvidencias.desde(propiedades);
+    }
+
+    @Bean
+    public GeneradorReportePort generadorReporte(CarpetaEvidencias carpeta) {
+        return new GeneradorReporteAdapter(carpeta, RELOJ);
+    }
+
+    @Bean
+    public EvidenciasPort evidencias(CarpetaEvidencias carpeta) {
+        return new EvidenciasArchivoAdapter(carpeta);
+    }
+
+    /** Al terminar cada ejecucion: generar el PDF y el HTML. */
+    @Bean
+    public TrasEjecucion trasEjecucion(EjecucionRepositoryPort ejecuciones, GeneradorReportePort generador) {
+        return new PublicarResultadosUseCase(ejecuciones, generador);
+    }
+
+    @Bean
+    public ObtenerReporteUseCase obtenerReporteUseCase(EjecucionRepositoryPort ejecuciones,
+                                                       GeneradorReportePort generador, EvidenciasPort evidencias) {
+        return new ObtenerReporteUseCase(ejecuciones, generador, evidencias);
     }
 
     @Bean
