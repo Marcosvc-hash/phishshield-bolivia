@@ -4,6 +4,7 @@ import bo.phishshield.backend.qa.domain.model.DesenlaceCaso;
 import bo.phishshield.backend.qa.domain.model.EstadoCaso;
 import bo.phishshield.backend.qa.domain.model.EstadoPaso;
 import bo.phishshield.backend.qa.domain.model.FinEjecucion;
+import bo.phishshield.backend.qa.domain.model.PasoEjecutado;
 import bo.phishshield.backend.qa.domain.model.PlanEjecucion;
 import bo.phishshield.backend.qa.domain.model.Suite;
 import bo.phishshield.backend.qa.domain.model.TipoFallo;
@@ -128,6 +129,20 @@ class JUnitEjecutorPruebasAdapterTest {
         assertTrue(JUnitEjecutorPruebasAdapter.esBaseDePruebas("jdbc:postgresql://localhost:5432/prueba_carga?ssl=false"));
         assertFalse(JUnitEjecutorPruebasAdapter.esBaseDePruebas("jdbc:postgresql://localhost:5432/phishshield"));
         assertFalse(JUnitEjecutorPruebasAdapter.esBaseDePruebas(null));
+    }
+
+    /** DEF-003: un PDF no se copia a la evidencia y un texto con caracter nulo se limpia antes de guardarlo. */
+    @Test
+    void las_respuestas_binarias_no_van_a_la_evidencia_y_el_caracter_nulo_se_limpia() {
+        assertTrue(ClienteApiQA.esBinario("application/pdf"));
+        assertTrue(ClienteApiQA.esBinario("image/png"));
+        assertFalse(ClienteApiQA.esBinario("application/json;charset=UTF-8"));
+        assertFalse(ClienteApiQA.esBinario(null));
+
+        PasoEjecutado paso = new PasoEjecutado(1, "Descargar", "ok", EstadoPaso.OK, null,
+                "GET /pdf\n-> HTTP 200\n%PDF-1.7 \u0000\u0000 binario", java.time.OffsetDateTime.now());
+        assertFalse(paso.detalleApi().contains("\u0000"));
+        assertTrue(paso.detalleApi().startsWith("GET /pdf"));
     }
 
     @Test

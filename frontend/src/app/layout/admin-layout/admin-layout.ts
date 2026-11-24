@@ -52,6 +52,7 @@ export class AdminLayout implements OnInit {
         { etiqueta: 'Panel', ruta: '/admin/panel', icono: 'panel', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
         { etiqueta: 'Historial de análisis', ruta: '/admin/historial', icono: 'historial', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
         { etiqueta: 'Alertas', ruta: '/admin/alertas', icono: 'campana', roles: ['ADMIN', 'ADMIN_EMPRESA'], conPendientes: true },
+        { etiqueta: 'Reportes', ruta: '/admin/reportes', icono: 'registro', roles: ['ADMIN', 'ADMIN_EMPRESA'] },
       ]
     },
     {

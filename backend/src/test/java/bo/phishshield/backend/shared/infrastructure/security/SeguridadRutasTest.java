@@ -95,7 +95,7 @@ class SeguridadRutasTest {
     @Test
     void el_admin_de_empresa_si_pasa_la_seguridad_en_alertas_e_historial() throws Exception {
         String token = tokenDe(Rol.ADMIN_EMPRESA);
-        for (String ruta : List.of("/api/admin/alertas", "/api/admin/analisis")) {
+        for (String ruta : List.of("/api/admin/alertas", "/api/admin/analisis", "/api/admin/reportes")) {
             mvc.perform(get(ruta).header("Authorization", "Bearer " + token))
                     .andExpect(status().isNotFound());
         }

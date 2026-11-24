@@ -122,6 +122,16 @@ public final class ClienteApiQA {
         return CAMPOS_SECRETOS.matcher(texto).replaceAll("$1***$2");
     }
 
+    /** Respuestas que no son texto: PDF, imagenes, archivos genericos. Publico para poder probarlo. */
+    public static boolean esBinario(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        String tipo = contentType.toLowerCase(java.util.Locale.ROOT);
+        return tipo.startsWith("application/pdf") || tipo.startsWith("image/")
+                || tipo.startsWith("application/octet-stream") || tipo.startsWith("application/zip");
+    }
+
     private static String recortar(String texto) {
         if (texto == null || texto.length() <= MAXIMO_CUERPO) {
             return texto;
@@ -149,9 +159,15 @@ public final class ClienteApiQA {
                 Response respuesta = contexto.next(peticion, spec);
                 long ms = (System.nanoTime() - inicio) / 1_000_000;
                 detalle.append("\n-> HTTP ").append(respuesta.statusCode()).append(" (").append(ms).append(" ms)");
-                String texto = respuesta.asString();
-                if (texto != null && !texto.isBlank()) {
-                    detalle.append("\n").append(recortar(enmascarar(texto)));
+                if (esBinario(respuesta.contentType())) {
+                    // Un PDF o una imagen no se copia a la evidencia: no se lee y trae bytes nulos
+                    detalle.append("\n[contenido binario: ").append(respuesta.asByteArray().length).append(" bytes, ")
+                            .append(respuesta.contentType()).append(']');
+                } else {
+                    String texto = respuesta.asString();
+                    if (texto != null && !texto.isBlank()) {
+                        detalle.append("\n").append(recortar(enmascarar(texto)));
+                    }
                 }
                 return respuesta;
             } catch (RuntimeException ex) {

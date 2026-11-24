@@ -16,6 +16,7 @@ dar PASS en una ejecución posterior). También **Rechazado** (no era un defecto
 |---|---|---|---|---|
 | DEF-001 | TC-SAN-003 | Alta | Abierto | El typosquatting de BancoSol no se detecta: `bancosoI.com.bo` sale "seguro" |
 | DEF-002 | TC-ROB-002 | Media | Abierto | El modelo de IA por sí solo no alcanza el recall mínimo (0,78 < 0,80): no reconoce typosquatting |
+| DEF-003 | TC-REG-009 | Alta | Verificado | El Centro de Pruebas quedaba con una ejecución atascada "en curso" si la evidencia traía bytes nulos (PDF) |
 
 ---
 
@@ -91,3 +92,38 @@ En el sistema completo, la regla `URL_TYPOSQUATTING` y la lista blanca cubren es
 **Corrección propuesta:** reentrenar con ejemplos de typosquatting de marcas bolivianas o
 agregar al modelo una característica de distancia a los dominios oficiales; mientras tanto,
 documentar en la ficha del modelo que no debe usarse sin las reglas.
+
+---
+
+## DEF-003 — Una evidencia binaria dejaba la ejecución atascada "en curso"
+
+| Campo | Valor |
+|---|---|
+| Caso que lo encontró | TC-REG-009 (suite Regression), en su primera ejecución real |
+| Encontrado | 2026-11-24, fase 9, contra `phishshield_qa` |
+| Severidad | Alta: una ejecución que queda activa bloquea todas las siguientes (solo se admite una a la vez) |
+| Estado | **Verificado** (corregido en la fase 9 y la suite volvió a dar 9/9 PASS) |
+| Componente | Centro de Pruebas QA: `ClienteApiQA` (evidencia de API) y `CorrerEjecucionUseCase` |
+
+**Pasos para reproducirlo (antes de la corrección)**
+
+1. Ejecutar la suite Regression con TC-REG-009, cuyo último paso descarga un PDF.
+2. El cliente de API copiaba el cuerpo de la respuesta a la evidencia del paso; el PDF trae bytes
+   nulos (`0x00`).
+
+**Resultado esperado:** la ejecución termina (PASS o FAIL) y se puede lanzar otra.
+
+**Resultado obtenido:** PostgreSQL rechazó el texto (`invalid byte sequence for encoding "UTF8":
+0x00`), falló el guardado del avance y también el guardado final; la ejecución quedó `en_curso`
+para siempre y la pantalla no dejaba lanzar otra hasta reiniciar el backend (al reiniciar,
+`MarcarInterrumpidasAlArrancar` la marcó FALLIDA, como estaba previsto).
+
+**Corrección:**
+
+1. Causa: una respuesta binaria (PDF, imagen) se resume en la evidencia como
+   `[contenido binario: N bytes, tipo]`, y el dominio quita el carácter nulo de cualquier texto
+   antes de guardarlo (`Textos.opcional`).
+2. Robustez: si el guardado final de una ejecución falla por cualquier motivo, se fuerza el estado
+   FALLIDA con el motivo (`EjecucionRepositoryPort.marcarFallida`), para que nunca quede activa.
+3. Pruebas de regresión: `CasosDeUsoQaTest.si_no_se_puede_guardar_el_final_la_ejecucion_queda_fallida_y_no_bloquea`
+   y `JUnitEjecutorPruebasAdapterTest.las_respuestas_binarias_no_van_a_la_evidencia_y_el_caracter_nulo_se_limpia`.

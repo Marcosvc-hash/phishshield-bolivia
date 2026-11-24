@@ -25,7 +25,7 @@ phishshield-bolivia/
 ├── .github/workflows/ci.yml   Integración continua: pruebas del backend, frontend e IA en cada push
 ├── database/        PostgreSQL 18 en Docker
 │   ├── initdb/        Esquema, datos de ejemplo, vistas del panel y catálogo QA (01 a 04)
-│   └── migraciones/   Cambios para bases ya creadas (V2__... a V13__...)
+│   └── migraciones/   Cambios para bases ya creadas (V2__... a V15__...)
 ├── backend/         API REST Spring Boot, arquitectura hexagonal por verticales
 │   ├── src/main/java/bo/phishshield/backend/
 │   │   ├── analisis/    Motor de reglas para URL e integración con el modelo de IA
@@ -36,10 +36,11 @@ phishshield-bolivia/
 │   │   ├── alerta/      Bandeja de alertas
 │   │   ├── listas/      Listas blanca, negra y gris de dominios
 │   │   ├── auditoria/   Registro de accesos y acciones administrativas
+│   │   ├── reporte/     Reportes por empresa y período (HU-17), con descarga en PDF
 │   │   ├── qa/          Centro de Pruebas QA: ejecutor, casos, reportes, correo y asistente de IA
 │   │   └── shared/      Seguridad, paginación y manejo global de errores
 │   ├── herramientas/  Scripts: levantar el backend contra la base de pruebas, crear el usuario QA, hash BCrypt
-│   └── *.http         Peticiones de ejemplo (analisis, auth, empresas, qa)
+│   └── *.http         Peticiones de ejemplo (analisis, auth, empresas, reportes, qa)
 ├── frontend/        Aplicación Angular: analizador, panel de administración y Centro de Pruebas
 ├── ia/              Modelo de detección de URL en Python (scikit-learn) y servicio de predicción (FastAPI)
 └── docs/            Guías, informe del modelo de IA y documentación de pruebas (docs/qa/)
@@ -91,7 +92,7 @@ Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker e
 ```
 
 Se aplican en orden y son idempotentes: ejecutarlas dos veces no hace daño. La
-lista completa (hasta V13) y el comando de cada una están en
+lista completa (hasta V15) y el comando de cada una están en
 [`database/README.md`](database/README.md).
 
 ### 3. Servicio de IA (puerto 8000)
@@ -148,7 +149,7 @@ Haga lo mismo con `DB_PASSWORD` en la plantilla de JUnit si va a ejecutar las
 pruebas desde el IDE.
 
 Hay peticiones de ejemplo en `backend/analisis.http`, `backend/auth.http`,
-`backend/empresas.http` y `backend/qa.http` (se ejecutan desde IntelliJ).
+`backend/empresas.http`, `backend/reportes.http` y `backend/qa.http` (se ejecutan desde IntelliJ).
 
 ### 5. Frontend (puerto 4200)
 
@@ -166,11 +167,11 @@ npm run build      # compilación de producción
 
 Pantalla `/admin/qa` (solo ADMIN) que ejecuta **pruebas reales** contra el propio
 PhishShield y guarda cada ejecución con sus pasos, evidencias, capturas y métricas.
-27 casos clasificados por tipo (funcional / no funcional) y suite:
+28 casos clasificados por tipo (funcional / no funcional) y suite:
 
 | Suite | Casos | Herramienta |
 |---|---|---|
-| Smoke, Sanity, Regression, Integration, E2E | 21 | Rest Assured (API) y Playwright (interfaz) |
+| Smoke, Sanity, Regression, Integration, E2E | 22 | Rest Assured (API) y Playwright (interfaz) |
 | Performance, Estrés, Soak | 4 | Generador de carga propio (HttpClient + hilos virtuales) |
 | Robustez IA | 2 | Lote boliviano etiquetado: precisión, recall, F1 y matriz de confusión |
 

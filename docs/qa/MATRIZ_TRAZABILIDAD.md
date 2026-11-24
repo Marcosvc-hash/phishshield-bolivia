@@ -48,7 +48,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 
 ## 3. Matriz caso ↔ historia ↔ requerimiento
 
-| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24) |
+| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24, 10:38) |
 |---|---|---|---|---|---|
 | TC-SMK-001 | Funcional / Smoke | La API del backend responde | HU-07 | RF-08 | PASS |
 | TC-SMK-002 | Funcional / Smoke | Login del administrador de prueba por API | HU-01 | RF-01, RNF-06 | PASS |
@@ -67,6 +67,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 | TC-REG-006 | Funcional / Regression | Filtro del historial por resultado | HU-05 | RF-04 | PASS |
 | TC-REG-007 | Funcional / Regression | Filtro del historial por texto en la interfaz | HU-05 | RF-04 | PASS |
 | TC-REG-008 | Funcional / Regression | Las rutas administrativas sin token devuelven 401 | HU-07 | RF-08 | PASS |
+| TC-REG-009 | Funcional / Regression | Generar el reporte de una empresa por API | HU-17 | RF-10 | PASS |
 | TC-INT-001 | Funcional / Integration | Integración del backend con el servicio de IA | HU-08 | RF-03 | PASS |
 | TC-INT-002 | Funcional / Integration | El análisis queda guardado en PostgreSQL | HU-05 | RF-04 | PASS |
 | TC-INT-003 | Funcional / Integration | Un análisis no seguro genera su alerta | HU-06 | RF-05 | PASS |
@@ -91,7 +92,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 | RF-07 | TC-SMK-004 | Sí (solo disponibilidad) |
 | RF-08 | TC-SMK-001, TC-REG-008 (y `SeguridadRutasTest` con 403 por rol) | Sí |
 | RF-09 | TC-REG-001, TC-REG-002, TC-REG-003 | Sí |
-| RF-10 | Pruebas unitarias de la vertical `reporte` (fase 9) | Parcial: sin caso en el catálogo del Centro de Pruebas |
+| RF-10 | TC-REG-009 (y pruebas unitarias de la vertical `reporte`) | Sí |
 | RNF-01 | TC-PERF-001, TC-PERF-002 | Sí |
 | RNF-02 | TC-STR-001 | Sí |
 | RNF-03 | TC-SOAK-001 | Sí |

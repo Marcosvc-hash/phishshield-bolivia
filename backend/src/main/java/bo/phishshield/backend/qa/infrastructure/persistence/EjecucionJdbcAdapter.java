@@ -417,6 +417,21 @@ public class EjecucionJdbcAdapter implements EjecucionRepositoryPort {
         return activas;
     }
 
+    @Override
+    public boolean marcarFallida(UUID uuidPublico, String motivo, OffsetDateTime fin) {
+        String texto = motivo == null ? "La ejecución terminó sin completar" : motivo.replace("\u0000", "");
+        return jdbc.sql("""
+                        UPDATE qa_ejecuciones
+                        SET estado = 'fallida', resultado_global = NULL, fin = GREATEST(:fin, COALESCE(inicio, :fin)),
+                            mensaje_error = LEFT(:motivo, 4000)
+                        WHERE uuid_publico = :uuid AND estado IN ('pendiente', 'en_curso')
+                        """)
+                .param("fin", fin)
+                .param("motivo", texto)
+                .param("uuid", uuidPublico)
+                .update() == 1;
+    }
+
     /** Una fila de qa_ejecuciones tal como sale de la base, antes de armar el agregado. */
     private record FilaLeida(long id, UUID uuid, Long idUsuario, String suite, String alcance, String correo,
                              String ambiente, String parametros, String estado, String resultadoGlobal,

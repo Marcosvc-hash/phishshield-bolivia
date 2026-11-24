@@ -77,9 +77,20 @@ public class CorrerEjecucionUseCase {
 
         try {
             ejecuciones.guardar(ejecucion);
+        } catch (TransicionEjecucionInvalidaException ex) {
+            // La detuvieron "a mano" mientras corria: lo que quedo en la base manda
+            log.log(Level.INFO, "La ejecucion " + idEjecucion + " ya habia terminado en la base: " + ex.getMessage());
+            return;
         } catch (RuntimeException ex) {
-            // Por ejemplo, la detuvieron "a mano" mientras corria: lo que quedo en la base manda
+            // No se pudo guardar el final (por ejemplo, un dato que la base rechaza). La ejecucion
+            // no puede quedar activa: bloquearia a todas las siguientes hasta reiniciar el backend.
             log.log(Level.WARNING, "No se pudo guardar el final de la ejecucion " + idEjecucion, ex);
+            try {
+                ejecuciones.marcarFallida(idEjecucion,
+                        "No se pudo guardar el resultado de la ejecución: " + ex.getMessage(), ahora());
+            } catch (RuntimeException otra) {
+                log.log(Level.WARNING, "Tampoco se pudo marcar FALLIDA la ejecucion " + idEjecucion, otra);
+            }
             return;
         }
 

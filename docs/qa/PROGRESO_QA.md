@@ -20,8 +20,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | 5 | 7 casos de interfaz con Playwright | Hecha (0e9f02a) |
 | 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Hecha (b6c2dc6) |
 | 7 | Correo y asistente de IA (opcionales) | Hecha (d8dca75) |
-| 8 | CI, JaCoCo y documentación TQA | **Hecha** |
-| 9 | HU-17 Reportes por empresa | Pendiente |
+| 8 | CI, JaCoCo y documentación TQA | Hecha (6b5dcac) |
+| 9 | HU-17 Reportes por empresa | **Hecha** |
 
 ## Cómo levantar el entorno de pruebas
 
@@ -383,9 +383,70 @@ se prueban en vivo con el Centro de Pruebas, no con pruebas de Maven.
 enunciado y HU-01 a HU-10 son una propuesta (está explicado en el documento) para reemplazar por
 los números oficiales.
 
+## Fase 9 — HU-17 "Generar reportes por empresa" (2026-11-24)
+
+La sesión se cortó a mitad de esta fase (límite de uso); se retomó revisando `git status`, se
+compiló lo que había y se completó. La CI del push de la fase 8 (6b5dcac) **pasó** (47 s).
+
+**Qué se hizo**
+
+- **Migración V14** (`V14__uuid_reportes.sql` + `01_schema.sql`): `uuid_publico` con índice único
+  en `reportes` (la API nunca expone el BIGINT). Cambio de esquema: **aplicada solo en `phishshield_qa`**.
+- **Migración V15** (`V15__caso_qa_reportes.sql` + `04_qa.sql`, ASCII con `U&'...'`): caso
+  **TC-REG-009** (reporte por API) y objetivo de TC-E2E-001 actualizado (decía que no había módulo
+  de reportes). **Aplicada solo en `phishshield_qa`**. El catálogo pasa a **28 casos**.
+- Vertical `reporte` (hexagonal):
+  - Dominio: `PeriodoReporte` (días en hora de Bolivia, ambos incluidos, máximo 366, sin fechas
+    futuras), `TotalesReporte` (phishing ≤ análisis), `ReporteEmpresa`, `EmpresaDelReporte`,
+    excepciones; puertos `ReporteRepositoryPort` y `ReportePdfPort`.
+  - Casos de uso sin Spring: `GenerarReporteUseCase` (alcance con `AlcanceDatos`: ADMIN elige la
+    empresa, ADMIN_EMPRESA siempre la suya y otra responde 404, USUARIO 403; auditoría
+    `REPORTE_GENERADO`), `ListarReportesUseCase`, `DescargarReportePdfUseCase`.
+  - `ReporteJdbcAdapter`: totales con una sola consulta sobre `analisis` + `alertas`; guardado con
+    upsert sobre `uq_reportes_periodo` (regenerar el mismo período recalcula y conserva el id).
+  - `ReporteEmpresaPdfAdapter` (OpenPDF), `ReporteConfig`, `ReporteController`
+    (`POST /api/admin/reportes` 201, `GET /api/admin/reportes`, `GET /api/admin/reportes/{id}/pdf`),
+    `ReporteExceptionHandler` (404, 400) y `backend/reportes.http`.
+- Frontend: página `/admin/reportes` (ADMIN y ADMIN_EMPRESA, entrada "Reportes" en Monitoreo):
+  formulario con empresa (solo ADMIN), período (por defecto los últimos 30 días), resumen del
+  reporte recién generado, tabla paginada y descarga del PDF con el token.
+- Caso **TC-REG-009** en `CasosRegressionApi`: busca Importadora Andina, genera el reporte de los
+  últimos 365 días, lo regenera (mismo id), lo encuentra en el listado y descarga el PDF.
+- Pruebas: `ReporteDominioTest` (4), `ReportesPorEmpresaTest` (7, doble en memoria),
+  `ReporteEmpresaPdfAdapterTest` (2), ruta de reportes en `SeguridadRutasTest`, `reportes.spec.ts` (4).
+
+**Defecto encontrado durante la fase: DEF-003 (corregido y verificado)**
+
+La primera corrida de TC-REG-009 dejó la ejecución **atascada en `en_curso`**: el último paso
+descarga un PDF, el cliente de API copiaba el cuerpo binario a la evidencia y PostgreSQL rechazó
+el byte `0x00`; falló el guardado del avance y también el final. Corrección: las respuestas
+binarias se resumen como `[contenido binario: N bytes, tipo]`, el dominio quita el carácter nulo
+de todo texto, y si el guardado final falla se fuerza FALLIDA (`EjecucionRepositoryPort.marcarFallida`).
+Al reiniciar, `MarcarInterrumpidasAlArrancar` destrabó la ejecución atascada (comportamiento
+previsto). Detalle en `REGISTRO_DEFECTOS.md`.
+
+**Verificación real (2026-11-24, contra `phishshield_qa`)**
+
+- Regression: 9/9 PASS. Totales del reporte comprobados con una consulta SQL independiente
+  (3 análisis, 2 phishing, 2 alertas en Importadora Andina para los últimos 365 días).
+- API: 400 sin empresa (ADMIN) y con período futuro; PDF 200 con `Content-Disposition`.
+- Pantalla revisada con Playwright: genera el reporte, muestra el resumen y la tabla (incluye el
+  reporte de ejemplo de `02_seed.sql`, que ya tiene uuid por V14).
+- **Ejecución completa** (10:38-10:41, 3 min): 28 casos, **26 PASS, 2 FAIL** (DEF-001 y DEF-002),
+  0 SKIPPED, 0 NOT_RUN. `INFORME_EJECUCION.md` se rehízo con esta corrida.
+- Al cerrar la fase: backend 376 pruebas en verde (375 con el comando de la CI, sin base),
+  frontend 113, IA 24; regla 4 sin coincidencias. Cobertura: **64,4 %** de líneas y **60,9 %** de
+  ramas (dominio 90,6 %, casos de uso 89,2 %, vertical `reporte` 84,8 %).
+- No se pudo probar en vivo con un ADMIN_EMPRESA (no hay contraseña conocida para
+  `maria.quispe@andina.bo` en `phishshield_qa`): el alcance por empresa está cubierto por las
+  pruebas de casos de uso.
+
 ## Cómo continuar
 
-Siguiente fase: **9 — HU-17 "Generar reportes por empresa"**: vertical `reporte` hexagonal sobre la
-tabla `reportes` (ya existe y nada la usa): generar el reporte de una empresa para un período
-(totales de análisis, phishing y alertas desde la base), listar y descargar en PDF; ADMIN ve todas,
-ADMIN_EMPRESA solo la suya; auditoría; pantalla `/admin/reportes`; pruebas.
+Las 9 fases están hechas. Pendiente de decisión del usuario:
+
+1. Aplicar **V13, V14 y V15** en la base real (V14 es cambio de esquema: hacer respaldo antes).
+2. Corregir **DEF-001** (BancoSol) con una migración nueva y volver a correr Sanity.
+3. Planificar **DEF-002** (reentrenar el modelo con typosquatting boliviano).
+4. ¿Pasar el asistente de IA al SDK oficial de Java de Anthropic? (dependencia no aprobada todavía).
+5. Fusionar `feature/qa-automation` a `main` cuando el usuario lo apruebe (no se hizo).

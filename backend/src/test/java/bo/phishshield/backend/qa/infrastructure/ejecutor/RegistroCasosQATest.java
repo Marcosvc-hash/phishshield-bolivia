@@ -37,7 +37,7 @@ class RegistroCasosQATest {
     @Test
     void cada_caso_programado_existe_en_el_catalogo() throws IOException {
         Map<String, String> catalogo = catalogo();
-        assertEquals(27, catalogo.size(), "El catálogo tiene 27 casos");
+        assertEquals(28, catalogo.size(), "El catálogo tiene 28 casos");
 
         for (String codigo : new RegistroCasosQA().codigos()) {
             assertTrue(catalogo.containsKey(codigo), codigo + " no existe en 04_qa.sql");
@@ -45,7 +45,7 @@ class RegistroCasosQATest {
     }
 
     @Test
-    void los_catorce_casos_de_api_estan_programados() throws IOException {
+    void los_casos_de_api_estan_programados() throws IOException {
         RegistroCasosQA registro = new RegistroCasosQA();
         catalogo().forEach((codigo, herramienta) -> {
             if (herramienta.equals("api")) {
@@ -63,11 +63,11 @@ class RegistroCasosQATest {
     }
 
     @Test
-    void los_veintisiete_casos_del_catalogo_estan_programados() throws IOException {
+    void los_veintiocho_casos_del_catalogo_estan_programados() throws IOException {
         RegistroCasosQA registro = new RegistroCasosQA();
         catalogo().keySet().forEach(codigo ->
                 assertTrue(registro.metodo(codigo).isPresent(), "Falta programar " + codigo));
-        assertEquals(27, registro.codigos().size());
+        assertEquals(28, registro.codigos().size());
     }
 
     @Test

@@ -345,6 +345,13 @@ INSERT INTO qa_casos (codigo, tipo, suite, herramienta, orden, nombre, objetivo,
  'GET /api/empresas, GET /api/admin/panel y GET /api/admin/qa/casos sin el encabezado Authorization.',
  'HTTP 401 en las tres rutas.'),
 
+('TC-REG-009', 'funcional', 'regression', 'api', 9,
+ 'Generar el reporte de una empresa por API',
+ 'Comprobar que el administrador genera el reporte de una empresa para un período, que los totales son coherentes y que el reporte se puede listar y descargar en PDF.',
+ 'Backend levantado en QA_BASE_URL. Sesión iniciada con el administrador de prueba. Empresa de ejemplo Importadora Andina S.R.L. activa.',
+ 'POST /api/admin/reportes para Importadora Andina S.R.L. con el período de los últimos 365 días; se genera dos veces el mismo período.',
+ 'HTTP 201 con los totales (análisis, phishing y alertas) y phishing menor o igual a análisis; la segunda vez devuelve el mismo id; el reporte aparece en GET /api/admin/reportes y GET /api/admin/reportes/{id}/pdf responde application/pdf.'),
+
 -- Integration
 ('TC-INT-001', 'funcional', 'integration', 'api', 1,
  'Integración del backend con el servicio de IA',
@@ -370,7 +377,7 @@ INSERT INTO qa_casos (codigo, tipo, suite, herramienta, orden, nombre, objetivo,
 -- E2E
 ('TC-E2E-001', 'funcional', 'e2e', 'ui', 1,
  'Flujo completo: login, análisis, historial y alerta',
- 'Recorrer como un usuario real el camino completo de una detección. El sistema no tiene módulo de reportes: el recorrido termina en la alerta.',
+ 'Recorrer como un usuario real el camino completo de una detección: login, análisis, historial y alerta.',
  'Backend en QA_BASE_URL, frontend en QA_FRONTEND_URL y servicio de IA levantados. Usuario administrador de prueba activo. Chromium instalado para Playwright.',
  'URL de phishing con una marca única por ejecución, por ejemplo http://bnb-verificacion-cuenta.xyz/login?qa=<id de ejecución>.',
  'El veredicto en pantalla no es seguro; la URL aparece en el Historial; su alerta aparece en Alertas con estado pendiente.'),

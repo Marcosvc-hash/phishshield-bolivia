@@ -71,6 +71,12 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/admin/auditoria/auditoria').then((m) => m.Auditoria)
       },
       {
+        path: 'reportes',
+        title: 'Reportes por empresa',
+        canActivate: [rolGuard('ADMIN', 'ADMIN_EMPRESA')],
+        loadComponent: () => import('./paginas/admin/reportes/reportes').then((m) => m.Reportes)
+      },
+      {
         path: 'qa',
         title: 'Centro de Pruebas',
         canActivate: [rolGuard('ADMIN')],

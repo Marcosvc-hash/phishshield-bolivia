@@ -5,10 +5,14 @@ import bo.phishshield.backend.qa.infrastructure.ejecutor.ClienteApiQA;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.ContextoCaso;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.ExtensionQA;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -142,6 +146,67 @@ public class CasosRegressionApi {
             ctx.observar(resultados.size() + " fila(s) revisadas; resultados distintos de phishing: " + otros);
             assertFalse(resultados.isEmpty(), "El filtro no devolvió filas aunque hay análisis phishing");
             assertTrue(otros.isEmpty(), "El filtro devolvió filas con otros resultados: " + otros);
+        });
+    }
+
+    @Test
+    @CasoQA("TC-REG-009")
+    void generarElReporteDeUnaEmpresa(ContextoCaso ctx) {
+        ctx.requiereSesion();
+        PasosApi.iniciarSesion(ctx);
+        LocalDate hoy = LocalDate.now(ZoneId.of("America/La_Paz"));
+        LocalDate desde = hoy.minusDays(364);
+
+        String idEmpresa = ctx.paso("Buscar la empresa Importadora Andina S.R.L. en GET /api/empresas", () -> {
+            Response x = ctx.api().conSesion().get("/api/empresas");
+            assertEquals(200, x.statusCode(), "Código HTTP del listado de empresas");
+            List<Map<String, Object>> empresas = x.jsonPath().getList("$");
+            Map<String, Object> andina = empresas.stream()
+                    .filter(e -> String.valueOf(e.get("nombre")).startsWith("Importadora Andina"))
+                    .findFirst().orElse(null);
+            if (andina == null) {
+                Assumptions.abort("No existe la empresa de ejemplo Importadora Andina S.R.L. en la base");
+            }
+            ctx.observar("Empresa " + andina.get("nombre") + " (" + andina.get("id") + ")");
+            return String.valueOf(andina.get("id"));
+        });
+
+        String cuerpo = ClienteApiQA.json("idEmpresa", idEmpresa, "desde", desde.toString(), "hasta", hoy.toString());
+        String idReporte = ctx.paso("Generar el reporte del " + desde + " al " + hoy + " con POST /api/admin/reportes", () -> {
+            Response x = ctx.api().conSesion().body(cuerpo).post("/api/admin/reportes");
+            ctx.observar("HTTP " + x.statusCode() + ", análisis " + x.jsonPath().get("totalAnalisis") + ", phishing "
+                    + x.jsonPath().get("totalPhishing") + ", alertas " + x.jsonPath().get("totalAlertas"));
+            assertEquals(201, x.statusCode(), "Código HTTP al generar el reporte");
+            int analisis = x.jsonPath().getInt("totalAnalisis");
+            int phishing = x.jsonPath().getInt("totalPhishing");
+            assertTrue(analisis >= 0 && x.jsonPath().getInt("totalAlertas") >= 0, "Totales negativos");
+            assertTrue(phishing <= analisis, "Hay más phishing (" + phishing + ") que análisis (" + analisis + ")");
+            return x.jsonPath().getString("id");
+        });
+
+        ctx.paso("Generar otra vez el mismo período: debe devolver el mismo reporte (no duplicarlo)", () -> {
+            Response x = ctx.api().conSesion().body(cuerpo).post("/api/admin/reportes");
+            ctx.observar("HTTP " + x.statusCode() + ", id " + x.jsonPath().getString("id"));
+            assertEquals(201, x.statusCode(), "Código HTTP al regenerar");
+            assertEquals(idReporte, x.jsonPath().getString("id"), "El mismo período debe conservar su id");
+        });
+
+        ctx.paso("Verificar que aparece en GET /api/admin/reportes?idEmpresa=...", () -> {
+            Response x = ctx.api().conSesion().queryParam("idEmpresa", idEmpresa).queryParam("tamano", 100)
+                    .get("/api/admin/reportes");
+            List<String> ids = x.jsonPath().getList("contenido.id", String.class);
+            ctx.observar("HTTP " + x.statusCode() + ", " + ids.size() + " reporte(s) de la empresa");
+            assertEquals(200, x.statusCode(), "Código HTTP del listado");
+            assertTrue(ids.contains(idReporte), "El reporte generado no aparece en el listado");
+        });
+
+        ctx.paso("Descargar el PDF con GET /api/admin/reportes/{id}/pdf", () -> {
+            Response x = ctx.api().conSesion().accept("application/pdf").get("/api/admin/reportes/" + idReporte + "/pdf");
+            byte[] bytes = x.asByteArray();
+            ctx.observar("HTTP " + x.statusCode() + ", " + x.contentType() + ", " + bytes.length + " bytes");
+            assertEquals(200, x.statusCode(), "Código HTTP del PDF");
+            assertTrue(x.contentType().startsWith("application/pdf"), "Content-Type " + x.contentType());
+            assertTrue(bytes.length > 4 && new String(bytes, 0, 4).equals("%PDF"), "El archivo no es un PDF");
         });
     }
 

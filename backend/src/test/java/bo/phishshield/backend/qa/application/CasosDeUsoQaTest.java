@@ -247,6 +247,22 @@ class CasosDeUsoQaTest {
         assertTrue(final_.getMensajeError().contains("no se encontró el motor de JUnit"));
     }
 
+    /** DEF-003: un guardado final que falla no puede dejar la ejecucion activa para siempre. */
+    @Test
+    void si_no_se_puede_guardar_el_final_la_ejecucion_queda_fallida_y_no_bloquea() {
+        Ejecucion e = lanzarSmoke();
+        ejecutor.guion = DoblesQa.todosPass(AHORA);
+        ejecuciones.fallaAlGuardar = new IllegalStateException("invalid byte sequence for encoding UTF8: 0x00");
+
+        correr.ejecutar(e.getUuidPublico());
+
+        Ejecucion final_ = ejecuciones.unica();
+        assertEquals(EstadoEjecucion.FALLIDA, final_.getEstado());
+        assertTrue(final_.getMensajeError().contains("No se pudo guardar el resultado"));
+        assertTrue(ejecuciones.buscarActiva().isEmpty(), "Se puede lanzar otra");
+        assertTrue(terminadas.isEmpty(), "Sin resultado guardado no se generan reportes");
+    }
+
     @Test
     void una_ejecucion_que_ya_no_esta_pendiente_no_se_corre() {
         Ejecucion e = lanzarSmoke();

@@ -9,9 +9,16 @@ final class Textos {
     private Textos() {
     }
 
-    /** Texto vacio o solo espacios se guarda como null. */
+    /**
+     * Texto vacio o solo espacios se guarda como null. Se quita el caracter
+     * nulo (codigo 0): PostgreSQL no lo admite en un texto y haria fallar el guardado.
+     */
     static String opcional(String texto) {
-        return texto == null || texto.isBlank() ? null : texto.strip();
+        if (texto == null) {
+            return null;
+        }
+        String limpio = texto.indexOf('\u0000') < 0 ? texto : texto.replace("\u0000", "");
+        return limpio.isBlank() ? null : limpio.strip();
     }
 
     /** Corta el texto con "…" al final si pasa del maximo. */

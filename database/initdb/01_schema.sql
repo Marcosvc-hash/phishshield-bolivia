@@ -346,6 +346,8 @@ CREATE TABLE reportes (
     total_alertas    INTEGER     NOT NULL DEFAULT 0,
     generado_por     BIGINT      REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
     fecha_generacion TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- Identificador expuesto en la API (V14); el BIGINT no sale al exterior
+    uuid_publico     UUID        NOT NULL DEFAULT gen_random_uuid(),
 
     CONSTRAINT chk_reportes_periodo   CHECK (periodo_fin >= periodo_inicio),
     CONSTRAINT chk_reportes_totales   CHECK (
@@ -353,6 +355,8 @@ CREATE TABLE reportes (
         total_phishing BETWEEN 0 AND total_analisis),
     CONSTRAINT uq_reportes_periodo    UNIQUE (id_empresa, periodo_inicio, periodo_fin)
 );
+
+CREATE UNIQUE INDEX uq_reportes_uuid ON reportes(uuid_publico);
 
 
 CREATE TABLE auditoria (

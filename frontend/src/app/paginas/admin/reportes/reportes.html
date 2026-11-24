@@ -1,0 +1,110 @@
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    @if (esAdmin()) { Reportes de las empresas cliente. } @else { Reportes de su empresa. }
+    Cada reporte cuenta, para un período, los análisis realizados, el phishing detectado y las alertas abiertas.
+  </p>
+</div>
+
+<section class="tarjeta seccion" aria-labelledby="titulo-generar">
+  <div class="tarjeta-cabecera">
+    <h2 id="titulo-generar" class="tarjeta-titulo">Generar un reporte</h2>
+  </div>
+  <div class="tarjeta-cuerpo">
+    <form class="barra-filtros" (ngSubmit)="generar()">
+      <div class="barra-filtros-fila">
+        @if (esAdmin()) {
+          <div class="campo">
+            <label class="campo-etiqueta" for="reporte-empresa">Empresa</label>
+            <select id="reporte-empresa" name="empresa" class="entrada" [(ngModel)]="idEmpresa" (change)="elegirEmpresa()">
+              <option value="">Todas (elija una para generar)</option>
+              @for (e of empresas(); track e.id) {
+                <option [value]="e.id">{{ e.nombre }}@if (!e.activa) { (desactivada) }</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="campo">
+          <label class="campo-etiqueta" for="reporte-desde">Desde</label>
+          <input id="reporte-desde" type="date" name="desde" class="entrada" [(ngModel)]="desde" [max]="hasta || hoy" required />
+        </div>
+        <div class="campo">
+          <label class="campo-etiqueta" for="reporte-hasta">Hasta</label>
+          <input id="reporte-hasta" type="date" name="hasta" class="entrada" [(ngModel)]="hasta" [min]="desde" [max]="hoy" required />
+        </div>
+        <button type="submit" class="btn btn-primario" [disabled]="generando()">
+          @if (generando()) { <span class="girador" aria-hidden="true"></span> } @else { <app-icono nombre="registro" [tamano]="16" /> }
+          Generar reporte
+        </button>
+      </div>
+      <p class="campo-ayuda">El período puede abarcar hasta un año y no puede terminar después de hoy. Si ya existe un reporte
+        del mismo período, se vuelve a calcular.</p>
+    </form>
+
+    @if (ultimo(); as r) {
+      <div class="aviso info ultimo" role="status">
+        <app-icono nombre="check-circulo" [tamano]="18" />
+        <div>
+          <strong>{{ r.empresa }}</strong>, del {{ fechaLegible(r.desde) }} al {{ fechaLegible(r.hasta) }}:
+          {{ r.totalAnalisis }} análisis, {{ r.totalPhishing }} de phishing ({{ r.porcentajePhishing | number: '1.0-1' }} %)
+          y {{ r.totalAlertas }} alertas.
+          <button type="button" class="btn btn-secundario btn-sm" (click)="descargar(r)">
+            <app-icono nombre="registro" [tamano]="14" /> Descargar PDF
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+@if (error()) {
+  <p class="aviso error seccion" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ error() }}</p>
+}
+
+<section class="tarjeta seccion" aria-labelledby="titulo-reportes">
+  <div class="tarjeta-cabecera">
+    <h2 id="titulo-reportes" class="tarjeta-titulo">Reportes generados</h2>
+  </div>
+  @if (cargando() && !pagina()) {
+    <app-skeleton tipo="tabla" [cantidad]="5" etiqueta="Cargando reportes…" />
+  } @else if (pagina(); as p) {
+    @if (p.contenido.length === 0) {
+      <app-estado-vacio icono="registro" titulo="Todavía no hay reportes" descripcion="Genere el primero con el formulario de arriba." />
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              @if (esAdmin()) { <th scope="col">Empresa</th> }
+              <th scope="col">Período</th>
+              <th scope="col" class="numero">Análisis</th>
+              <th scope="col" class="numero">Phishing</th>
+              <th scope="col" class="numero">Alertas</th>
+              <th scope="col" class="col-extra">Generado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of p.contenido; track r.id) {
+              <tr>
+                @if (esAdmin()) { <td data-etiqueta="Empresa">{{ r.empresa }}</td> }
+                <td data-etiqueta="Período" class="fecha">{{ fechaLegible(r.desde) }} – {{ fechaLegible(r.hasta) }}</td>
+                <td data-etiqueta="Análisis" class="numero">{{ r.totalAnalisis }}</td>
+                <td data-etiqueta="Phishing" class="numero">{{ r.totalPhishing }} <span class="texto-secundario">({{ r.porcentajePhishing | number: '1.0-1' }} %)</span></td>
+                <td data-etiqueta="Alertas" class="numero">{{ r.totalAlertas }}</td>
+                <td data-etiqueta="Generado" class="texto-secundario col-extra">{{ r.fechaGeneracion | date: 'dd/MM/yyyy HH:mm' }} · {{ r.generadoPor ?? '—' }}</td>
+                <td data-etiqueta="PDF">
+                  <button type="button" class="btn btn-secundario btn-sm descargar" [disabled]="descargando() === r.id"
+                          [attr.aria-label]="'Descargar el PDF del reporte de ' + r.empresa" (click)="descargar(r)">
+                    <app-icono nombre="registro" [tamano]="14" /> PDF
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginador [pagina]="p.pagina" [totalPaginas]="p.totalPaginas" [tamano]="p.tamano"
+                     [totalElementos]="p.totalElementos" (cambiar)="cargar($event)" />
+    }
+  }
+</section>

@@ -46,7 +46,7 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 ## Arquitectura hexagonal del backend
 
 Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`,
-`historial`, `alerta`, `listas`, `auditoria`, `qa` y `shared` (ver `docs/guia-modulo-admin.md`).
+`historial`, `alerta`, `listas`, `auditoria`, `reporte`, `qa` y `shared` (ver `docs/guia-modulo-admin.md`).
 Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
@@ -102,6 +102,11 @@ Otros puntos del diseño:
   - Una empresa desactivada no recibe usuarios nuevos; sus usuarios actuales siguen entrando.
   - `POST /api/analisis` sigue siendo público. Con token, el análisis queda a nombre del
     usuario; los ids del cuerpo se ignoran.
+  - Reportes por empresa (HU-17, vertical `reporte`, `/api/admin/reportes`, pantalla `/admin/reportes`):
+    los totales se calculan desde `analisis`/`alertas` en el período (días en hora de Bolivia,
+    máximo 366, sin fechas futuras). Uno solo por empresa y período: regenerar recalcula
+    (upsert sobre `uq_reportes_periodo`). ADMIN elige la empresa; ADMIN_EMPRESA siempre la suya
+    (otra responde 404). Se audita como `REPORTE_GENERADO`. PDF con OpenPDF.
 - Hash de una contraseña para la base: `backend/herramientas/GenerarHashBcrypt.java` (ver su
   comentario). Lee la contraseña por teclado y no la muestra.
 
@@ -182,8 +187,9 @@ defectos e informe en `docs/qa/`.
   El admin tiene la misma contraseña que en la base real (se copió el hash).
 - La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar (V13 y
   siguientes también están ocupadas por `feature/qa-automation`).
-- **V13 aplicada solo en `phishshield_qa` (2026-11-24)**; falta aplicarla en la base real cuando el
-  usuario lo decida. Ver `docs/qa/PROGRESO_QA.md` para las migraciones posteriores.
+- **V13, V14 y V15 aplicadas solo en `phishshield_qa` (2026-11-24)**; falta aplicarlas en la base
+  real cuando el usuario lo decida (V14 cambia el esquema de `reportes`: sin ella, la pantalla de
+  reportes responde error en la base real; conviene un respaldo antes, como con V9-V12).
 - **Usuario `qa.admin@phishshield.bo`** existe solo en `phishshield_qa` (lo crea
   `backend\herramientas\crear-usuario-qa.ps1`); su contraseña está en `backend\.env`.
 - **Playwright:** Chromium se descarga una vez (`com.microsoft.playwright.CLI install chromium`) en
@@ -192,7 +198,8 @@ defectos e informe en `docs/qa/`.
 - **Presupuesto de CSS:** Angular avisa si el CSS de un componente pasa de 4 kB; en el Centro de
   Pruebas se resolvió separando `detalle-caso.ts`, no subiendo el límite.
 - **Defectos abiertos** encontrados por el Centro de Pruebas: DEF-001 (BancoSol no está en
-  `entidades_suplantadas`) y DEF-002 (el modelo solo no detecta typosquatting). Ver
+  `entidades_suplantadas`) y DEF-002 (el modelo solo no detecta typosquatting). DEF-003 (evidencia
+  binaria que atascaba una ejecución) ya está corregido y verificado. Ver
   `docs/qa/REGISTRO_DEFECTOS.md`; no se corrigen sin aprobación.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.

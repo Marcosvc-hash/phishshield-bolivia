@@ -42,7 +42,7 @@ Los casos se tipifican **solo por tipo de prueba y suite**. Cada suite pertenece
 |---|---|---|---|---|---|
 | Funcional | Smoke | Saber en minutos si vale la pena seguir probando | Rest Assured, Playwright | 6 | Después de cada despliegue o arranque |
 | Funcional | Sanity | Que el motor siga dando veredictos razonables en 3 URL clave | Rest Assured | 3 | Después de cambiar reglas, listas o el modelo |
-| Funcional | Regression | Que lo que ya funcionaba no se rompa | Rest Assured, Playwright | 8 | Antes de fusionar a `main` |
+| Funcional | Regression | Que lo que ya funcionaba no se rompa | Rest Assured, Playwright | 9 | Antes de fusionar a `main` |
 | Funcional | Integration | El backend con sus vecinos: servicio de IA y PostgreSQL | Rest Assured | 3 | Antes de fusionar a `main` |
 | Funcional | E2E | Recorrer como usuario el camino completo de una detección | Playwright | 1 | Antes de una entrega o demo |
 | No funcional | Performance | Tiempo de respuesta con carga normal (motor completo y caché) | Generador de carga propio | 2 | Antes de una entrega; tras cambios en el motor |
@@ -137,7 +137,7 @@ entorno vuelve a cumplir los criterios de entrada.
 
 ## 8. Entregables
 
-- Catálogo de 27 casos en `qa_casos` (`database/initdb/04_qa.sql`, migraciones V12 y V13).
+- Catálogo de 28 casos en `qa_casos` (`database/initdb/04_qa.sql`, migraciones V12, V13 y V15).
 - Este plan, la matriz de trazabilidad (`MATRIZ_TRAZABILIDAD.md`), el registro de defectos
   (`REGISTRO_DEFECTOS.md`) y el informe de ejecución (`INFORME_EJECUCION.md`).
 - Por cada ejecución: reporte PDF detallado y HTML resumido en `backend/qa-evidencias/{id}/`.

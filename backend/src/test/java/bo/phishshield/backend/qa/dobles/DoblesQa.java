@@ -86,6 +86,11 @@ public final class DoblesQa {
                 enBase.put(e.getUuidPublico(), conId);
                 return copiar(conId, conId.getId());
             }
+            if (fallaAlGuardar != null && e.getEstado().esFinal()) {
+                RuntimeException falla = fallaAlGuardar;
+                fallaAlGuardar = null;
+                throw falla;
+            }
             Ejecucion actual = enBase.get(e.getUuidPublico());
             if (actual.getEstado().esFinal() && actual.getEstado() != e.getEstado()) {
                 throw new TransicionEjecucionInvalidaException("ya terminó en la base");
@@ -120,6 +125,19 @@ public final class DoblesQa {
         public List<Ejecucion> listarActivas() {
             return enBase.values().stream().filter(e -> e.getEstado().estaActiva())
                     .map(e -> copiar(e, e.getId())).toList();
+        }
+
+        /** Si se pone, el proximo guardado de una ejecucion existente falla (simula un dato que la base rechaza). */
+        public RuntimeException fallaAlGuardar;
+
+        @Override
+        public boolean marcarFallida(UUID uuid, String motivo, java.time.OffsetDateTime fin) {
+            Ejecucion actual = enBase.get(uuid);
+            if (actual == null || !actual.getEstado().estaActiva()) {
+                return false;
+            }
+            actual.fallar(motivo, fin);
+            return true;
         }
 
         public Ejecucion unica() {

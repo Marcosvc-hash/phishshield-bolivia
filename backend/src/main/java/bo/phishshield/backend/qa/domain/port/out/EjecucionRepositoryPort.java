@@ -5,6 +5,7 @@ import bo.phishshield.backend.qa.domain.model.FilaEjecucion;
 import bo.phishshield.backend.shared.domain.model.Pagina;
 import bo.phishshield.backend.shared.domain.model.SolicitudPagina;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,4 +29,13 @@ public interface EjecucionRepositoryPort {
      * cualquiera que aparezca aqui quedo interrumpida por un reinicio.
      */
     List<Ejecucion> listarActivas();
+
+    /**
+     * Ultimo recurso cuando no se pudo guardar el final de una ejecucion: la
+     * deja FALLIDA con el motivo, sin tocar sus casos, para que no quede activa
+     * y bloquee a las siguientes. Solo actua si sigue pendiente o en curso.
+     *
+     * @return true si la marco
+     */
+    boolean marcarFallida(UUID uuidPublico, String motivo, OffsetDateTime fin);
 }

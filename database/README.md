@@ -164,6 +164,8 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V11__calculado_en_analisis.sql` | Agrega a `analisis` la columna `calculado_en` (admite NULL) y la restricción `chk_analisis_calculado_en`. Cuando otro usuario u otra empresa analiza una URL que está en la caché, se guarda una fila a su nombre con los indicadores copiados; `calculado_en` guarda cuándo se calcularon, para que la copia no renueve la vigencia de 24 h. Las filas existentes quedan en NULL; no borra datos. **El backend la necesita**: sin ella no arranca |
 | `V12__modulo_qa.sql` | Crea las 6 tablas del Centro de Pruebas QA (`qa_casos`, `qa_ejecuciones`, `qa_resultados`, `qa_pasos`, `qa_metricas`, `qa_lote_robustez`) y carga el catálogo de 27 casos y el lote de 80 URL etiquetadas. No toca tablas ni filas existentes. Mismo contenido que `initdb/04_qa.sql`; los textos con tildes van como `U&'...'` para que el archivo quede en ASCII. **El backend con el módulo QA la necesita** |
 | `V13__ruta_catalogo_qa.sql` | Corrige los datos de prueba de `TC-REG-008` en `qa_casos`: la ruta del catálogo es `GET /api/admin/qa/casos`. Solo cambia ese texto; no crea ni borra filas. En bases nuevas ya viene corregido en `initdb/04_qa.sql` |
+| `V14__uuid_reportes.sql` | Agrega `uuid_publico` (con índice único) a `reportes`, para que la HU-17 (reportes por empresa) no exponga el BIGINT interno. Cada fila existente recibe un uuid distinto; no borra datos. **El módulo de reportes la necesita**. En bases nuevas ya viene en `initdb/01_schema.sql` |
+| `V15__caso_qa_reportes.sql` | Agrega al catálogo QA el caso `TC-REG-009` (reporte de una empresa por API) y actualiza el objetivo de `TC-E2E-001`. No borra filas. En bases nuevas ya viene en `initdb/04_qa.sql` |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -181,6 +183,8 @@ Get-Content database\migraciones\V10__desactivar_modelos_de_ejemplo.sql | docker
 Get-Content database\migraciones\V11__calculado_en_analisis.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V12__modulo_qa.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V13__ruta_catalogo_qa.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V14__uuid_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V15__caso_qa_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 ```
 
 ```bash
@@ -197,6 +201,8 @@ docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STO
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V11__calculado_en_analisis.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V12__modulo_qa.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V13__ruta_catalogo_qa.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V14__uuid_reportes.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V15__caso_qa_reportes.sql
 ```
 
 ### Base de pruebas `phishshield_qa`
