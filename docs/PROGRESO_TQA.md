@@ -111,7 +111,7 @@ Resumen de cierre del trabajo de la materia **Testing y Aseguramiento de la Cali
 |---|---|
 | CI de GitHub Actions, push de la fase 8 (`6b5dcac`) | **Pasó** (run 45336072169, 47 s) |
 | CI de GitHub Actions, push de la fase 9 (`5ae2712`) | **Pasó** (run 45417714209, 42 s) |
-| CI de GitHub Actions, push del cierre de pendientes | Ver §5 |
+| CI de GitHub Actions, push del cierre de pendientes (`a1a10ed`) | **Pasó** (run 45431743717, 40 s; backend 375 pruebas) |
 | Backend local, `mvnw test` con la base (cierre, 2026-11-24) | **376 pruebas, 0 fallos** |
 | Backend con el comando de la CI, sin base (`-Dtest='*Test'`) | **375 pruebas, 0 fallos** (fase 9) |
 | Frontend, `npm test -- --watch=false` (cierre) | **113 pruebas, 0 fallos**; `npm run build` sin avisos |
@@ -189,7 +189,7 @@ Pedido del usuario: cerrar todo lo que se pudiera hacer desde este equipo, en or
 | 2. V13, V14, V15 en la base real | Aplicadas en orden con `ON_ERROR_STOP=1 --single-transaction` | Columnas e índices iguales a `phishshield_qa` (salvo las tablas de educación, que la real no tiene desde antes); `reportes.uuid_publico` con `uq_reportes_uuid`; catálogo QA de 28 casos |
 | 3. DEF-001 | `V16__entidad_bancosol.sql` + `02_seed.sql`: BancoSol en `entidades_suplantadas` y en la lista blanca, con `DOMINIO_AGREGADO` en `auditoria` | Probada en dos bases temporales `prueba_v16` (ya borradas); aplicada en `phishshield_qa` y en la real (respaldo previo `respaldo_antes_v16.dump`, 94 585 bytes). TC-SAN-003: PASS (phishing, 81,35). Suite completa: 27 PASS, 1 FAIL (DEF-002) |
 | 4. DEF-002 | No se corrigió (ver §4); plan de corrección en `docs/qa/REGISTRO_DEFECTOS.md` | — |
-| 5. Pruebas | Backend 376, frontend 113 + build, IA 24, regla 4, JaCoCo | Todo en verde (ver §2); CI después del push: ver el resumen del commit en GitHub Actions |
+| 5. Pruebas | Backend 376, frontend 113 + build, IA 24, regla 4, JaCoCo | Todo en verde (ver §2); CI del push `a1a10ed`: pasó (run 45431743717) |
 | 6. Documentación | `REGISTRO_DEFECTOS.md`, `INFORME_EJECUCION.md`, `MATRIZ_TRAZABILIDAD.md`, `PROGRESO_QA.md`, `database/README.md`, `CLAUDE.md` y este archivo | — |
 
 Para volver atrás la base real (solo si hiciera falta, borra lo posterior al respaldo):
