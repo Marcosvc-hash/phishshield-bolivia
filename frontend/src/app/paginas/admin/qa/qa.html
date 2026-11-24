@@ -1,0 +1,260 @@
+<div class="pagina-cabecera">
+  <p class="pagina-descripcion">
+    Ejecuta pruebas automatizadas reales contra PhishShield y guarda su evidencia. Los casos se agrupan por
+    tipo de prueba (funcional o no funcional) y por suite. Se corre una ejecución a la vez.
+  </p>
+</div>
+
+<div class="qa-diseno">
+
+  <!-- ============================== Catalogo ============================== -->
+  <section class="tarjeta catalogo" aria-labelledby="titulo-catalogo">
+    <div class="tarjeta-cabecera">
+      <div>
+        <h2 id="titulo-catalogo" class="tarjeta-titulo">Catálogo de casos</h2>
+        <p class="tarjeta-subtitulo">Ejecute una suite completa o marque casos de una misma suite.</p>
+      </div>
+    </div>
+
+    <div class="tarjeta-cuerpo">
+      @if (errorCatalogo()) {
+        <p class="aviso error" role="alert"><app-icono nombre="x-circulo" [tamano]="18" /> {{ errorCatalogo() }}</p>
+      } @else if (cargandoCatalogo()) {
+        <app-skeleton tipo="texto" [cantidad]="6" etiqueta="Cargando el catálogo…" />
+      } @else {
+        @for (tipo of grupos(); track tipo.tipo) {
+          <div class="grupo-tipo">
+            <h3 class="subtitulo-seccion">Pruebas {{ tipo.etiqueta.toLowerCase() }}es</h3>
+            @for (grupo of tipo.suites; track grupo.suite) {
+              <div class="suite" [attr.data-suite]="grupo.suite">
+                <div class="suite-cabecera">
+                  <button type="button" class="suite-plegar" [attr.aria-expanded]="estaDesplegada(grupo.suite)"
+                          [attr.aria-controls]="'casos-' + grupo.suite" (click)="alternarSuite(grupo.suite)">
+                    <app-icono nombre="chevron-abajo" [tamano]="16" class="flecha" />
+                    <span class="suite-nombre">{{ grupo.etiqueta }}</span>
+                    <span class="texto-secundario suite-cuenta">
+                      {{ grupo.casos.length }} caso(s) · {{ grupo.implementados }} programado(s)
+                      @if (marcadosEn(grupo) > 0) { · <strong>{{ marcadosEn(grupo) }} marcado(s)</strong> }
+                    </span>
+                  </button>
+                  <button type="button" class="btn btn-secundario btn-sm" [disabled]="lanzando() || detalle()?.activa"
+                          [attr.aria-label]="'Ejecutar la suite ' + grupo.etiqueta" (click)="ejecutarSuite(grupo)">
+                    <app-icono nombre="actividad" [tamano]="14" />Ejecutar suite
+                  </button>
+                </div>
+                <ul class="casos" [id]="'casos-' + grupo.suite" [hidden]="!estaDesplegada(grupo.suite)">
+                  @for (caso of grupo.casos; track caso.codigo) {
+                    <li>
+                      <label class="caso" [class.marcado]="estaMarcado(caso)">
+                        <input type="checkbox" [checked]="estaMarcado(caso)" (change)="alternar(caso)"
+                               [attr.aria-describedby]="'obj-' + caso.codigo" />
+                        <span class="caso-codigo mono">{{ caso.codigo }}</span>
+                        <span class="caso-nombre">{{ caso.nombre }}</span>
+                        <span class="badge sin-punto herramienta">{{ caso.herramienta.toUpperCase() }}</span>
+                        @if (!caso.implementado) {
+                          <span class="badge badge-alerta sin-punto pendiente-fase" title="Al ejecutarlo queda NOT_RUN">Próxima fase</span>
+                        }
+                      </label>
+                      <p class="sr-only" [id]="'obj-' + caso.codigo">{{ caso.objetivo }}</p>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="lanzador">
+          <div class="campo">
+            <label class="campo-etiqueta" for="qa-correo">Enviar los reportes a (opcional)</label>
+            <input id="qa-correo" type="email" class="entrada" name="correo" [(ngModel)]="correo" maxlength="150"
+                   [placeholder]="auth.usuario()?.email ?? 'nombre@dominio.com'" autocomplete="email" />
+            <p class="campo-ayuda">Si lo deja vacío, se usa su correo.
+              @if (capacidades() && !capacidades()!.correoConfigurado) {
+                El envío por correo no está configurado en el servidor (MAIL_*): los reportes quedan para descargar aquí.
+              }
+            </p>
+          </div>
+          <details class="avanzado">
+            <summary>Parámetros de la ejecución</summary>
+            <div class="campo">
+              <label class="campo-etiqueta" for="qa-parametros">Uno por línea, como <span class="mono">usuarios=10</span></label>
+              <textarea id="qa-parametros" class="entrada mono" rows="3" name="parametros" [(ngModel)]="parametrosTexto"
+                        placeholder="usuarios=10&#10;umbralP95Ms=2000"></textarea>
+              <p class="campo-ayuda">Ajustan las pruebas no funcionales; sin parámetros se usan valores cortos para la demo.</p>
+            </div>
+          </details>
+          <div class="botones">
+            <button type="button" class="btn btn-primario" [disabled]="seleccion().size === 0 || lanzando() || detalle()?.activa"
+                    (click)="ejecutarSeleccion()">
+              @if (lanzando()) { <span class="girador" aria-hidden="true"></span> } @else { <app-icono nombre="actividad" [tamano]="16" /> }
+              Ejecutar selección ({{ seleccion().size }})
+            </button>
+            @if (seleccion().size > 0) {
+              <button type="button" class="btn btn-fantasma" (click)="limpiarSeleccion()">Quitar selección</button>
+            }
+          </div>
+          @if (detalle()?.activa) {
+            <p class="aviso info"><app-icono nombre="info" [tamano]="16" /> Hay una ejecución en curso: espere a que termine para lanzar otra.</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============================== Ejecucion ============================== -->
+  <section class="tarjeta ejecucion" aria-labelledby="titulo-ejecucion" aria-live="polite">
+    @if (detalle(); as e) {
+      <div class="tarjeta-cabecera">
+        <div>
+          <h2 id="titulo-ejecucion" class="tarjeta-titulo">{{ e.suiteEtiqueta }} · {{ e.tipo === 'funcional' ? 'Funcional' : 'No funcional' }}</h2>
+          <p class="tarjeta-subtitulo">
+            {{ e.alcance === 'seleccion' ? 'Casos seleccionados' : 'Suite completa' }} · ambiente {{ e.ambiente }}
+            · {{ e.creadaEn | date: 'dd/MM/yyyy HH:mm:ss' }}
+          </p>
+        </div>
+        <div class="acciones-ejecucion">
+          @if (e.activa) {
+            <button type="button" class="btn btn-peligro btn-sm" [disabled]="deteniendo()" (click)="detener(e)">
+              <app-icono nombre="prohibido" [tamano]="14" />Detener
+            </button>
+          } @else {
+            <button type="button" class="btn btn-secundario btn-sm" [disabled]="descargando() !== null" (click)="descargar(e, 'pdf')">
+              <app-icono nombre="registro" [tamano]="14" />{{ descargando() === 'pdf' ? 'Descargando…' : 'Reporte PDF' }}
+            </button>
+            <button type="button" class="btn btn-secundario btn-sm" [disabled]="descargando() !== null" (click)="descargar(e, 'html')">
+              <app-icono nombre="globo" [tamano]="14" />{{ descargando() === 'html' ? 'Descargando…' : 'Resumen HTML' }}
+            </button>
+            @if (capacidades()?.asistenteDisponible) {
+              <button type="button" class="btn btn-secundario btn-sm resumir-ia" [disabled]="resumiendo()" (click)="resumirConIa(e)">
+                <app-icono nombre="ia" [tamano]="14" />{{ resumiendo() ? 'Pensando…' : 'Resumen con IA' }}
+              </button>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="tarjeta-cuerpo">
+        <div class="estado-ejecucion">
+          <span class="badge" [class]="claseResultado(e.resultadoGlobal, e.estado)">
+            {{ e.activa ? nombreEstado(e.estado) : nombreResultado(e.resultadoGlobal) }}
+          </span>
+          @if (!e.activa) { <span class="badge sin-punto">{{ nombreEstado(e.estado) }}</span> }
+          <span class="texto-secundario">Duración: {{ duracion(e.duracionMs) }}</span>
+          @if (!e.activa) {
+            <span class="texto-secundario linea-correo" [style.color]="e.estadoCorreo === 'error' ? 'var(--peligro)' : null">
+              <app-icono nombre="correo" [tamano]="14" /> {{ textoCorreo(e) }}
+            </span>
+          }
+        </div>
+
+        @if (e.mensajeError) {
+          <p class="aviso"><app-icono nombre="info" [tamano]="16" /> {{ e.mensajeError }}</p>
+        }
+        @if (resumenIa(); as ia) {
+          <div class="aviso info resumen-ia" role="note">
+            <app-icono nombre="ia" [tamano]="16" />
+            <div><strong>Resumen del asistente de IA.</strong> {{ ia.resumen }}<br /><small>{{ ia.aviso }}</small></div>
+          </div>
+        }
+
+        <div class="avance" role="progressbar" aria-label="Avance de la ejecución" aria-valuemin="0" aria-valuemax="100"
+             [attr.aria-valuenow]="progreso()">
+          <div class="avance-relleno" [class.activa]="e.activa" [style.width.%]="progreso()"></div>
+        </div>
+        <p class="texto-secundario avance-texto">{{ e.resumen.terminados }} de {{ e.resumen.total }} casos con resultado
+          · {{ e.resumen.porcentajeExito | number: '1.0-1' }} % de éxito</p>
+
+        <div class="conteos">
+          <div class="conteo pass"><span>PASS</span><strong>{{ e.resumen.pass }}</strong></div>
+          <div class="conteo fail"><span>FAIL</span><strong>{{ e.resumen.fail }}</strong></div>
+          <div class="conteo skipped"><span>SKIPPED</span><strong>{{ e.resumen.skipped }}</strong></div>
+          <div class="conteo not-run"><span>NOT_RUN</span><strong>{{ e.resumen.notRun }}</strong></div>
+        </div>
+
+        <ul class="resultados">
+          @for (r of e.resultados; track r.codigo) {
+            <li class="resultado" [class.abierto]="casoAbierto() === r.codigo">
+              <button type="button" class="resultado-fila" [attr.aria-expanded]="casoAbierto() === r.codigo"
+                      (click)="alternarCaso(r.codigo)">
+                <span class="mono resultado-codigo">{{ r.codigo }}</span>
+                <span class="resultado-nombre">{{ r.nombre }}</span>
+                <span class="badge" [class]="claseEstadoCaso(r.estado)">
+                  @if (e.activa && r.estado === 'not_run' && !r.observacion) { En espera } @else { {{ etiquetaCaso(r.estado) }} }
+                </span>
+                <span class="texto-secundario resultado-duracion">{{ duracion(r.duracionMs) }}</span>
+                <app-icono nombre="chevron-abajo" [tamano]="16" class="flecha" />
+              </button>
+              @if (casoAbierto() === r.codigo) {
+                <app-qa-detalle-caso [resultado]="r" [idEjecucion]="e.id" [asistente]="capacidades()?.asistenteDisponible ?? false" />
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <div class="tarjeta-cuerpo">
+        <h2 id="titulo-ejecucion" class="sr-only">Ejecución</h2>
+        <app-estado-vacio icono="actividad" titulo="Ninguna ejecución abierta"
+                          descripcion="Lance una suite del catálogo o elija una ejecución del historial para ver sus casos, pasos y evidencias." />
+      </div>
+    }
+  </section>
+</div>
+
+<!-- ============================== Historial ============================== -->
+<section class="tarjeta seccion" aria-labelledby="titulo-historial">
+  <div class="tarjeta-cabecera">
+    <h2 id="titulo-historial" class="tarjeta-titulo">Historial de ejecuciones</h2>
+    <button type="button" class="btn btn-icono" aria-label="Actualizar el historial" data-tooltip="Actualizar"
+            (click)="cargarHistorial(historial()?.pagina ?? 0)">
+      <app-icono nombre="refrescar" />
+    </button>
+  </div>
+  @if (cargandoHistorial() && !historial()) {
+    <app-skeleton tipo="tabla" [cantidad]="4" etiqueta="Cargando el historial…" />
+  } @else if (historial(); as h) {
+    @if (h.contenido.length === 0) {
+      <app-estado-vacio icono="historial" titulo="Todavía no hay ejecuciones" descripcion="Cuando lance una suite, aparecerá aquí." />
+    } @else {
+      <div class="tabla-contenedor">
+        <table class="tabla tabla-apilable">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Suite</th>
+              <th scope="col">Resultado</th>
+              <th scope="col" class="numero">PASS</th>
+              <th scope="col" class="numero">FAIL</th>
+              <th scope="col" class="numero col-extra">SKIPPED</th>
+              <th scope="col" class="numero col-extra">NOT_RUN</th>
+              <th scope="col" class="col-extra">Duración</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of h.contenido; track f.id) {
+              <tr class="clicable" tabindex="0" [class.seleccionada]="detalle()?.id === f.id"
+                  [attr.aria-label]="'Abrir la ejecución ' + f.suiteEtiqueta + ' del ' + (f.creadaEn | date: 'dd/MM/yyyy HH:mm')"
+                  (click)="abrir(f)" (keydown.enter)="abrir(f)">
+                <td data-etiqueta="Fecha" class="fecha">{{ f.creadaEn | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td data-etiqueta="Suite">{{ f.suiteEtiqueta }}@if (f.alcance === 'seleccion') { <span class="texto-secundario"> (selección)</span> }</td>
+                <td data-etiqueta="Resultado">
+                  <span class="badge" [class]="claseResultado(f.resultadoGlobal, f.estado)">
+                    {{ f.estado === 'pendiente' || f.estado === 'en_curso' || f.estado === 'fallida' ? nombreEstado(f.estado) : nombreResultado(f.resultadoGlobal) }}
+                  </span>
+                </td>
+                <td data-etiqueta="PASS" class="numero">{{ f.resumen.pass }}</td>
+                <td data-etiqueta="FAIL" class="numero">{{ f.resumen.fail }}</td>
+                <td data-etiqueta="SKIPPED" class="numero col-extra">{{ f.resumen.skipped }}</td>
+                <td data-etiqueta="NOT_RUN" class="numero col-extra">{{ f.resumen.notRun }}</td>
+                <td data-etiqueta="Duración" class="texto-secundario col-extra">{{ duracion(f.duracionMs) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-paginador [pagina]="h.pagina" [totalPaginas]="h.totalPaginas" [tamano]="h.tamano"
+                     [totalElementos]="h.totalElementos" (cambiar)="cargarHistorial($event)" />
+    }
+  }
+</section>

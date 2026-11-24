@@ -73,7 +73,7 @@ public class SeguridadConfig {
                         // Datos de toda la plataforma: solo el ADMIN. Van antes de
                         // /api/admin/** porque Spring usa la primera regla que coincide.
                         .requestMatchers("/api/admin/auditoria/**", "/api/admin/dominios/**",
-                                "/api/admin/entidades/**").hasRole("ADMIN")
+                                "/api/admin/entidades/**", "/api/admin/qa/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "ADMIN_EMPRESA")
 
                         .anyRequest().authenticated())

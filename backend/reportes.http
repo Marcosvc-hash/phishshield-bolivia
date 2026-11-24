@@ -1,0 +1,38 @@
+### Reportes por empresa (HU-17). ADMIN y ADMIN_EMPRESA (USUARIO recibe 403).
+### 1) Ejecute "Login" (auth.http) y copie tokenAcceso aqui abajo (dura 15 minutos).
+### 2) idEmpresa es el "id" de GET /api/empresas (uuid publico). El ADMIN_EMPRESA puede omitirlo:
+###    siempre se usa su empresa, y pedir otra responde 404.
+
+@tokenAcceso = pegar-aqui-el-tokenAcceso
+@idEmpresa = pegar-aqui-el-id-de-una-empresa
+@idReporte = pegar-aqui-el-id-de-un-reporte
+
+### Generar el reporte de un periodo (201). Si ya existe el mismo periodo, se recalcula y conserva su id.
+POST http://localhost:8080/api/admin/reportes
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "idEmpresa": "{{idEmpresa}}",
+  "desde": "2026-11-01",
+  "hasta": "2026-11-24"
+}
+
+### Error: periodo que termina en el futuro o de mas de 366 dias (400)
+POST http://localhost:8080/api/admin/reportes
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "idEmpresa": "{{idEmpresa}}",
+  "desde": "2025-01-01",
+  "hasta": "2026-11-24"
+}
+
+### Reportes generados, del mas reciente al mas antiguo (filtro opcional por empresa)
+GET http://localhost:8080/api/admin/reportes?idEmpresa={{idEmpresa}}&pagina=0&tamano=20
+Authorization: Bearer {{tokenAcceso}}
+
+### PDF de un reporte (404 si es de otra empresa para un ADMIN_EMPRESA)
+GET http://localhost:8080/api/admin/reportes/{{idReporte}}/pdf
+Authorization: Bearer {{tokenAcceso}}

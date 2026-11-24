@@ -36,14 +36,17 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 - `backend/`: Spring Boot 4.1 + Java 25, Maven Wrapper (`mvnw.cmd`).
 - `frontend/`: Angular 22 + TypeScript 6, pruebas con Vitest.
 - `database/`: PostgreSQL 18 en Docker (contenedor `phishshield-db`).
-  - `initdb/01_schema.sql` (15 tablas), `initdb/02_seed.sql` y `initdb/03_vistas_panel_admin.sql`
-    (vistas del panel, igual que V8): solo corren con el volumen vacío.
+  - `initdb/01_schema.sql` (15 tablas), `initdb/02_seed.sql`, `initdb/03_vistas_panel_admin.sql`
+    (vistas del panel, igual que V8) y `initdb/04_qa.sql` (6 tablas `qa_*`, igual que V12): solo
+    corren con el volumen vacío.
+  - V12 se generó desde `04_qa.sql` convirtiendo los textos con tildes a `U&'...'`: si se cambia el
+    catálogo QA, hacerlo en una migración nueva (V13+) y en `04_qa.sql`, con el mismo método.
   - `migraciones/V<n>__*.sql`: cambios para bases que ya existen.
 
 ## Arquitectura hexagonal del backend
 
 Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`,
-`historial`, `alerta`, `listas`, `auditoria` y `shared` (ver `docs/guia-modulo-admin.md`).
+`historial`, `alerta`, `listas`, `auditoria`, `reporte`, `qa` y `shared` (ver `docs/guia-modulo-admin.md`).
 Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
@@ -99,8 +102,36 @@ Otros puntos del diseño:
   - Una empresa desactivada no recibe usuarios nuevos; sus usuarios actuales siguen entrando.
   - `POST /api/analisis` sigue siendo público. Con token, el análisis queda a nombre del
     usuario; los ids del cuerpo se ignoran.
+  - Reportes por empresa (HU-17, vertical `reporte`, `/api/admin/reportes`, pantalla `/admin/reportes`):
+    los totales se calculan desde `analisis`/`alertas` en el período (días en hora de Bolivia,
+    máximo 366, sin fechas futuras). Uno solo por empresa y período: regenerar recalcula
+    (upsert sobre `uq_reportes_periodo`). ADMIN elige la empresa; ADMIN_EMPRESA siempre la suya
+    (otra responde 404). Se audita como `REPORTE_GENERADO`. PDF con OpenPDF.
 - Hash de una contraseña para la base: `backend/herramientas/GenerarHashBcrypt.java` (ver su
   comentario). Lee la contraseña por teclado y no la muestra.
+
+## Centro de Pruebas QA (vertical `qa`)
+
+Bitácora y estado: `docs/qa/PROGRESO_QA.md` (leerla antes de tocar el módulo). Plan, matriz,
+defectos e informe en `docs/qa/`.
+- Pantalla `/admin/qa` y API `/api/admin/qa/**`: solo ADMIN (SeguridadConfig + `AlcanceDatos.soloPlataforma`).
+- Ejecuta pruebas reales con el JUnit Platform Launcher, un caso por vez, en un pool `@Async` de un
+  hilo (`PlanificadorEjecucionAsync`). Una sola ejecución activa (índice único parcial en la base).
+- Los casos viven en `src/main`, en `qa/infrastructure/ejecutor/casos/{api,ui,carga}`, con
+  `@Test @CasoQA("TC-...")`; al agregar una clase se suma a `RegistroCasosQA.CLASES`. Los
+  metadatos (objetivo, datos, esperado) están en `qa_casos`, no en el código.
+- Tipificación: solo **tipo** (funcional / no funcional) y **suite**. Nunca "positivo/negativo".
+- Estados: `AssertionError` → FAIL funcional; sin conexión o `FalloInfraestructuraException`
+  → FAIL de infraestructura; `CasoNoEjecutableException` (falta configuración) → NOT_RUN; otra
+  suposición no cumplida → SKIPPED.
+- La evidencia de API se enmascara (contraseña, tokens, `Authorization`). Las capturas de Playwright
+  van en `qa-evidencias/{id}/capturas/` y los reportes en `qa-evidencias/{id}/` (ignorada por git).
+- Protección: si el backend está conectado a una base que no es `*_qa` ni `prueba_*`, ningún caso
+  corre (salvo `QA_PERMITIR_BASE_REAL=true`). En vivo, siempre contra `phishshield_qa`.
+- Al terminar: PDF detallado (OpenPDF) + HTML resumido; correo opcional con `MAIL_*`; asistente
+  de IA opcional con `ANTHROPIC_API_KEY` (Messages API por HTTP, nunca decide PASS/FAIL).
+- Si se cambia el catálogo (`qa_casos`): migración nueva + `04_qa.sql` (ASCII con `U&'...'`), y
+  `RegistroCasosQATest` revisa que cada `@CasoQA` exista en `04_qa.sql`.
 
 ## Ejecutar
 
@@ -114,6 +145,16 @@ Otros puntos del diseño:
   secreto falso de `src/test/resources/config/application.yaml`. Para levantar el backend en
   una sesión, genérala al azar sin imprimirla:
   `$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $env:JWT_SECRET = [Convert]::ToBase64String($b)`
+
+- **Variables del Centro de Pruebas** (en `backend/.env`, ignorado; ejemplo en `backend/.env.example`;
+  `levantar-backend-qa.ps1` las lee): `QA_BASE_URL`, `QA_FRONTEND_URL`, `QA_TEST_USER`,
+  `QA_TEST_PASSWORD` (si falta alguna, los casos que la necesitan quedan NOT_RUN), `QA_AMBIENTE`,
+  `QA_EVIDENCIAS_DIR`, `QA_PERMITIR_BASE_REAL`. Opcionales: `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`,
+  `MAIL_PASSWORD`, `MAIL_FROM`, `MAIL_STARTTLS` (correo) y `ANTHROPIC_API_KEY`, `QA_IA_MODELO` (asistente).
+  **Nunca mostrar ni commitear `QA_TEST_PASSWORD`, `MAIL_PASSWORD` ni `ANTHROPIC_API_KEY`.**
+- **Cobertura:** `.\mvnw.cmd test` genera `backend/target/site/jacoco/index.html` (JaCoCo).
+- **CI:** `.github/workflows/ci.yml` corre `mvnw test -Dtest='*Test'` (así quedan fuera `contextLoads`
+  y los casos falsos del ejecutor), `npm test`, `npm run build` y `pytest`.
 
 ## Migraciones
 
@@ -138,7 +179,34 @@ Otros puntos del diseño:
   (raíz del repo, ignorado por git; restaurar con `pg_restore`).
 - **V10 y V11 aplicadas en la base real (2026-11-16)**. Antes de V11 se guardó
   `respaldo_antes_v11.dump` (mismo lugar). Sin V11 el backend no arranca (`ddl-auto: validate`).
-- **La base real tiene 13 tablas**, no las 15 de `01_schema.sql` (faltan las de educación).
+- **V12 aplicada en la base real (2026-11-17)**, con respaldo previo en `respaldo_antes_v12.dump`.
+- **La base real tiene 19 tablas**: 13 de `01_schema.sql` (faltan las de educación) + 6 `qa_*`.
+- **Base `phishshield_qa`** (mismo contenedor, creada el 2026-11-17): la usa el Centro de Pruebas QA
+  para no ensuciar la real. Se levanta el backend contra ella con
+  `backend\herramientas\levantar-backend-qa.ps1` (pone `DB_URL`). Cómo recrearla: `database/README.md`.
+  El admin tiene la misma contraseña que en la base real (se copió el hash).
+- La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar (V13 y
+  siguientes también están ocupadas por `feature/qa-automation`).
+- **V13 a V17 aplicadas en la base real y en `phishshield_qa` (2026-11-24)**, con respaldos previos
+  `respaldo_antes_v13.dump`, `_v16` y `_v17` (raíz del repo, ignorados). Todos los `.dump` tienen
+  además una copia en `C:\respaldos-phishshield`.
+- **Una migración que cambie listas debe escribir un `DOMINIO_*` en `auditoria`** (como V16):
+  si no, la caché de 24 h sigue devolviendo análisis calculados con las listas viejas.
+- **Usuario `qa.admin@phishshield.bo`** existe solo en `phishshield_qa` (lo crea
+  `backend\herramientas\crear-usuario-qa.ps1`); su contraseña está en `backend\.env`.
+- **Playwright:** Chromium se descarga una vez (`com.microsoft.playwright.CLI install chromium`) en
+  `%LOCALAPPDATA%\ms-playwright`. Un `Playwright.create()` sin `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
+  descarga además Firefox y WebKit.
+- **Presupuesto de CSS:** Angular avisa si el CSS de un componente pasa de 4 kB; en el Centro de
+  Pruebas se resolvió separando `detalle-caso.ts`, no subiendo el límite.
+- **Defectos** encontrados por el Centro de Pruebas: DEF-002 (el modelo solo no detecta
+  typosquatting) sigue abierto, con plan para el modelo 1.1.0. DEF-001 (BancoSol, V16), DEF-003
+  (evidencia binaria) y DEF-004 (falso positivo de `xangosol.com`, V17) están verificados. Ver
+  `docs/qa/REGISTRO_DEFECTOS.md`; no se corrigen sin aprobación.
+- **`maria.quispe@andina.bo` (ADMIN_EMPRESA)** tiene una contraseña de prueba solo en
+  `phishshield_qa` (2026-11-24); se le dio al usuario en el chat y no está en ningún archivo.
+- **Asistente de IA del Centro de Pruebas:** probado solo con pruebas automáticas; la prueba con la
+  API real sigue pendiente porque no hay `ANTHROPIC_API_KEY`.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
 - **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.

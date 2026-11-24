@@ -67,3 +67,10 @@ pgdata/
 *.log
 logs/
 tmp/
+
+# --- Centro de Pruebas QA ---
+# Evidencias, capturas y reportes que genera cada ejecucion
+qa-evidencias/
+
+# --- Archivos personales que no van al repositorio ---
+Claude outputs/

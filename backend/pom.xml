@@ -28,6 +28,11 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+        <!-- Dependencias del Centro de Pruebas QA que Spring Boot no administra -->
+        <rest-assured.version>6.3.0</rest-assured.version>
+        <openpdf.version>3.0.6</openpdf.version>
+        <playwright.version>1.65.1</playwright.version>
+        <jacoco.version>0.8.16</jacoco.version>
     </properties>
     <dependencies>
         <dependency>
@@ -68,6 +73,40 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Centro de Pruebas QA: los casos se ejecutan en caliente desde src/main,
+             por eso JUnit y Rest Assured van con scope compile (no test).
+             JUnit usa la version que fija Spring Boot, para no chocar con sus pruebas. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${rest-assured.version}</version>
+        </dependency>
+        <!-- Envio de los reportes del Centro de Pruebas por SMTP (opcional, variables MAIL_*) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <!-- Casos de interfaz del Centro de Pruebas (Chromium en modo headless) -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
+        </dependency>
+        <!-- Reporte PDF detallado de cada ejecucion (licencia LGPL / MPL) -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>
@@ -95,6 +134,35 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Cobertura de las pruebas: reporte HTML en target/site/jacoco/index.html
+                 despues de cada mvnw test. Los casos del Centro de Pruebas
+                 (qa/infrastructure/ejecutor/casos) se excluyen: son pruebas que viven
+                 en src/main y se ejecutan contra el sistema levantado, no con Maven. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>bo/phishshield/backend/qa/infrastructure/ejecutor/casos/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>preparar-agente</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>reporte</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

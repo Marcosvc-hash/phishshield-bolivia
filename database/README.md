@@ -29,7 +29,8 @@ docker compose up -d
 ```
 
 Eso es todo. En la primera ejecución Docker descarga la imagen, crea la base
-`phishshield` y ejecuta en orden `initdb/01_schema.sql` y `initdb/02_seed.sql`.
+`phishshield` y ejecuta en orden `initdb/01_schema.sql`, `02_seed.sql`,
+`03_vistas_panel_admin.sql` y `04_qa.sql` (Centro de Pruebas QA).
 
 Comprobá que arrancó bien:
 
@@ -161,6 +162,12 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V9__uuid_alertas_y_dominios.sql` | Agrega `uuid_publico` (con índice único) a `alertas` y `dominios_lista`, para que la gestión de alertas y de listas no exponga el BIGINT interno. Cada fila existente recibe un uuid distinto; no borra datos. **El módulo de administración la necesita**: sin ella, las páginas de alertas y de listas de dominios responden error |
 | `V10__desactivar_modelos_de_ejemplo.sql` | Pone `activo = FALSE` en las filas de ejemplo de `modelos_ia` (`phishshield-url` y `phishshield-texto`), que no tienen un modelo real detrás. El único modelo activo queda `phishshield-url-ia` 1.0.0. No borra filas ni cambia métricas |
 | `V11__calculado_en_analisis.sql` | Agrega a `analisis` la columna `calculado_en` (admite NULL) y la restricción `chk_analisis_calculado_en`. Cuando otro usuario u otra empresa analiza una URL que está en la caché, se guarda una fila a su nombre con los indicadores copiados; `calculado_en` guarda cuándo se calcularon, para que la copia no renueve la vigencia de 24 h. Las filas existentes quedan en NULL; no borra datos. **El backend la necesita**: sin ella no arranca |
+| `V12__modulo_qa.sql` | Crea las 6 tablas del Centro de Pruebas QA (`qa_casos`, `qa_ejecuciones`, `qa_resultados`, `qa_pasos`, `qa_metricas`, `qa_lote_robustez`) y carga el catálogo de 27 casos y el lote de 80 URL etiquetadas. No toca tablas ni filas existentes. Mismo contenido que `initdb/04_qa.sql`; los textos con tildes van como `U&'...'` para que el archivo quede en ASCII. **El backend con el módulo QA la necesita** |
+| `V13__ruta_catalogo_qa.sql` | Corrige los datos de prueba de `TC-REG-008` en `qa_casos`: la ruta del catálogo es `GET /api/admin/qa/casos`. Solo cambia ese texto; no crea ni borra filas. En bases nuevas ya viene corregido en `initdb/04_qa.sql` |
+| `V14__uuid_reportes.sql` | Agrega `uuid_publico` (con índice único) a `reportes`, para que la HU-17 (reportes por empresa) no exponga el BIGINT interno. Cada fila existente recibe un uuid distinto; no borra datos. **El módulo de reportes la necesita**. En bases nuevas ya viene en `initdb/01_schema.sql` |
+| `V15__caso_qa_reportes.sql` | Agrega al catálogo QA el caso `TC-REG-009` (reporte de una empresa por API) y actualiza el objetivo de `TC-E2E-001`. No borra filas. En bases nuevas ya viene en `initdb/04_qa.sql` |
+| `V16__entidad_bancosol.sql` | Corrige **DEF-001**: agrega BancoSol a `entidades_suplantadas` (dominio oficial `bancosol.com.bo`, tipo `banco`) y su dominio a la lista blanca, y registra un `DOMINIO_AGREGADO` en `auditoria` para que la caché de análisis no devuelva resultados anteriores. Así `URL_TYPOSQUATTING` detecta `bancosoI.com.bo`. No borra filas. En bases nuevas ya viene en `initdb/02_seed.sql` |
+| `V17__lista_blanca_xangosol.sql` | Corrige **DEF-004**: agrega `xangosol.com` a la lista blanca (sitio legítimo que desde V16 sumaba 45 puntos por parecerse a "bancosol") y registra un `DOMINIO_AGREGADO` en `auditoria`. No borra filas. En bases nuevas ya viene en `initdb/02_seed.sql` |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -176,6 +183,12 @@ Get-Content database\migraciones\V8__vistas_panel_admin.sql | docker exec -i phi
 Get-Content database\migraciones\V9__uuid_alertas_y_dominios.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V10__desactivar_modelos_de_ejemplo.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V11__calculado_en_analisis.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V12__modulo_qa.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V13__ruta_catalogo_qa.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V14__uuid_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V15__caso_qa_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V16__entidad_bancosol.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V17__lista_blanca_xangosol.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 ```
 
 ```bash
@@ -190,7 +203,43 @@ docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STO
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V9__uuid_alertas_y_dominios.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V10__desactivar_modelos_de_ejemplo.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V11__calculado_en_analisis.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V12__modulo_qa.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V13__ruta_catalogo_qa.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V14__uuid_reportes.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V15__caso_qa_reportes.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V16__entidad_bancosol.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V17__lista_blanca_xangosol.sql
 ```
+
+### Base de pruebas `phishshield_qa`
+
+El Centro de Pruebas QA ejecuta pruebas reales contra PhishShield: cada ejecución
+crea análisis, alertas, empresas y filas de auditoría, y las pruebas de carga pueden
+crear miles. Para no ensuciar la base real, la demo usa otra base, `phishshield_qa`,
+en el mismo contenedor. Tiene la misma configuración de detección que la real
+(reglas, listas, entidades y modelos), y el admin entra con la misma contraseña que
+en la base real.
+
+Para levantar el backend contra ella: `backend/herramientas/levantar-backend-qa.ps1`.
+
+Para recrearla desde cero (Git Bash, desde la raíz del repositorio; **solo afecta a
+`phishshield_qa`**):
+
+```bash
+export MSYS_NO_PATHCONV=1
+docker exec phishshield-db dropdb -U phishshield --if-exists phishshield_qa
+docker exec phishshield-db createdb -U phishshield phishshield_qa
+for f in database/initdb/0*.sql $(ls database/migraciones/V*.sql | sort -V); do
+  docker exec -i phishshield-db psql -U phishshield -d phishshield_qa -q -v ON_ERROR_STOP=1 --single-transaction < "$f" || break
+done
+# Copia la contraseña del admin de la base real (sin mostrar el hash)
+docker exec phishshield-db psql -U phishshield -d phishshield -Atc "SELECT format('UPDATE usuarios SET password_hash = %L WHERE email = %L;', password_hash, email) FROM usuarios WHERE email = 'admin@phishshield.bo'" | docker exec -i phishshield-db psql -U phishshield -d phishshield_qa -q
+```
+
+Los casos del Centro de Pruebas inician sesión con un administrador propio,
+`qa.admin@phishshield.bo`, que existe **solo en `phishshield_qa`**. Para crearlo (o
+cambiarle la contraseña) y dejar sus datos en `backend/.env`:
+`backend/herramientas/crear-usuario-qa.ps1`. La contraseña es aleatoria y no se muestra.
 
 Si una migración falta, el backend lo avisa al arrancar con un `WARN` del tipo
 "La regla URL_... existe en Java pero no en reglas_deteccion".
@@ -229,6 +278,7 @@ cat backup.sql | docker exec -i phishshield-db psql -U phishshield -d phishshiel
 | Operación | `analisis`, `analisis_indicadores`, `alertas`, `feedback_analisis` |
 | Educación | `lecciones`, `progreso_lecciones` |
 | Dashboard y trazabilidad | `reportes`, `auditoria` |
+| Centro de Pruebas QA (`04_qa.sql` / V12) | `qa_casos`, `qa_ejecuciones`, `qa_resultados`, `qa_pasos`, `qa_metricas`, `qa_lote_robustez` |
 
 Relaciones principales:
 

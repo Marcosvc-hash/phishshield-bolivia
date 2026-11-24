@@ -22,7 +22,9 @@ public enum AccionAuditoria {
     EMPRESA_CREADA,
     EMPRESA_EDITADA,
     EMPRESA_ACTIVADA,
-    EMPRESA_DESACTIVADA;
+    EMPRESA_DESACTIVADA,
+
+    REPORTE_GENERADO;
 
     /**
      * Los cambios en las listas blanca y negra hacen que el motor deje de
