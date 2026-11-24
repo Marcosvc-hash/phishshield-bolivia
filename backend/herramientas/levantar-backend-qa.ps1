@@ -57,7 +57,7 @@ $env:DB_URL = 'jdbc:postgresql://localhost:5432/phishshield_qa'
 # Resumen sin valores
 Write-Host ''
 Write-Host 'Base de datos : phishshield_qa'
-foreach ($nombre in 'DB_PASSWORD', 'JWT_SECRET', 'QA_TEST_USER', 'QA_TEST_PASSWORD', 'MAIL_HOST', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD') {
+foreach ($nombre in 'DB_PASSWORD', 'JWT_SECRET', 'QA_BASE_URL', 'QA_FRONTEND_URL', 'QA_TEST_USER', 'QA_TEST_PASSWORD', 'MAIL_HOST', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD') {
     $definida = if ([Environment]::GetEnvironmentVariable($nombre)) { 'definida' } else { 'NO definida' }
     Write-Host ('{0,-14}: {1}' -f $nombre, $definida)
 }

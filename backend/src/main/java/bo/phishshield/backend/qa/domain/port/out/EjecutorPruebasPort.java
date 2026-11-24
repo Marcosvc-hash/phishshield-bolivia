@@ -1,7 +1,9 @@
 package bo.phishshield.backend.qa.domain.port.out;
 
+import bo.phishshield.backend.qa.domain.model.FinEjecucion;
 import bo.phishshield.backend.qa.domain.model.PlanEjecucion;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,12 +20,19 @@ public interface EjecutorPruebasPort {
      * metodo solo lanza una excepcion si el motor de pruebas mismo no pudo
      * funcionar; en ese caso los casos que no alcanzaron a correr se quedan
      * sin desenlace (NOT_RUN).
+     *
+     * @return COMPLETA si se recorrio todo el plan; DETENIDA si alguien pidio
+     *         detenerla y quedaron casos sin correr
      */
-    void ejecutar(PlanEjecucion plan, OyenteEjecucion oyente);
+    FinEjecucion ejecutar(PlanEjecucion plan, OyenteEjecucion oyente);
 
     /**
      * Pide detener la ejecucion indicada. Los casos que todavia no empezaron
-     * no se ejecutan. Devuelve false si esa ejecucion no esta corriendo.
+     * no se ejecutan; el que esta corriendo termina normalmente.
+     * Devuelve false si esa ejecucion no esta corriendo ahora.
      */
     boolean detener(UUID idEjecucion);
+
+    /** Codigos que tienen una prueba programada; los demas quedan NOT_RUN. */
+    Set<String> codigosImplementados();
 }

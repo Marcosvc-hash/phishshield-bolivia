@@ -7,8 +7,15 @@ import bo.phishshield.backend.qa.domain.model.DesenlaceCaso;
  * el caso de uso, que guarda cada resultado apenas llega: asi la pantalla
  * muestra el avance y, si el backend se cae, lo ya ejecutado no se pierde.
  */
-@FunctionalInterface
 public interface OyenteEjecucion {
 
+    /** El caso corrio y termino en PASS, FAIL o SKIPPED. */
     void casoTerminado(DesenlaceCaso desenlace);
+
+    /**
+     * El caso no se pudo ejecutar y queda en NOT_RUN, por ejemplo porque falta
+     * una variable de entorno, porque se implementa en una fase posterior o
+     * porque la ejecucion se detuvo antes de llegar a el.
+     */
+    void casoNoEjecutado(String codigo, String motivo);
 }

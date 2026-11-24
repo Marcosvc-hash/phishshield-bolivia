@@ -82,7 +82,7 @@ class SeguridadRutasTest {
     void el_admin_de_empresa_no_entra_a_las_rutas_de_plataforma() throws Exception {
         String token = tokenDe(Rol.ADMIN_EMPRESA);
         for (String ruta : List.of("/api/admin/auditoria", "/api/admin/auditoria/acciones",
-                "/api/admin/dominios", "/api/admin/entidades")) {
+                "/api/admin/dominios", "/api/admin/entidades", "/api/admin/qa/casos", "/api/admin/qa/ejecuciones")) {
             mvc.perform(get(ruta).header("Authorization", "Bearer " + token))
                     .andExpect(status().isForbidden());
         }

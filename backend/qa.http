@@ -1,0 +1,71 @@
+### Centro de Pruebas QA (IntelliJ HTTP Client). Todas las rutas son solo para ADMIN.
+### El backend debe estar levantado contra phishshield_qa:
+###   herramientas\levantar-backend-qa.ps1
+### 1) Ejecute "Login" (auth.http) con un ADMIN y copie tokenAcceso aqui abajo.
+### 2) El token dura 15 minutos.
+### Una sola ejecucion activa a la vez: lanzar otra mientras corre responde 409.
+
+@tokenAcceso = pegar-aqui-el-tokenAcceso
+@idEjecucion = pegar-aqui-el-id-de-una-ejecucion
+
+### Catalogo: los 27 casos con tipo, suite, herramienta e "implementado"
+GET http://localhost:8080/api/admin/qa/casos
+Authorization: Bearer {{tokenAcceso}}
+
+### Lanzar una suite completa (202 Accepted; la ejecucion queda "pendiente" y corre sola)
+### Suites: smoke, sanity, regression, integration, e2e, performance, estres, soak, robustez_ia
+POST http://localhost:8080/api/admin/qa/ejecuciones
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "suite": "smoke"
+}
+
+### Lanzar casos sueltos (todos de la misma suite) con otro destinatario para los reportes
+POST http://localhost:8080/api/admin/qa/ejecuciones
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "codigos": ["TC-SAN-001", "TC-SAN-003"],
+  "correo": "docente@ejemplo.bo"
+}
+
+### Lanzar una suite no funcional con parametros (ver docs/qa/PROGRESO_QA.md)
+POST http://localhost:8080/api/admin/qa/ejecuciones
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "suite": "performance",
+  "parametros": {
+    "usuarios": "10",
+    "peticionesPorUsuario": "5",
+    "umbralP95Ms": "2000"
+  }
+}
+
+### Error: casos de dos suites distintas (400)
+POST http://localhost:8080/api/admin/qa/ejecuciones
+Authorization: Bearer {{tokenAcceso}}
+Content-Type: application/json
+
+{
+  "codigos": ["TC-SMK-001", "TC-SAN-001"]
+}
+
+### Historial paginado (de la mas reciente a la mas antigua)
+GET http://localhost:8080/api/admin/qa/ejecuciones?pagina=0&tamano=10
+Authorization: Bearer {{tokenAcceso}}
+
+### Detalle con casos, pasos (evidencia) y metricas. Mientras "activa" sea true, consultar cada 2 s.
+GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}
+Authorization: Bearer {{tokenAcceso}}
+
+### Detener: el caso que esta corriendo termina; los demas quedan NOT_RUN (409 si ya termino)
+POST http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/detener
+Authorization: Bearer {{tokenAcceso}}
+
+### Sin token: 401
+GET http://localhost:8080/api/admin/qa/casos

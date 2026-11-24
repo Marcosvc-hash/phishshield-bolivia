@@ -342,7 +342,7 @@ INSERT INTO qa_casos (codigo, tipo, suite, herramienta, orden, nombre, objetivo,
  'Las rutas administrativas sin token devuelven 401',
  'Comprobar que las rutas de administración no responden datos sin sesión.',
  'Backend levantado en QA_BASE_URL.',
- 'GET /api/empresas, GET /api/admin/panel y GET /api/admin/qa/catalogo sin el encabezado Authorization.',
+ 'GET /api/empresas, GET /api/admin/panel y GET /api/admin/qa/casos sin el encabezado Authorization.',
  'HTTP 401 en las tres rutas.'),
 
 -- Integration

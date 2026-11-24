@@ -152,6 +152,24 @@ public class Ejecucion {
                 .registrar(desenlace);
     }
 
+    /**
+     * El ejecutor avisa que un caso no pudo correr (falta configuracion, se
+     * implementa en una fase posterior, se detuvo la ejecucion): queda en
+     * NOT_RUN con el motivo. Solo con la ejecucion en curso.
+     */
+    public void anotarNoEjecutado(String codigo, String motivo) {
+        if (estado != EstadoEjecucion.EN_CURSO) {
+            throw new TransicionEjecucionInvalidaException(
+                    "Solo se anotan casos no ejecutados con la ejecución en curso (está " + estado + ")");
+        }
+        resultados.stream()
+                .filter(r -> r.getCodigo().equals(codigo))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El caso " + codigo + " no forma parte de esta ejecución"))
+                .anotarNoEjecutado(motivo);
+    }
+
     /** Todos los casos corrieron (o se omitieron): se calcula el resultado global. */
     public void finalizar(OffsetDateTime ahora) {
         pasarA(EstadoEjecucion.FINALIZADA);
@@ -167,7 +185,10 @@ public class Ejecucion {
         pasarA(EstadoEjecucion.FALLIDA);
         this.fin = noAntesDelInicio(ahora);
         this.mensajeError = Textos.mensaje(motivo == null ? "La ejecución terminó sin completar" : motivo);
-        resultados.forEach(r -> r.anotarNoEjecutado("No se ejecutó: " + this.mensajeError));
+        // Un caso que ya tiene su propio motivo (por ejemplo, "falta QA_TEST_USER") lo conserva
+        resultados.stream()
+                .filter(r -> r.getObservacion() == null)
+                .forEach(r -> r.anotarNoEjecutado("No se ejecutó: " + this.mensajeError));
     }
 
     private void pasarA(EstadoEjecucion destino) {

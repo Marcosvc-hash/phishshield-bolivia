@@ -33,3 +33,16 @@ phishshield:
     secreto: ${JWT_SECRET}
     duracion-acceso: 15m
     duracion-refresco: 7d
+  qa:
+    # Centro de Pruebas QA (/admin/qa). Sin QA_BASE_URL, QA_TEST_USER o
+    # QA_TEST_PASSWORD los casos que los necesitan quedan NOT_RUN con el motivo.
+    # La contrasena nunca se escribe en la evidencia ni en el log.
+    base-url: ${QA_BASE_URL:}
+    frontend-url: ${QA_FRONTEND_URL:}
+    usuario: ${QA_TEST_USER:}
+    contrasena: ${QA_TEST_PASSWORD:}
+    # Evidencias y reportes de cada ejecucion (ignorada por git)
+    carpeta-evidencias: ${QA_EVIDENCIAS_DIR:qa-evidencias}
+    ambiente: ${QA_AMBIENTE:local}
+    # Las pruebas crean datos: solo corren contra una base *_qa o prueba_*
+    permitir-base-real: ${QA_PERMITIR_BASE_REAL:false}
