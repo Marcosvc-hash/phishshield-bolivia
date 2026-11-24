@@ -16,6 +16,7 @@ import bo.phishshield.backend.qa.domain.port.out.EjecucionRepositoryPort;
 import bo.phishshield.backend.qa.domain.port.out.EjecutorPruebasPort;
 import bo.phishshield.backend.qa.domain.port.out.EvidenciasPort;
 import bo.phishshield.backend.qa.domain.port.out.GeneradorReportePort;
+import bo.phishshield.backend.qa.domain.port.out.LoteRobustezPort;
 import bo.phishshield.backend.qa.domain.port.out.PlanificadorEjecucionPort;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.JUnitEjecutorPruebasAdapter;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.RegistroCasosQA;
@@ -73,8 +74,9 @@ public class QaConfig {
     @Bean
     public EjecutorPruebasPort ejecutorPruebas(RegistroCasosQA registro, QaPropiedades propiedades,
                                                @Value("${phishshield.ia.url:}") String iaUrl,
-                                               @Value("${spring.datasource.url:}") String urlBaseDatos) {
-        return new JUnitEjecutorPruebasAdapter(registro, propiedades, iaUrl, urlBaseDatos, RELOJ);
+                                               @Value("${spring.datasource.url:}") String urlBaseDatos,
+                                               LoteRobustezPort lote) {
+        return new JUnitEjecutorPruebasAdapter(registro, propiedades, iaUrl, urlBaseDatos, RELOJ, lote);
     }
 
     @Bean

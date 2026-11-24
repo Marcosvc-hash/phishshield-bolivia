@@ -5,6 +5,7 @@ import bo.phishshield.backend.qa.domain.model.FinEjecucion;
 import bo.phishshield.backend.qa.domain.model.PlanEjecucion;
 import bo.phishshield.backend.qa.domain.model.TipoFallo;
 import bo.phishshield.backend.qa.domain.port.out.EjecutorPruebasPort;
+import bo.phishshield.backend.qa.domain.port.out.LoteRobustezPort;
 import bo.phishshield.backend.qa.domain.port.out.OyenteEjecucion;
 import bo.phishshield.backend.qa.infrastructure.config.QaPropiedades;
 import bo.phishshield.backend.qa.infrastructure.reporte.CarpetaEvidencias;
@@ -26,6 +27,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -63,8 +65,16 @@ public class JUnitEjecutorPruebasAdapter implements EjecutorPruebasPort {
     private final Set<UUID> detenciones = ConcurrentHashMap.newKeySet();
     private volatile UUID enCurso;
 
+    private final LoteRobustezPort lote;
+
     public JUnitEjecutorPruebasAdapter(RegistroCasosQA registro, QaPropiedades propiedades, String iaUrl,
                                        String urlBaseDatos, Clock reloj) {
+        this(registro, propiedades, iaUrl, urlBaseDatos, reloj, List::of);
+    }
+
+    public JUnitEjecutorPruebasAdapter(RegistroCasosQA registro, QaPropiedades propiedades, String iaUrl,
+                                       String urlBaseDatos, Clock reloj, LoteRobustezPort lote) {
+        this.lote = lote;
         this.registro = registro;
         this.propiedades = propiedades;
         this.iaUrl = iaUrl;
@@ -76,7 +86,7 @@ public class JUnitEjecutorPruebasAdapter implements EjecutorPruebasPort {
     public FinEjecucion ejecutar(PlanEjecucion plan, OyenteEjecucion oyente) {
         UUID id = plan.idEjecucion();
         enCurso = id;
-        SesionEjecucion sesion = new SesionEjecucion(plan, entorno(), reloj);
+        SesionEjecucion sesion = new SesionEjecucion(plan, entorno(), reloj, lote, () -> detenciones.contains(id));
         SesionEjecucion.Registro.agregar(sesion);
         try {
             String bloqueo = motivoBloqueoBaseReal();

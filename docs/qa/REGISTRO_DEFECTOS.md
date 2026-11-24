@@ -15,6 +15,7 @@ dar PASS en una ejecución posterior). También **Rechazado** (no era un defecto
 | Id | Caso | Severidad | Estado | Resumen |
 |---|---|---|---|---|
 | DEF-001 | TC-SAN-003 | Alta | Abierto | El typosquatting de BancoSol no se detecta: `bancosoI.com.bo` sale "seguro" |
+| DEF-002 | TC-ROB-002 | Media | Abierto | El modelo de IA por sí solo no alcanza el recall mínimo (0,78 < 0,80): no reconoce typosquatting |
 
 ---
 
@@ -51,3 +52,42 @@ Entel, Segip y Ende), así que no tiene contra qué medir la distancia de `banco
 BancoSol (`bancosol.com.bo`, tipo `banco`) a `entidades_suplantadas` y su dominio a la
 lista blanca, más la misma fila en `02_seed.sql`. Después, volver a ejecutar la suite
 Sanity: TC-SAN-003 debería dar PASS y el defecto pasaría a *Verificado*.
+
+---
+
+## DEF-002 — El modelo de IA por sí solo no alcanza el recall mínimo
+
+| Campo | Valor |
+|---|---|
+| Caso que lo encontró | TC-ROB-002 (suite Robustez del modelo IA, tipo no funcional) |
+| Encontrado | 2026-11-24, ejecución de la suite Robustez IA contra `phishshield_qa` |
+| Severidad | Media: el modelo es un componente del motor; el sistema completo (TC-ROB-001) sí cumple porque las reglas compensan |
+| Estado | Abierto |
+| Componente | Servicio de IA (`ia/`, modelo `phishshield-url-ia` 1.0.0) |
+
+**Pasos para reproducirlo**
+
+1. Levantar el servicio de IA (`ia\.venv\Scripts\python.exe -m uvicorn servicio:app --port 8000`).
+2. Ejecutar la suite *Robustez del modelo IA* desde el Centro de Pruebas (o enviar cada URL de
+   `qa_lote_robustez` a `POST /predecir`).
+3. Revisar la matriz de confusión de TC-ROB-002.
+
+**Resultado esperado:** precisión y recall de 0,80 o más sobre las 80 URL del lote boliviano
+(18 de phishing, 62 legítimas).
+
+**Resultado obtenido:** precisión **0,8235**, recall **0,7778** (VP 14, FP 3, VN 59, FN 4), F1 0,80.
+
+- Phishing no detectado (todos de la categoría *typosquatting*, 1 de 5 acertados):
+  `bancounlon.com.bo` (p = 0,36), `www.bmcs.com.bo` (0,37), `blsa.com/banca` (0,19),
+  `entel-bo.com/recarga` (0,20). El umbral del modelo es 0,5527.
+- Legítimas marcadas como phishing: las tres URL de `bg.com.bo` (Banco Ganadero, p = 0,63).
+
+**Causa probable:** el modelo solo mira caracteres del host (ver `ia/FICHA_MODELO.md`); un
+typosquatting de una letra se parece demasiado al dominio real para que lo distinga, y el
+dominio corto `bg.com.bo` se parece a los patrones de phishing del dataset de entrenamiento.
+En el sistema completo, la regla `URL_TYPOSQUATTING` y la lista blanca cubren estos casos
+(TC-ROB-001: precisión y recall 1,0).
+
+**Corrección propuesta:** reentrenar con ejemplos de typosquatting de marcas bolivianas o
+agregar al modelo una característica de distancia a los dominios oficiales; mientras tanto,
+documentar en la ficha del modelo que no debe usarse sin las reglas.

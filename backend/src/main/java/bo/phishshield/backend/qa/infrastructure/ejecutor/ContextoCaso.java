@@ -1,6 +1,7 @@
 package bo.phishshield.backend.qa.infrastructure.ejecutor;
 
 import bo.phishshield.backend.qa.domain.model.MetricaRendimiento;
+import bo.phishshield.backend.qa.domain.model.UrlEtiquetada;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -51,6 +52,16 @@ public final class ContextoCaso {
 
     public ClienteApiQA api() {
         return api;
+    }
+
+    /** Lote etiquetado de qa_lote_robustez (activas y aprobadas). */
+    public List<UrlEtiquetada> loteRobustez() {
+        return sesion.lote().listarActivasAprobadas();
+    }
+
+    /** true si se pidio detener la ejecucion: las pruebas largas (soak) lo consultan para cortar. */
+    public boolean detenida() {
+        return sesion.detenida();
     }
 
     public Path carpetaEvidencias() {

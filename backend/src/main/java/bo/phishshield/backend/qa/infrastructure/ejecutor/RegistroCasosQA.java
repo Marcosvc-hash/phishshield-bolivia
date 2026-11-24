@@ -4,6 +4,8 @@ import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosIntegrat
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosRegressionApi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosSanityApi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosSmokeApi;
+import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.carga.CasosCarga;
+import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.carga.CasosRobustez;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosE2eUi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosRegressionUi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosSmokeUi;
@@ -33,7 +35,9 @@ public final class RegistroCasosQA {
             CasosIntegrationApi.class,
             CasosSmokeUi.class,
             CasosRegressionUi.class,
-            CasosE2eUi.class);
+            CasosE2eUi.class,
+            CasosCarga.class,
+            CasosRobustez.class);
 
     private final Map<String, Method> metodos;
 

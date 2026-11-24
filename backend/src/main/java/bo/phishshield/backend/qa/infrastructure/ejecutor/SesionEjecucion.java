@@ -1,6 +1,7 @@
 package bo.phishshield.backend.qa.infrastructure.ejecutor;
 
 import bo.phishshield.backend.qa.domain.model.PlanEjecucion;
+import bo.phishshield.backend.qa.domain.port.out.LoteRobustezPort;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Playwright;
@@ -8,9 +9,11 @@ import com.microsoft.playwright.PlaywrightException;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 
 /**
  * Estado compartido por los casos de una misma ejecucion: el plan, el
@@ -36,10 +39,29 @@ public final class SesionEjecucion {
     private Browser navegador;
     private NavegadorQA navegadorCaso;
 
+    private final LoteRobustezPort lote;
+    private final BooleanSupplier detenida;
+
     public SesionEjecucion(PlanEjecucion plan, EntornoQA entorno, Clock reloj) {
+        this(plan, entorno, reloj, List::of, () -> false);
+    }
+
+    public SesionEjecucion(PlanEjecucion plan, EntornoQA entorno, Clock reloj,
+                           LoteRobustezPort lote, BooleanSupplier detenida) {
         this.plan = plan;
         this.entorno = entorno;
         this.reloj = reloj;
+        this.lote = lote;
+        this.detenida = detenida;
+    }
+
+    LoteRobustezPort lote() {
+        return lote;
+    }
+
+    /** true si alguien pidio detener esta ejecucion (las pruebas largas lo consultan). */
+    boolean detenida() {
+        return detenida.getAsBoolean();
     }
 
     public UUID idEjecucion() {

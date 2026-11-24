@@ -17,8 +17,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | 2 | Motor de ejecución y 14 casos de API | Hecha (5a67d2b) |
 | 3 | Reportes PDF y HTML | Hecha (c7736b7) |
 | 4 | Pantalla "Centro de Pruebas" en Angular | Hecha (f0b2001) |
-| 5 | 7 casos de interfaz con Playwright | **Hecha** |
-| 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Pendiente |
+| 5 | 7 casos de interfaz con Playwright | Hecha (0e9f02a) |
+| 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | **Hecha** |
 | 7 | Correo y asistente de IA (opcionales) | Pendiente |
 | 8 | CI, JaCoCo y documentación TQA | Pendiente |
 | 9 | HU-17 Reportes por empresa | Pendiente |
@@ -230,10 +230,69 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
 - Las capturas de página completa pesan (100-400 KB cada una): el PDF de una ejecución E2E ronda
   1,3 MB. Es aceptable para la demo.
 
+## Fase 6 — Pruebas no funcionales (2026-11-24)
+
+**Qué se hizo**
+
+- Dominio: `EstadisticasLatencia` (p50/p95/p99 por rango más cercano, media, máxima,
+  throughput y tasa de error), `MatrizConfusion` (VP/FP/VN/FN, precisión, recall, F1,
+  exactitud), `UrlEtiquetada` y el puerto `LoteRobustezPort` (adaptador `LoteRobustezJdbcAdapter`).
+- `carga/GeneradorCarga`: generador propio con `java.net.http.HttpClient` e hilos virtuales; dos
+  modos: cantidad fija por usuario y carga constante por tiempo (con pausa y corte si se detiene
+  la ejecución). `carga/ClienteJson` recorre el lote sin llenar la evidencia.
+- `CasosCarga`: TC-PERF-001 (URL nuevas, motor completo), TC-PERF-002 (5 URL repetidas desde la
+  caché), TC-STR-001 (escalones; se detiene en el primero que se degrada y luego comprueba la
+  recuperación con una petición normal) y TC-SOAK-001 (carga constante; compara el p95 del primer
+  y del último cuarto del tiempo, con piso de 20 ms). Antes de cargar, una petición de
+  calentamiento: si el backend no responde, FAIL de infraestructura.
+- `CasosRobustez`: TC-ROB-001 (sistema completo por la API; detectada = sospechoso o phishing) y
+  TC-ROB-002 (solo el modelo, `POST {IA_URL}/predecir`; detectada = `es_phishing`). Registran la
+  matriz y los aciertos por categoría, y listan el phishing no detectado y las falsas alarmas.
+- Parámetros (todos opcionales, en "Parámetros de la ejecución"):
+
+| Parámetro | Por defecto | Casos |
+|---|---|---|
+| `usuarios` | 20 (soak: 5) | PERF, SOAK |
+| `peticionesPorUsuario` | 5 | PERF, STR |
+| `umbralP95Ms` | 2000 | PERF, STR |
+| `umbralErrorPct` | 1 | PERF, SOAK |
+| `escalones` | 10,20,40,80 | STR |
+| `umbralErrorEstresPct` | 5 | STR |
+| `minutos` | 2 (máximo 30) | SOAK |
+| `pausaMs` | 200 | SOAK |
+| `umbralPrecision` / `umbralRecall` | 0,80 | ROB |
+
+- Las URL de carga llevan la marca de la ejecución y usan https sin ruta sensible: el aporte de la
+  IA no llega a 40 puntos y los análisis salen seguros (comprobado: 858 análisis de carga, todos
+  seguros, **ninguna alerta**). La caché (PERF-002) no crea filas nuevas.
+- Pruebas: `MetricasNoFuncionalesTest` (6), `GeneradorCargaTest` (4, contra un servidor HTTP local
+  del JDK) y `RegistroCasosQATest` ahora exige los 27 casos programados.
+
+**Verificación real (2026-11-24, contra `phishshield_qa`, valores por defecto)**
+
+| Caso | Resultado | Métricas principales |
+|---|---|---|
+| TC-PERF-001 | PASS | 100 peticiones; p50 420 ms, p95 961 ms, p99 1122 ms; 40,8 pet/s; 0 % error |
+| TC-PERF-002 | PASS | 100 peticiones; p50 68 ms, p95 114 ms; 286,5 pet/s; 0 % error |
+| TC-STR-001 | PASS | p95 por escalón: 10 → 302 ms, 20 → 629 ms, 40 → 1632 ms, 80 → **2370 ms** (se degrada en el escalón 4); throughput estable en ~45 pet/s; recuperación 42 ms |
+| TC-SOAK-001 | PASS | 2 min, 1945 peticiones, 16,2 pet/s, 0 % error; p95 130 → 136 ms (+4,6 %) |
+| TC-ROB-001 | PASS | precisión 1,0, recall 1,0 (VP 18, FP 0, VN 62, FN 0) |
+| TC-ROB-002 | **FAIL** (funcional) | precisión 0,8235, recall **0,7778** (VP 14, FP 3, VN 59, FN 4) → **DEF-002** |
+
+- Lectura: el techo de ~45 pet/s con URL nuevas (contra ~286 pet/s desde la caché) indica que el
+  cuello de botella es el cálculo completo (consulta al servicio de IA de un solo proceso y
+  escritura en la base), no la red ni Tomcat.
+- Al cerrar la fase: backend 346 pruebas en verde, frontend 107, IA 24; regla 4 sin coincidencias.
+
+**Limitaciones a tener en cuenta (van al plan de pruebas)**
+
+- El generador de carga corre dentro del mismo backend que se prueba (comparten CPU): sirve para
+  comparar entre ejecuciones y detectar degradación, no como medida absoluta de capacidad.
+- TC-ROB-001 da 1,0 en parte porque las reglas y la lista blanca se ajustaron mirando este mismo
+  lote boliviano: es una medida optimista; hace falta un lote nuevo para medir generalización.
+
 ## Cómo continuar
 
-Siguiente fase: **6 — Pruebas no funcionales**: TC-PERF-001/002, TC-STR-001 y TC-SOAK-001 con un
-generador de carga propio (HttpClient + hilos virtuales; p50/p95/p99, throughput y tasa de error en
-`qa_metricas`), y TC-ROB-001/002 con el lote de `qa_lote_robustez` (precisión, recall, F1 y
-matriz de confusión). Nombres de parámetros ya anunciados en `qa.http`: `usuarios`,
-`peticionesPorUsuario`, `umbralP95Ms`.
+Siguiente fase: **7 — Correo y asistente de IA (opcionales)**. `NotificadorCorreoPort` con
+`spring-boot-starter-mail` y variables `MAIL_*` (si faltan, `estaConfigurado()` = false y se marca
+`no_configurado`); `AsistenteIAPort` solo si hay una variable con la clave de un proveedor de LLM.

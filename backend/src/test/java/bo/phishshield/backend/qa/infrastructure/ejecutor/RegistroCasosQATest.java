@@ -63,6 +63,14 @@ class RegistroCasosQATest {
     }
 
     @Test
+    void los_veintisiete_casos_del_catalogo_estan_programados() throws IOException {
+        RegistroCasosQA registro = new RegistroCasosQA();
+        catalogo().keySet().forEach(codigo ->
+                assertTrue(registro.metodo(codigo).isPresent(), "Falta programar " + codigo));
+        assertEquals(27, registro.codigos().size());
+    }
+
+    @Test
     void el_nombre_de_las_capturas_es_corto_y_sin_tildes() {
         assertEquals("pulsar-analizar-con-el-campo-vacio", NavegadorQA.nombreArchivo("Pulsar \"Analizar\" con el campo vacío"));
         assertTrue(NavegadorQA.nombreArchivo("x".repeat(100)).length() <= 40);
