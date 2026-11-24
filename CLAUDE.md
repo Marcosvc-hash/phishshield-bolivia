@@ -187,8 +187,9 @@ defectos e informe en `docs/qa/`.
   El admin tiene la misma contraseña que en la base real (se copió el hash).
 - La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar (V13 y
   siguientes también están ocupadas por `feature/qa-automation`).
-- **V13, V14, V15 y V16 aplicadas en la base real y en `phishshield_qa` (2026-11-24)**, con
-  respaldos previos `respaldo_antes_v13.dump` y `respaldo_antes_v16.dump` (raíz del repo, ignorados).
+- **V13 a V17 aplicadas en la base real y en `phishshield_qa` (2026-11-24)**, con respaldos previos
+  `respaldo_antes_v13.dump`, `_v16` y `_v17` (raíz del repo, ignorados). Todos los `.dump` tienen
+  además una copia en `C:\respaldos-phishshield`.
 - **Una migración que cambie listas debe escribir un `DOMINIO_*` en `auditoria`** (como V16):
   si no, la caché de 24 h sigue devolviendo análisis calculados con las listas viejas.
 - **Usuario `qa.admin@phishshield.bo`** existe solo en `phishshield_qa` (lo crea
@@ -199,11 +200,13 @@ defectos e informe en `docs/qa/`.
 - **Presupuesto de CSS:** Angular avisa si el CSS de un componente pasa de 4 kB; en el Centro de
   Pruebas se resolvió separando `detalle-caso.ts`, no subiendo el límite.
 - **Defectos** encontrados por el Centro de Pruebas: DEF-002 (el modelo solo no detecta
-  typosquatting) sigue abierto, con plan de corrección. DEF-001 (BancoSol, corregido con V16) y
-  DEF-003 (evidencia binaria que atascaba una ejecución) están verificados. Ver
+  typosquatting) sigue abierto, con plan para el modelo 1.1.0. DEF-001 (BancoSol, V16), DEF-003
+  (evidencia binaria) y DEF-004 (falso positivo de `xangosol.com`, V17) están verificados. Ver
   `docs/qa/REGISTRO_DEFECTOS.md`; no se corrigen sin aprobación.
-- **Efecto colateral de V16:** `xangosol.com` (legítimo en PhiUSIIL) suma 45 por parecerse a
-  "bancosol". Pendiente de decisión del usuario si va a la lista blanca.
+- **`maria.quispe@andina.bo` (ADMIN_EMPRESA)** tiene una contraseña de prueba solo en
+  `phishshield_qa` (2026-11-24); se le dio al usuario en el chat y no está en ningún archivo.
+- **Asistente de IA del Centro de Pruebas:** probado solo con pruebas automáticas; la prueba con la
+  API real sigue pendiente porque no hay `ANTHROPIC_API_KEY`.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
 - **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.

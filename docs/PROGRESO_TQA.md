@@ -6,7 +6,7 @@ Resumen de cierre del trabajo de la materia **Testing y Aseguramiento de la Cali
 
 - Rama: `feature/qa-automation`, subida a `origin`. **No está fusionada con `main`.**
 - Todo lo que corrió en vivo fue contra la base de pruebas **`phishshield_qa`**, nunca la real.
-  En la base real solo se aplicaron migraciones (V13 a V16), con respaldo previo (ver §5).
+  En la base real solo se aplicaron migraciones (V13 a V17), con respaldo previo (ver §5 y §6).
 - Los casos se clasifican solo por **tipo** (funcional / no funcional) y **suite**.
 
 ---
@@ -24,6 +24,8 @@ Resumen de cierre del trabajo de la materia **Testing y Aseguramiento de la Cali
 | 7 | `d8dca75` | Envío de reportes por correo y asistente de IA (ambos opcionales) |
 | 8 | `6b5dcac` | CI en GitHub Actions, cobertura con JaCoCo y documentación TQA |
 | 9 | `5ae2712` | HU-17 "Generar reportes por empresa" y su caso TC-REG-009 |
+| Cierre 1 | `a1a10ed`, `0335149` | V13-V15 en la base real, DEF-001 corregido (V16), plan de DEF-002 |
+| Cierre 2 | (este commit) | DEF-004 corregido (V17), prueba en vivo de ADMIN_EMPRESA, respaldos fuera del repo, PR a `main` |
 
 ### Fase 1 — Base de datos, dominio y puertos (`d60d8ba`)
 
@@ -112,44 +114,43 @@ Resumen de cierre del trabajo de la materia **Testing y Aseguramiento de la Cali
 | CI de GitHub Actions, push de la fase 8 (`6b5dcac`) | **Pasó** (run 45336072169, 47 s) |
 | CI de GitHub Actions, push de la fase 9 (`5ae2712`) | **Pasó** (run 45417714209, 42 s) |
 | CI de GitHub Actions, push del cierre de pendientes (`a1a10ed`) | **Pasó** (run 45431743717, 40 s; backend 375 pruebas) |
-| Backend local, `mvnw test` con la base (cierre, 2026-11-24) | **376 pruebas, 0 fallos** |
-| Backend con el comando de la CI, sin base (`-Dtest='*Test'`) | **375 pruebas, 0 fallos** (fase 9) |
-| Frontend, `npm test -- --watch=false` (cierre) | **113 pruebas, 0 fallos**; `npm run build` sin avisos |
-| IA, `pytest` (cierre) | **24 pruebas, 0 fallos** |
+| CI de GitHub Actions, push del cierre final (V17) | Ver §6 |
+| Backend local, `mvnw test` con la base (cierre final, 2026-11-24) | **376 pruebas, 0 fallos** |
+| Backend con el comando de la CI, sin base (`-Dtest='*Test'`) | **375 pruebas, 0 fallos** (CI del cierre) |
+| Frontend, `npm test -- --watch=false` (cierre final) | **113 pruebas, 0 fallos**; `npm run build` sin avisos |
+| IA, `pytest` (cierre final) | **24 pruebas, 0 fallos** |
 | Regla 4 (dominio sin Spring ni JPA, `git grep`) | Sin coincidencias |
-| Cobertura (JaCoCo, cierre) | 64,4 % de líneas y 60,9 % de ramas; dominio 90,6 %, casos de uso 89,2 % (igual que en la fase 9: el cierre no cambió código Java) |
+| Cobertura (JaCoCo, cierre final) | 64,4 % de líneas y 60,9 % de ramas; dominio 90,6 %, casos de uso 89,2 % (igual que en la fase 9: los cierres no cambiaron código Java) |
 
-**Centro de Pruebas, última ejecución completa** (2026-11-24, 11:50, 28 casos, contra `phishshield_qa`,
-después de corregir DEF-001): **27 PASS, 1 FAIL**, 0 SKIPPED, 0 NOT_RUN.
+**Centro de Pruebas, última ejecución completa** (2026-11-24, 14:10, 28 casos, contra `phishshield_qa`,
+con V16 y V17): **27 PASS, 1 FAIL**, 0 SKIPPED, 0 NOT_RUN.
 
-| Caso | Estado | Defecto |
-|---|---|---|
-| TC-SAN-003 | **PASS** (antes FAIL): `https://bancosoI.com.bo/login` sale phishing con 81,35 | DEF-001 (alta) **Verificado** |
-| TC-ROB-002 | FAIL: el modelo de IA solo tiene recall 0,78 (< 0,80), no reconoce typosquatting | DEF-002 (media) abierto, con plan |
+| Defecto | Severidad | Estado | Cómo se verificó |
+|---|---|---|---|
+| DEF-001 BancoSol no se detectaba | Alta | **Verificado** (V16) | TC-SAN-003 en PASS: `bancosoI.com.bo` sale phishing con 81,35 |
+| DEF-002 El modelo solo no reconoce typosquatting | Media | **Abierto**, plan para el modelo 1.1.0 | TC-ROB-002 sigue en FAIL (recall 0,7778) |
+| DEF-003 Evidencia binaria atascaba una ejecución | Alta | **Verificado** (fase 9) | Regression 9/9 PASS |
+| DEF-004 Falso positivo de `xangosol.com` (efecto de V16) | Media | **Verificado** (V17) | `xangosol.com` vuelve a seguro (0 puntos) |
 
-La corrida anterior (10:38, antes de la corrección) dio 26 PASS y 2 FAIL; ningún caso que pasaba
-dejó de pasar. Detalle en `docs/qa/INFORME_EJECUCION.md` y `docs/qa/REGISTRO_DEFECTOS.md`.
+Corridas del día: 10:38 → 26 PASS / 2 FAIL; 11:50 (V16) → 27 / 1; 14:10 (V16 + V17) → 27 / 1.
+Ningún caso que pasaba dejó de pasar. Además, el alcance de ADMIN_EMPRESA en los reportes se
+probó en vivo (16 de 16 comprobaciones bien). Detalle en `docs/qa/INFORME_EJECUCION.md` y
+`docs/qa/REGISTRO_DEFECTOS.md`.
 
 ---
 
 ## 3. Pendiente y siguiente paso
 
-Hechos el 2026-11-24 (ver §5): V13, V14 y V15 en la base real, corrección de DEF-001 (V16) y
-plan de DEF-002. Queda lo que depende de una decisión del usuario o de credenciales que no hay en
-este equipo:
+Hechos el 2026-11-24 (ver §5 y §6): V13 a V17 en la base real, DEF-001 y DEF-004 corregidos,
+prueba en vivo de ADMIN_EMPRESA, respaldos copiados fuera del repo y PR a `main` abierto. Queda:
 
-1. **Ejecutar el plan de DEF-002** (reentrenar el modelo como 1.1.0 con typosquatting boliviano
-   generado, sin tocar el lote de robustez). Plan completo en `docs/qa/REGISTRO_DEFECTOS.md`.
-2. **Decidir si `xangosol.com` va a la lista blanca**: es legítimo en PhiUSIIL y desde V16 suma
-   45 puntos por parecerse a "bancosol" (único efecto colateral medido de V16).
-3. **Probar el asistente de IA contra la API real**: no se pudo porque no hay `ANTHROPIC_API_KEY`
-   (se probó con un servidor que imita la API).
-4. **Probar en vivo como ADMIN_EMPRESA**: no hay contraseña conocida para `maria.quispe@andina.bo` en
-   `phishshield_qa`; el alcance por empresa está cubierto por pruebas de casos de uso.
-5. **Fusionar `feature/qa-automation` a `main`** cuando el usuario lo apruebe.
-
-**Siguiente paso recomendado:** revisar la rama y fusionarla a `main` (punto 5); DEF-002 no
-bloquea, porque afecta al modelo aislado y no al veredicto del sistema.
+1. **DEF-002 (abierto):** ejecutar el plan del modelo 1.1.0 (`docs/qa/REGISTRO_DEFECTOS.md`).
+   No bloquea: afecta al modelo aislado, no al veredicto del sistema.
+2. **Asistente de IA:** está implementado y probado con 10 pruebas automáticas (3 del adaptador
+   contra un servidor que imita la Messages API, 5 del caso de uso y 2 del frontend). **La prueba
+   con la API real queda pendiente por falta de `ANTHROPIC_API_KEY`**; cómo hacerla:
+   `docs/qa/INFORME_EJECUCION.md`, sección 6.
+3. **Fusionar el PR de `feature/qa-automation` a `main`** cuando el usuario lo apruebe.
 
 ---
 
@@ -162,6 +163,7 @@ bloquea, porque afecta al modelo aislado y no al veredicto del sistema.
 | **Migraciones primero en `phishshield_qa`** | Durante las fases la consigna prohibía tocar la base real. El 2026-11-24 el usuario pidió aplicarlas: se hizo con respaldo previo y comparando el esquema contra `phishshield_qa`. |
 | **DEF-001 con una entidad nueva (V16), no aflojando la regla** | Es un hueco de datos: la regla funciona, pero no tenía contra qué comparar. Antes se midió con el motor real sobre 235 448 URL: solo cambian `bancosoI.com.bo` y `xangosol.com`. |
 | **V16 escribe un `DOMINIO_AGREGADO` en `auditoria`** | La caché de 24 h solo se invalida con esas filas; sin ella, el "seguro" ya guardado se seguía devolviendo. Solo se escribe si la migración inserta el dominio (idempotente). |
+| **DEF-004 con la lista blanca (V17), no bajando la tolerancia** | Bajar la tolerancia para marcas largas habría dejado de detectar imitaciones reales; la lista blanca corrige un falso positivo puntual, como `visa.com`. |
 | **DEF-002 planificado, no corregido** | Los únicos ejemplos de typosquatting boliviano están en los conjuntos de evaluación: entrenar con ellos haría pasar TC-ROB-002 por fuga de datos. |
 | **Base de pruebas aparte y bloqueo del ejecutor** | Las pruebas crean empresas, análisis, alertas y miles de filas de carga. Si el backend está conectado a una base que no sea `*_qa` ni `prueba_*`, ningún caso corre (salvo `QA_PERMITIR_BASE_REAL=true`). |
 | **Casos de prueba en `src/main` con JUnit en scope compile** | El Centro de Pruebas ejecuta los casos en caliente desde el backend, con el JUnit Platform Launcher; en `src/test` no estarían disponibles en ejecución. |
@@ -195,3 +197,17 @@ Pedido del usuario: cerrar todo lo que se pudiera hacer desde este equipo, en or
 Para volver atrás la base real (solo si hiciera falta, borra lo posterior al respaldo):
 `docker exec phishshield-db pg_restore -U phishshield -d phishshield --clean --if-exists /tmp/respaldo_antes_v13.dump`
 (copiar antes el archivo al contenedor con `docker cp`).
+
+---
+
+## 6. Cierre final del módulo (2026-11-24, tarde)
+
+| Paso | Qué se hizo | Comprobación |
+|---|---|---|
+| 1. DEF-004 | `V17__lista_blanca_xangosol.sql` + `02_seed.sql`: `xangosol.com` en la lista blanca, con `DOMINIO_AGREGADO` en `auditoria`. Registrado como DEF-004 (encontrado al medir la regresión de V16) | Probada en dos bases temporales `prueba_v17` (borradas); respaldo `respaldo_antes_v17.dump` (94 793 bytes, 19 tablas); aplicada en `phishshield_qa` y en la real. `xangosol.com` → seguro (0); `bancosoI.com.bo` → phishing (81,35). Suite completa 14:10-14:13: 27 PASS, 1 FAIL (TC-ROB-002 = DEF-002); TC-SAN-003 en PASS |
+| 2. DEF-002 | Sigue **abierto**, con su plan para el modelo 1.1.0 en `REGISTRO_DEFECTOS.md` | — |
+| 3. Secretos y respaldos | `backend/.env` está ignorado (regla `*.env`), no está en el índice y ningún commit de ninguna rama (local o de `origin`) contiene un `.env`; el valor de `QA_TEST_PASSWORD` no aparece en todo el historial. Los 6 respaldos `.dump` se copiaron a `C:\respaldos-phishshield` | Copias con el mismo SHA-256 que los originales |
+| 4. ADMIN_EMPRESA en vivo | Contraseña de prueba para `maria.quispe@andina.bo` **solo en `phishshield_qa`** (hash BCrypt con `GenerarHashBcrypt`; la contraseña no se guardó en el repo) | 16 de 16 comprobaciones de la API de reportes bien (detalle en `INFORME_EJECUCION.md`, sección 5) |
+| 5. Asistente de IA | Documentado como implementado y probado con pruebas automáticas; la prueba con la API real queda pendiente por falta de clave | `INFORME_EJECUCION.md`, sección 6 |
+| 6. Pruebas | Backend 376, frontend 113 + build, IA 24, regla 4, JaCoCo | Todo en verde; CI del push: ver el PR |
+| 7. PR | Pull request de `feature/qa-automation` a `main` con el resumen del módulo. **No se fusionó** | — |

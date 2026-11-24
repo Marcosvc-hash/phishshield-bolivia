@@ -457,11 +457,29 @@ previsto). Detalle en `REGISTRO_DEFECTOS.md`.
   plan de corrección en `REGISTRO_DEFECTOS.md`.
 - Backend 376, frontend 113 + build, IA 24, regla 4 sin coincidencias; cobertura sin cambios.
 
+## Cierre final del módulo (2026-11-24, tarde)
+
+- **DEF-004** (nuevo, encontrado al medir la regresión de V16): `xangosol.com`, legítimo, sumaba 45
+  por parecerse a "bancosol". Corregido con `V17__lista_blanca_xangosol.sql` (+ `02_seed.sql`),
+  probada en `prueba_v17` (temporal, borrada), aplicada en `phishshield_qa` y en la real
+  (respaldo `respaldo_antes_v17.dump`). En vivo: `xangosol.com` → seguro (0) y
+  `bancosoI.com.bo` → phishing (81,35).
+- **Suite completa 14:10-14:13:** 27 PASS, 1 FAIL (TC-ROB-002 = DEF-002). `INFORME_EJECUCION.md`
+  rehecho con esta corrida.
+- **DEF-002:** sigue abierto, con plan para el modelo 1.1.0.
+- **Secretos:** `backend/.env` ignorado y nunca commiteado (revisado en todas las ramas y en `origin`).
+  Respaldos `.dump` copiados a `C:\respaldos-phishshield` (mismo SHA-256).
+- **ADMIN_EMPRESA en vivo:** `maria.quispe@andina.bo` con una contraseña de prueba solo en
+  `phishshield_qa`; 16 de 16 comprobaciones de la API de reportes bien.
+- **Asistente de IA:** implementado y con 10 pruebas automáticas; la prueba con la API real queda
+  pendiente por falta de `ANTHROPIC_API_KEY`.
+- Backend 376, frontend 113 + build, IA 24; PR de `feature/qa-automation` a `main` abierto, sin fusionar.
+
 ## Cómo continuar
 
 Pendiente de decisión del usuario:
 
 1. Ejecutar el plan de **DEF-002** (modelo 1.1.0, ver `REGISTRO_DEFECTOS.md`).
-2. ¿`xangosol.com` a la lista blanca? (efecto colateral medido de V16).
+2. Probar el asistente de IA con la API real cuando haya clave (`INFORME_EJECUCION.md`, sección 6).
 3. ¿Pasar el asistente de IA al SDK oficial de Java de Anthropic? (dependencia no aprobada todavía).
-4. Fusionar `feature/qa-automation` a `main` cuando el usuario lo apruebe (no se hizo).
+4. Revisar y fusionar el PR de `feature/qa-automation` a `main` (no se hizo).

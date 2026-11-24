@@ -45,7 +45,9 @@ INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
 -- (ende.bo ya no va aquí: desde V7 Ende es una entidad y su dominio entra a la
 -- lista blanca con el INSERT ... SELECT de arriba.)
 INSERT INTO dominios_lista (dominio, lista, id_entidad, fuente, motivo) VALUES
-    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)');
+    ('visa.com', 'blanca', NULL, 'manual', 'Sitio oficial de Visa; se parece a bisa.com (Banco BISA)'),
+    -- Desde V17 (DEF-004): falso positivo que apareció al agregar BancoSol en V16
+    ('xangosol.com', 'blanca', NULL, 'manual', 'Sitio legitimo (PhiUSIIL); se parece a bancosol.com.bo (BancoSol). DEF-004');
 
 -- ---------------------------------------------------------------------
 -- Reglas heurísticas

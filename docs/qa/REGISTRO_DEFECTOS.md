@@ -2,8 +2,9 @@
 
 Defectos reales del sistema encontrados por el Centro de Pruebas QA. Un defecto se
 registra cuando un caso da **FAIL funcional** y, al revisar la evidencia, la causa es
-PhishShield (no la prueba ni el entorno). Los fallos de infraestructura (servicio caído,
-sin conexión) no son defectos y no se registran aquí.
+PhishShield (no la prueba ni el entorno). También se registran los defectos que aparecen
+al medir la regresión de una corrección con el motor real (DEF-004). Los fallos de
+infraestructura (servicio caído, sin conexión) no son defectos y no se registran aquí.
 
 Severidad: **Crítica** (el sistema no se puede usar o expone datos), **Alta** (una
 función principal da un resultado equivocado), **Media** (una función secundaria falla
@@ -15,8 +16,9 @@ dar PASS en una ejecución posterior). También **Rechazado** (no era un defecto
 | Id | Caso | Severidad | Estado | Resumen |
 |---|---|---|---|---|
 | DEF-001 | TC-SAN-003 | Alta | Verificado | El typosquatting de BancoSol no se detecta: `bancosoI.com.bo` sale "seguro" |
-| DEF-002 | TC-ROB-002 | Media | Abierto (planificado) | El modelo de IA por sí solo no alcanza el recall mínimo (0,78 < 0,80): no reconoce typosquatting |
+| DEF-002 | TC-ROB-002 | Media | **Abierto** (plan para la versión 1.1.0) | El modelo de IA por sí solo no alcanza el recall mínimo (0,78 < 0,80): no reconoce typosquatting |
 | DEF-003 | TC-REG-009 | Alta | Verificado | El Centro de Pruebas quedaba con una ejecución atascada "en curso" si la evidencia traía bytes nulos (PDF) |
+| DEF-004 | Medición de regresión de V16 | Media | Verificado | Falso positivo: desde V16, `www.xangosol.com` (legítimo) sumaba 45 puntos por parecerse a "bancosol" |
 
 ---
 
@@ -65,8 +67,8 @@ Entel, Segip y Ende), así que no tiene contra qué medir la distancia de `banco
 no commiteada): sobre 235 448 URL (`ia/datos_evaluacion`, `qa_lote_robustez` y PhiUSIIL)
 cambian solo dos: `bancosoI.com.bo` (lo buscado) y `www.xangosol.com`, **legítima** en PhiUSIIL,
 que ahora suma 45 puntos ("xangosol" está a distancia 2 de la marca "bancosol"). Es un sitio
-extranjero que no está en ningún conjunto boliviano; si se quiere evitar, se agrega a la lista
-blanca como `visa.com` (pendiente de decisión del usuario).
+extranjero que no está en ningún conjunto boliviano. Se registró como **DEF-004** y se corrigió
+con V17 (lista blanca, como `visa.com`).
 
 **Verificación (2026-11-24, contra `phishshield_qa`):**
 
@@ -112,8 +114,9 @@ dominio corto `bg.com.bo` se parece a los patrones de phishing del dataset de en
 En el sistema completo, la regla `URL_TYPOSQUATTING` y la lista blanca cubren estos casos
 (TC-ROB-001: precisión y recall 1,0).
 
-**Decisión (2026-11-24): no se corrige todavía; queda planificado.** No es razonable hacerlo
-sin más porque:
+**Decisión (2026-11-24, confirmada por el usuario): queda abierto; no se corrige en este
+módulo.** Se corregirá en la versión 1.1.0 del modelo con el plan de abajo. No es razonable
+hacerlo sin más porque:
 
 - Los únicos ejemplos de typosquatting boliviano que existen están en los conjuntos de
   **evaluación** (`qa_lote_robustez` y `ia/datos_evaluacion/bolivia.csv`). Entrenar con ellos
@@ -177,3 +180,35 @@ para siempre y la pantalla no dejaba lanzar otra hasta reiniciar el backend (al 
    FALLIDA con el motivo (`EjecucionRepositoryPort.marcarFallida`), para que nunca quede activa.
 3. Pruebas de regresión: `CasosDeUsoQaTest.si_no_se_puede_guardar_el_final_la_ejecucion_queda_fallida_y_no_bloquea`
    y `JUnitEjecutorPruebasAdapterTest.las_respuestas_binarias_no_van_a_la_evidencia_y_el_caracter_nulo_se_limpia`.
+
+---
+
+## DEF-004 — Falso positivo de `xangosol.com` después de agregar BancoSol
+
+| Campo | Valor |
+|---|---|
+| Cómo se encontró | Al medir la regresión de V16 (DEF-001) con el motor real, antes de aplicarla: `ReglaTyposquatting` con y sin BancoSol sobre 235 448 URL (`ia/datos_evaluacion`, `qa_lote_robustez` y PhiUSIIL) |
+| Encontrado | 2026-11-24 |
+| Severidad | Media: un sitio legítimo recibe un resultado equivocado ("sospechoso"), pero es un único dominio extranjero, fuera de los conjuntos bolivianos, y hay un rodeo (la lista blanca) |
+| Estado | **Verificado** (corregido con V17 el 2026-11-24) |
+| Componente | Motor de URL, regla `URL_TYPOSQUATTING` (caso 3: marca mal escrita), datos de `dominios_lista` |
+
+**Pasos para reproducirlo (antes de V17)**
+
+1. Base con V16 aplicada (BancoSol en `entidades_suplantadas`).
+2. Enviar `POST /api/analisis` con `{"url": "https://www.xangosol.com"}`.
+
+**Resultado esperado:** `seguro`. Es un sitio legítimo según PhiUSIIL (label 1).
+
+**Resultado obtenido:** `URL_TYPOSQUATTING` aporta 45 puntos ("El dominio contiene 'xangosol',
+muy similar a la marca 'bancosol' de BancoSol"), así que sale por lo menos `sospechoso`.
+
+**Causa:** la marca `bancosol` tiene 8 letras, y la regla tolera hasta 2 cambios en marcas de 8 o
+más letras (`toleranciaPara`). `xangosol` está a distancia 2 (b→x, c→g) y tiene el mismo largo.
+
+**Corrección:** migración `V17__lista_blanca_xangosol.sql` y la misma fila en `02_seed.sql`:
+`xangosol.com` en la lista blanca (sin entidad), igual que `visa.com` para `bisa.com`. No se
+bajó la tolerancia de la regla: eso habría dejado de detectar imitaciones reales de marcas
+largas. Como V16, escribe un `DOMINIO_AGREGADO` en `auditoria` para invalidar la caché.
+Probada en bases temporales `prueba_v17` (base nueva y base existente, idempotente; borradas)
+y aplicada en `phishshield_qa` y en la base real (respaldo previo `respaldo_antes_v17.dump`).

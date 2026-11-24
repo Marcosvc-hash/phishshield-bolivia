@@ -48,7 +48,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 
 ## 3. Matriz caso ↔ historia ↔ requerimiento
 
-| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24, 11:50) |
+| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24, 14:10) |
 |---|---|---|---|---|---|
 | TC-SMK-001 | Funcional / Smoke | La API del backend responde | HU-07 | RF-08 | PASS |
 | TC-SMK-002 | Funcional / Smoke | Login del administrador de prueba por API | HU-01 | RF-01, RNF-06 | PASS |
