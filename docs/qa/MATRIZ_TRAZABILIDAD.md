@@ -48,7 +48,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 
 ## 3. Matriz caso ↔ historia ↔ requerimiento
 
-| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24, 10:38) |
+| Caso | Tipo / suite | Nombre | HU | RF / RNF | Último resultado (2026-11-24, 11:50) |
 |---|---|---|---|---|---|
 | TC-SMK-001 | Funcional / Smoke | La API del backend responde | HU-07 | RF-08 | PASS |
 | TC-SMK-002 | Funcional / Smoke | Login del administrador de prueba por API | HU-01 | RF-01, RNF-06 | PASS |
@@ -58,7 +58,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 | TC-SMK-006 | Funcional / Smoke | La pantalla de análisis carga | HU-02 | RF-02 | PASS |
 | TC-SAN-001 | Funcional / Sanity | URL oficial de banco boliviano se califica como segura | HU-02 | RF-02 | PASS |
 | TC-SAN-002 | Funcional / Sanity | Dominio que imita al BNB con extensión abusada se califica como phishing | HU-02 | RF-02 | PASS |
-| TC-SAN-003 | Funcional / Sanity | Typosquatting de BancoSol con I mayúscula se califica como phishing | HU-02 | RF-02 | **FAIL → DEF-001** |
+| TC-SAN-003 | Funcional / Sanity | Typosquatting de BancoSol con I mayúscula se califica como phishing | HU-02 | RF-02 | PASS (antes FAIL → DEF-001, corregido con V16) |
 | TC-REG-001 | Funcional / Regression | URL vacía muestra mensaje de validación | HU-02 | RF-09, RNF-05 | PASS |
 | TC-REG-002 | Funcional / Regression | URL sin http:// muestra mensaje de validación | HU-02 | RF-09, RNF-05 | PASS |
 | TC-REG-003 | Funcional / Regression | La API rechaza una URL malformada | HU-02 | RF-09 | PASS |
@@ -84,7 +84,7 @@ requerimiento funcional (`RF-*`) o no funcional (`RNF-*`) que verifica.
 | Requerimiento | Casos | ¿Cubierto? |
 |---|---|---|
 | RF-01 | TC-SMK-002, TC-SMK-005, TC-REG-004, TC-E2E-001 | Sí |
-| RF-02 | TC-SMK-006, TC-SAN-001, TC-SAN-002, TC-SAN-003, TC-E2E-001 | Sí (1 FAIL abierto: DEF-001) |
+| RF-02 | TC-SMK-006, TC-SAN-001, TC-SAN-002, TC-SAN-003, TC-E2E-001 | Sí (DEF-001 corregido y verificado) |
 | RF-03 | TC-INT-001 | Sí |
 | RF-04 | TC-REG-006, TC-REG-007, TC-INT-002, TC-E2E-001 | Sí |
 | RF-05 | TC-INT-003, TC-E2E-001 | Sí |

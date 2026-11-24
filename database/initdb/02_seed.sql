@@ -16,7 +16,9 @@ INSERT INTO entidades_suplantadas (nombre, tipo, dominio_oficial) VALUES
     ('Impuestos Nacionales',           'gobierno',  'impuestos.gob.bo'),
     ('Entel',                          'telco',     'entel.bo'),
     ('Segip',                          'gobierno',  'segip.gob.bo'),
-    ('Ende',                           'gobierno',  'ende.bo');
+    ('Ende',                           'gobierno',  'ende.bo'),
+    -- BancoSol: desde V16 (DEF-001, TC-SAN-003 no detectaba bancosoI.com.bo)
+    ('BancoSol',                       'banco',     'bancosol.com.bo');
 
 -- ---------------------------------------------------------------------
 -- Listas de dominios

@@ -187,9 +187,10 @@ defectos e informe en `docs/qa/`.
   El admin tiene la misma contraseña que en la base real (se copió el hash).
 - La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar (V13 y
   siguientes también están ocupadas por `feature/qa-automation`).
-- **V13, V14 y V15 aplicadas solo en `phishshield_qa` (2026-11-24)**; falta aplicarlas en la base
-  real cuando el usuario lo decida (V14 cambia el esquema de `reportes`: sin ella, la pantalla de
-  reportes responde error en la base real; conviene un respaldo antes, como con V9-V12).
+- **V13, V14, V15 y V16 aplicadas en la base real y en `phishshield_qa` (2026-11-24)**, con
+  respaldos previos `respaldo_antes_v13.dump` y `respaldo_antes_v16.dump` (raíz del repo, ignorados).
+- **Una migración que cambie listas debe escribir un `DOMINIO_*` en `auditoria`** (como V16):
+  si no, la caché de 24 h sigue devolviendo análisis calculados con las listas viejas.
 - **Usuario `qa.admin@phishshield.bo`** existe solo en `phishshield_qa` (lo crea
   `backend\herramientas\crear-usuario-qa.ps1`); su contraseña está en `backend\.env`.
 - **Playwright:** Chromium se descarga una vez (`com.microsoft.playwright.CLI install chromium`) en
@@ -197,10 +198,12 @@ defectos e informe en `docs/qa/`.
   descarga además Firefox y WebKit.
 - **Presupuesto de CSS:** Angular avisa si el CSS de un componente pasa de 4 kB; en el Centro de
   Pruebas se resolvió separando `detalle-caso.ts`, no subiendo el límite.
-- **Defectos abiertos** encontrados por el Centro de Pruebas: DEF-001 (BancoSol no está en
-  `entidades_suplantadas`) y DEF-002 (el modelo solo no detecta typosquatting). DEF-003 (evidencia
-  binaria que atascaba una ejecución) ya está corregido y verificado. Ver
+- **Defectos** encontrados por el Centro de Pruebas: DEF-002 (el modelo solo no detecta
+  typosquatting) sigue abierto, con plan de corrección. DEF-001 (BancoSol, corregido con V16) y
+  DEF-003 (evidencia binaria que atascaba una ejecución) están verificados. Ver
   `docs/qa/REGISTRO_DEFECTOS.md`; no se corrigen sin aprobación.
+- **Efecto colateral de V16:** `xangosol.com` (legítimo en PhiUSIIL) suma 45 por parecerse a
+  "bancosol". Pendiente de decisión del usuario si va a la lista blanca.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
 - **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.

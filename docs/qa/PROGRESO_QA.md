@@ -441,12 +441,27 @@ previsto). Detalle en `REGISTRO_DEFECTOS.md`.
   `maria.quispe@andina.bo` en `phishshield_qa`): el alcance por empresa está cubierto por las
   pruebas de casos de uso.
 
+## Cierre de pendientes (2026-11-24, después de la fase 9)
+
+- **Base real:** respaldo `respaldo_antes_v13.dump` y luego V13, V14 y V15. Esquema comparado
+  contra `phishshield_qa`: iguales, salvo las tablas de educación (la real no las tiene desde antes).
+- **DEF-001 corregido** con `V16__entidad_bancosol.sql` (+ `02_seed.sql`): BancoSol en
+  `entidades_suplantadas` y en la lista blanca. La migración escribe un `DOMINIO_AGREGADO` en
+  `auditoria` para que la caché de 24 h no devuelva el "seguro" ya calculado. Medición previa
+  con el motor real sobre 235 448 URL: solo cambian `bancosoI.com.bo` y `xangosol.com`
+  (legítimo en PhiUSIIL; queda a decisión del usuario pasarlo a la lista blanca). Aplicada en
+  `prueba_v16` (temporal, borrada), `phishshield_qa` y la real (respaldo `respaldo_antes_v16.dump`).
+- **Verificación:** TC-SAN-003 solo, PASS (phishing, 81,35). Suite completa 11:50-11:53:
+  **27 PASS, 1 FAIL** (TC-ROB-002 = DEF-002, mismas métricas). `INFORME_EJECUCION.md` rehecho.
+- **DEF-002:** no se corrige (entrenar con los únicos ejemplos bolivianos sería fuga de datos);
+  plan de corrección en `REGISTRO_DEFECTOS.md`.
+- Backend 376, frontend 113 + build, IA 24, regla 4 sin coincidencias; cobertura sin cambios.
+
 ## Cómo continuar
 
-Las 9 fases están hechas. Pendiente de decisión del usuario:
+Pendiente de decisión del usuario:
 
-1. Aplicar **V13, V14 y V15** en la base real (V14 es cambio de esquema: hacer respaldo antes).
-2. Corregir **DEF-001** (BancoSol) con una migración nueva y volver a correr Sanity.
-3. Planificar **DEF-002** (reentrenar el modelo con typosquatting boliviano).
-4. ¿Pasar el asistente de IA al SDK oficial de Java de Anthropic? (dependencia no aprobada todavía).
-5. Fusionar `feature/qa-automation` a `main` cuando el usuario lo apruebe (no se hizo).
+1. Ejecutar el plan de **DEF-002** (modelo 1.1.0, ver `REGISTRO_DEFECTOS.md`).
+2. ¿`xangosol.com` a la lista blanca? (efecto colateral medido de V16).
+3. ¿Pasar el asistente de IA al SDK oficial de Java de Anthropic? (dependencia no aprobada todavía).
+4. Fusionar `feature/qa-automation` a `main` cuando el usuario lo apruebe (no se hizo).

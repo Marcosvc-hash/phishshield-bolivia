@@ -166,6 +166,7 @@ ejecutar más de una vez). Todo cambio se escribe en los dos lugares: en
 | `V13__ruta_catalogo_qa.sql` | Corrige los datos de prueba de `TC-REG-008` en `qa_casos`: la ruta del catálogo es `GET /api/admin/qa/casos`. Solo cambia ese texto; no crea ni borra filas. En bases nuevas ya viene corregido en `initdb/04_qa.sql` |
 | `V14__uuid_reportes.sql` | Agrega `uuid_publico` (con índice único) a `reportes`, para que la HU-17 (reportes por empresa) no exponga el BIGINT interno. Cada fila existente recibe un uuid distinto; no borra datos. **El módulo de reportes la necesita**. En bases nuevas ya viene en `initdb/01_schema.sql` |
 | `V15__caso_qa_reportes.sql` | Agrega al catálogo QA el caso `TC-REG-009` (reporte de una empresa por API) y actualiza el objetivo de `TC-E2E-001`. No borra filas. En bases nuevas ya viene en `initdb/04_qa.sql` |
+| `V16__entidad_bancosol.sql` | Corrige **DEF-001**: agrega BancoSol a `entidades_suplantadas` (dominio oficial `bancosol.com.bo`, tipo `banco`) y su dominio a la lista blanca, y registra un `DOMINIO_AGREGADO` en `auditoria` para que la caché de análisis no devuelva resultados anteriores. Así `URL_TYPOSQUATTING` detecta `bancosoI.com.bo`. No borra filas. En bases nuevas ya viene en `initdb/02_seed.sql` |
 
 Aplicarlas en orden, desde la raíz del repositorio:
 
@@ -185,6 +186,7 @@ Get-Content database\migraciones\V12__modulo_qa.sql | docker exec -i phishshield
 Get-Content database\migraciones\V13__ruta_catalogo_qa.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V14__uuid_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 Get-Content database\migraciones\V15__caso_qa_reportes.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
+Get-Content database\migraciones\V16__entidad_bancosol.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction
 ```
 
 ```bash
@@ -203,6 +205,7 @@ docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STO
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V13__ruta_catalogo_qa.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V14__uuid_reportes.sql
 docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V15__caso_qa_reportes.sql
+docker exec -i phishshield-db psql -U phishshield -d phishshield -v ON_ERROR_STOP=1 --single-transaction < database/migraciones/V16__entidad_bancosol.sql
 ```
 
 ### Base de pruebas `phishshield_qa`
