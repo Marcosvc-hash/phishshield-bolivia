@@ -19,8 +19,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | 4 | Pantalla "Centro de Pruebas" en Angular | Hecha (f0b2001) |
 | 5 | 7 casos de interfaz con Playwright | Hecha (0e9f02a) |
 | 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Hecha (b6c2dc6) |
-| 7 | Correo y asistente de IA (opcionales) | **Hecha** |
-| 8 | CI, JaCoCo y documentación TQA | Pendiente |
+| 7 | Correo y asistente de IA (opcionales) | Hecha (d8dca75) |
+| 8 | CI, JaCoCo y documentación TQA | **Hecha** |
 | 9 | HU-17 Reportes por empresa | Pendiente |
 
 ## Cómo levantar el entorno de pruebas
@@ -337,9 +337,55 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
   con `MAIL_USERNAME`.
 - Al cerrar la fase: backend 361 pruebas en verde, frontend 109, IA 24; regla 4 sin coincidencias.
 
+## Fase 8 — Calidad del proyecto y documentación TQA (2026-11-24)
+
+**Qué se hizo**
+
+- `.github/workflows/ci.yml`: en cada push y pull request, tres trabajos: backend
+  (`mvnw -B test -Dtest='*Test'` con Java 25; el patrón deja fuera `contextLoads`, que necesita
+  PostgreSQL, y los casos falsos del ejecutor; sube el reporte de JaCoCo como artefacto),
+  frontend (`npm ci`, `npm test -- --watch=false`, `npm run build` con Node 24) e IA
+  (`pip install -r requirements.txt` y `pytest` con Python 3.14; las pruebas del servicio se
+  omiten solas porque el modelo no está en git). Sin secretos.
+- JaCoCo 0.8.16 (aprobado) en el `pom.xml`: `prepare-agent` + `report` en la fase `test`; reporte en
+  `backend/target/site/jacoco/index.html`. Se excluyen los casos del Centro de Pruebas
+  (`qa/infrastructure/ejecutor/casos/**`): son pruebas que viven en `src/main` y corren contra el
+  sistema levantado.
+- Documentos en `docs/qa/`: `PLAN_DE_PRUEBAS.md`, `MATRIZ_TRAZABILIDAD.md`, `REGISTRO_DEFECTOS.md`
+  (DEF-001 y DEF-002) e `INFORME_EJECUCION.md`.
+- `README.md` (estructura, stack, Centro de Pruebas y calidad) y `CLAUDE.md` (vertical `qa`,
+  variables `QA_*`, `MAIL_*`, `ANTHROPIC_API_KEY`, CI, cobertura, V13, Playwright, defectos).
+
+**Cobertura obtenida (JaCoCo, 2026-11-24)**
+
+| Alcance | Líneas | Ramas |
+|---|---|---|
+| Backend completo | **63,9 %** (3266 de 5108) | **60,6 %** (1061 de 1752) |
+| Capa de dominio (`domain/`) | 90,5 % | — |
+| Casos de uso (`application/`) | 88,5 % | — |
+
+Lo menos cubierto son los adaptadores web y JDBC de `panel`, `historial` y `auditoria` (30-40 %):
+se prueban en vivo con el Centro de Pruebas, no con pruebas de Maven.
+
+**Verificación**
+
+- El comando de la CI se probó localmente sin base de datos (sin `DB_PASSWORD`): 360 pruebas, 0
+  fallos. La primera versión usaba `-Dtest='!BackendApplicationTests'`, que hace que Surefire tome
+  todas las clases (incluidos los casos falsos que solo usa el launcher) y daba 5 errores: se
+  cambió a `-Dtest='*Test'`.
+- **Ejecución completa real** de las 9 suites (2026-11-24, 01:42-01:45, 2 min 48 s): 27 casos,
+  **25 PASS, 2 FAIL** (TC-SAN-003 → DEF-001; TC-ROB-002 → DEF-002), 0 SKIPPED, 0 NOT_RUN. Detalle
+  en `INFORME_EJECUCION.md`.
+- Pendiente de comprobar en GitHub: la primera corrida real de la CI se ve en la pestaña Actions
+  después del push.
+
+**Sobre la matriz**: el repositorio no tiene backlog con números de historia; HU-17 es la del
+enunciado y HU-01 a HU-10 son una propuesta (está explicado en el documento) para reemplazar por
+los números oficiales.
+
 ## Cómo continuar
 
-Siguiente fase: **8 — Calidad del proyecto y documentación TQA**: `.github/workflows/ci.yml` (mvnw test
-sin `contextLoads`, npm test, npm run build, pytest), JaCoCo con reporte HTML (anotar la cobertura),
-y en `docs/qa/`: PLAN_DE_PRUEBAS.md, MATRIZ_TRAZABILIDAD.md, REGISTRO_DEFECTOS.md (ya tiene DEF-001 y
-DEF-002) e INFORME_EJECUCION.md (una ejecución completa real); actualizar README.md y CLAUDE.md.
+Siguiente fase: **9 — HU-17 "Generar reportes por empresa"**: vertical `reporte` hexagonal sobre la
+tabla `reportes` (ya existe y nada la usa): generar el reporte de una empresa para un período
+(totales de análisis, phishing y alertas desde la base), listar y descargar en PDF; ADMIN ve todas,
+ADMIN_EMPRESA solo la suya; auditoría; pantalla `/admin/reportes`; pruebas.

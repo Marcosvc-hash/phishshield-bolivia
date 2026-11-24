@@ -46,7 +46,7 @@ y no tiene experiencia previa en Java: respóndele en español sencillo.
 ## Arquitectura hexagonal del backend
 
 Paquete `bo.phishshield.backend`, organizado por verticales: `analisis`, `empresa`, `usuario`, `panel`,
-`historial`, `alerta`, `listas`, `auditoria` y `shared` (ver `docs/guia-modulo-admin.md`).
+`historial`, `alerta`, `listas`, `auditoria`, `qa` y `shared` (ver `docs/guia-modulo-admin.md`).
 Cada vertical se divide así:
 
 | Capa | Qué va ahí | Reglas |
@@ -105,6 +105,29 @@ Otros puntos del diseño:
 - Hash de una contraseña para la base: `backend/herramientas/GenerarHashBcrypt.java` (ver su
   comentario). Lee la contraseña por teclado y no la muestra.
 
+## Centro de Pruebas QA (vertical `qa`)
+
+Bitácora y estado: `docs/qa/PROGRESO_QA.md` (leerla antes de tocar el módulo). Plan, matriz,
+defectos e informe en `docs/qa/`.
+- Pantalla `/admin/qa` y API `/api/admin/qa/**`: solo ADMIN (SeguridadConfig + `AlcanceDatos.soloPlataforma`).
+- Ejecuta pruebas reales con el JUnit Platform Launcher, un caso por vez, en un pool `@Async` de un
+  hilo (`PlanificadorEjecucionAsync`). Una sola ejecución activa (índice único parcial en la base).
+- Los casos viven en `src/main`, en `qa/infrastructure/ejecutor/casos/{api,ui,carga}`, con
+  `@Test @CasoQA("TC-...")`; al agregar una clase se suma a `RegistroCasosQA.CLASES`. Los
+  metadatos (objetivo, datos, esperado) están en `qa_casos`, no en el código.
+- Tipificación: solo **tipo** (funcional / no funcional) y **suite**. Nunca "positivo/negativo".
+- Estados: `AssertionError` → FAIL funcional; sin conexión o `FalloInfraestructuraException`
+  → FAIL de infraestructura; `CasoNoEjecutableException` (falta configuración) → NOT_RUN; otra
+  suposición no cumplida → SKIPPED.
+- La evidencia de API se enmascara (contraseña, tokens, `Authorization`). Las capturas de Playwright
+  van en `qa-evidencias/{id}/capturas/` y los reportes en `qa-evidencias/{id}/` (ignorada por git).
+- Protección: si el backend está conectado a una base que no es `*_qa` ni `prueba_*`, ningún caso
+  corre (salvo `QA_PERMITIR_BASE_REAL=true`). En vivo, siempre contra `phishshield_qa`.
+- Al terminar: PDF detallado (OpenPDF) + HTML resumido; correo opcional con `MAIL_*`; asistente
+  de IA opcional con `ANTHROPIC_API_KEY` (Messages API por HTTP, nunca decide PASS/FAIL).
+- Si se cambia el catálogo (`qa_casos`): migración nueva + `04_qa.sql` (ASCII con `U&'...'`), y
+  `RegistroCasosQATest` revisa que cada `@CasoQA` exista en `04_qa.sql`.
+
 ## Ejecutar
 
 - **Backend:** `.\mvnw.cmd test` dentro de `backend/`. La prueba `contextLoads` necesita la base levantada y la variable `DB_PASSWORD`.
@@ -117,6 +140,16 @@ Otros puntos del diseño:
   secreto falso de `src/test/resources/config/application.yaml`. Para levantar el backend en
   una sesión, genérala al azar sin imprimirla:
   `$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); $env:JWT_SECRET = [Convert]::ToBase64String($b)`
+
+- **Variables del Centro de Pruebas** (en `backend/.env`, ignorado; ejemplo en `backend/.env.example`;
+  `levantar-backend-qa.ps1` las lee): `QA_BASE_URL`, `QA_FRONTEND_URL`, `QA_TEST_USER`,
+  `QA_TEST_PASSWORD` (si falta alguna, los casos que la necesitan quedan NOT_RUN), `QA_AMBIENTE`,
+  `QA_EVIDENCIAS_DIR`, `QA_PERMITIR_BASE_REAL`. Opcionales: `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`,
+  `MAIL_PASSWORD`, `MAIL_FROM`, `MAIL_STARTTLS` (correo) y `ANTHROPIC_API_KEY`, `QA_IA_MODELO` (asistente).
+  **Nunca mostrar ni commitear `QA_TEST_PASSWORD`, `MAIL_PASSWORD` ni `ANTHROPIC_API_KEY`.**
+- **Cobertura:** `.\mvnw.cmd test` genera `backend/target/site/jacoco/index.html` (JaCoCo).
+- **CI:** `.github/workflows/ci.yml` corre `mvnw test -Dtest='*Test'` (así quedan fuera `contextLoads`
+  y los casos falsos del ejecutor), `npm test`, `npm run build` y `pytest`.
 
 ## Migraciones
 
@@ -147,7 +180,20 @@ Otros puntos del diseño:
   para no ensuciar la real. Se levanta el backend contra ella con
   `backend\herramientas\levantar-backend-qa.ps1` (pone `DB_URL`). Cómo recrearla: `database/README.md`.
   El admin tiene la misma contraseña que en la base real (se copió el hash).
-- La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar.
+- La migración de `feature/quitar-educacion` ya no puede ser V12: renumerarla al fusionar (V13 y
+  siguientes también están ocupadas por `feature/qa-automation`).
+- **V13 aplicada solo en `phishshield_qa` (2026-11-24)**; falta aplicarla en la base real cuando el
+  usuario lo decida. Ver `docs/qa/PROGRESO_QA.md` para las migraciones posteriores.
+- **Usuario `qa.admin@phishshield.bo`** existe solo en `phishshield_qa` (lo crea
+  `backend\herramientas\crear-usuario-qa.ps1`); su contraseña está en `backend\.env`.
+- **Playwright:** Chromium se descarga una vez (`com.microsoft.playwright.CLI install chromium`) en
+  `%LOCALAPPDATA%\ms-playwright`. Un `Playwright.create()` sin `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
+  descarga además Firefox y WebKit.
+- **Presupuesto de CSS:** Angular avisa si el CSS de un componente pasa de 4 kB; en el Centro de
+  Pruebas se resolvió separando `detalle-caso.ts`, no subiendo el límite.
+- **Defectos abiertos** encontrados por el Centro de Pruebas: DEF-001 (BancoSol no está en
+  `entidades_suplantadas`) y DEF-002 (el modelo solo no detecta typosquatting). Ver
+  `docs/qa/REGISTRO_DEFECTOS.md`; no se corrigen sin aprobación.
 - **Python:** `python` del sistema abre la Microsoft Store. Las pruebas de la IA se corren con el
   entorno virtual: dentro de `ia/`, `.\.venv\Scripts\python.exe -m pytest`.
 - **Git Bash convierte rutas** como `/tmp/x` en rutas de Windows al pasarlas a `docker exec`.

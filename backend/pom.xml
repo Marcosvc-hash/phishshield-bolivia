@@ -32,6 +32,7 @@
         <rest-assured.version>6.3.0</rest-assured.version>
         <openpdf.version>3.0.6</openpdf.version>
         <playwright.version>1.65.1</playwright.version>
+        <jacoco.version>0.8.16</jacoco.version>
     </properties>
     <dependencies>
         <dependency>
@@ -133,6 +134,35 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Cobertura de las pruebas: reporte HTML en target/site/jacoco/index.html
+                 despues de cada mvnw test. Los casos del Centro de Pruebas
+                 (qa/infrastructure/ejecutor/casos) se excluyen: son pruebas que viven
+                 en src/main y se ejecutan contra el sistema levantado, no con Maven. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>bo/phishshield/backend/qa/infrastructure/ejecutor/casos/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>preparar-agente</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>reporte</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

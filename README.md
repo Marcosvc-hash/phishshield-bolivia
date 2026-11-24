@@ -22,18 +22,27 @@ Proyecto universitario — La Paz, Bolivia, 2026.
 
 ```
 phishshield-bolivia/
+├── .github/workflows/ci.yml   Integración continua: pruebas del backend, frontend e IA en cada push
 ├── database/        PostgreSQL 18 en Docker
-│   ├── initdb/        Esquema (01_schema.sql) y datos de ejemplo (02_seed.sql)
-│   └── migraciones/   Cambios para bases ya creadas (V2__..., V3__...)
+│   ├── initdb/        Esquema, datos de ejemplo, vistas del panel y catálogo QA (01 a 04)
+│   └── migraciones/   Cambios para bases ya creadas (V2__... a V13__...)
 ├── backend/         API REST Spring Boot, arquitectura hexagonal por verticales
-│   └── src/main/java/bo/phishshield/backend/
-│       ├── analisis/    Motor de reglas para URL (lista negra, typosquatting, ...)
-│       ├── empresa/     Empresas cliente
-│       ├── usuario/     Consulta de usuarios
-│       └── shared/      CORS y manejo global de errores
-├── frontend/        Aplicación Angular (analizador de URL + listado de empresas)
+│   ├── src/main/java/bo/phishshield/backend/
+│   │   ├── analisis/    Motor de reglas para URL e integración con el modelo de IA
+│   │   ├── usuario/     Registro, login con JWT y gestión de usuarios
+│   │   ├── empresa/     Empresas cliente
+│   │   ├── panel/       Datos del panel de administración
+│   │   ├── historial/   Historial de análisis con filtros
+│   │   ├── alerta/      Bandeja de alertas
+│   │   ├── listas/      Listas blanca, negra y gris de dominios
+│   │   ├── auditoria/   Registro de accesos y acciones administrativas
+│   │   ├── qa/          Centro de Pruebas QA: ejecutor, casos, reportes, correo y asistente de IA
+│   │   └── shared/      Seguridad, paginación y manejo global de errores
+│   ├── herramientas/  Scripts: levantar el backend contra la base de pruebas, crear el usuario QA, hash BCrypt
+│   └── *.http         Peticiones de ejemplo (analisis, auth, empresas, qa)
+├── frontend/        Aplicación Angular: analizador, panel de administración y Centro de Pruebas
 ├── ia/              Modelo de detección de URL en Python (scikit-learn) y servicio de predicción (FastAPI)
-└── docs/            Guía de la demo, guía del módulo de administración e informe del modelo de IA
+└── docs/            Guías, informe del modelo de IA y documentación de pruebas (docs/qa/)
 ```
 
 ---
@@ -47,6 +56,8 @@ phishshield-bolivia/
 | Frontend | Angular 22, TypeScript 6, pruebas con Vitest |
 | Seguridad | Spring Security + JWT (HS256), contraseñas con BCrypt |
 | IA | Python 3.11+ con scikit-learn; servicio de predicción con FastAPI |
+| Pruebas automatizadas | JUnit 6 (Platform Launcher), Rest Assured, Playwright (Chromium), generador de carga propio, Vitest, pytest |
+| Reportes y calidad | OpenPDF (reportes PDF), JaCoCo (cobertura), GitHub Actions (CI) |
 | Infraestructura | Docker y Docker Compose |
 
 ---
@@ -79,7 +90,9 @@ Get-Content database\migraciones\V3__ajustar_peso_typosquatting.sql | docker exe
 Get-Content database\migraciones\V4__ajuste_reglas_y_lista_blanca.sql | docker exec -i phishshield-db psql -U phishshield -d phishshield
 ```
 
-Se aplican en orden y son idempotentes: ejecutarlas dos veces no hace daño.
+Se aplican en orden y son idempotentes: ejecutarlas dos veces no hace daño. La
+lista completa (hasta V13) y el comando de cada una están en
+[`database/README.md`](database/README.md).
 
 ### 3. Servicio de IA (puerto 8000)
 
@@ -134,8 +147,8 @@ Environment variables* → `DB_PASSWORD=su-contraseña;JWT_SECRET=una-clave-de-a
 Haga lo mismo con `DB_PASSWORD` en la plantilla de JUnit si va a ejecutar las
 pruebas desde el IDE.
 
-Hay peticiones de ejemplo en `backend/analisis.http` y `backend/empresas.http`
-(se ejecutan desde IntelliJ).
+Hay peticiones de ejemplo en `backend/analisis.http`, `backend/auth.http`,
+`backend/empresas.http` y `backend/qa.http` (se ejecutan desde IntelliJ).
 
 ### 5. Frontend (puerto 4200)
 
@@ -146,6 +159,52 @@ npm start          # http://localhost:4200
 npm test           # pruebas con Vitest
 npm run build      # compilación de producción
 ```
+
+---
+
+## Centro de Pruebas QA
+
+Pantalla `/admin/qa` (solo ADMIN) que ejecuta **pruebas reales** contra el propio
+PhishShield y guarda cada ejecución con sus pasos, evidencias, capturas y métricas.
+27 casos clasificados por tipo (funcional / no funcional) y suite:
+
+| Suite | Casos | Herramienta |
+|---|---|---|
+| Smoke, Sanity, Regression, Integration, E2E | 21 | Rest Assured (API) y Playwright (interfaz) |
+| Performance, Estrés, Soak | 4 | Generador de carga propio (HttpClient + hilos virtuales) |
+| Robustez IA | 2 | Lote boliviano etiquetado: precisión, recall, F1 y matriz de confusión |
+
+Al terminar cada ejecución se generan un **reporte PDF detallado** y un **resumen HTML**,
+que se descargan desde la pantalla y, si hay SMTP configurado, se envían por correo.
+
+**Cómo usarlo** (todo contra la base de pruebas `phishshield_qa`, nunca la real):
+
+1. Levantar la base, el servicio de IA y el frontend (pasos 1, 3 y 5; el frontend con
+   `$env:PORT = "4200"` antes de `npm start`).
+2. La primera vez: `backend\herramientas\crear-usuario-qa.ps1` (crea el administrador de
+   prueba en `phishshield_qa` y guarda sus datos en `backend\.env`, ignorado por Git) y
+   descargar Chromium para Playwright (ver `docs/qa/PROGRESO_QA.md`).
+3. Levantar el backend contra la base de pruebas: `backend\herramientas\levantar-backend-qa.ps1`.
+4. Entrar a `http://localhost:4200` con un administrador → **Centro de Pruebas**, elegir una
+   suite o marcar casos y pulsar **Ejecutar**. El avance se ve en vivo; al final se
+   descargan los reportes.
+
+Variables (ver [`backend/.env.example`](backend/.env.example)): `QA_BASE_URL`,
+`QA_FRONTEND_URL`, `QA_TEST_USER`, `QA_TEST_PASSWORD` (obligatorias para los casos);
+`MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` (correo, opcional) y
+`ANTHROPIC_API_KEY` (asistente de IA, opcional; nunca decide PASS ni FAIL).
+
+Documentación de pruebas en [`docs/qa/`](docs/qa/): plan de pruebas, matriz de
+trazabilidad, registro de defectos, informe de ejecución y bitácora del módulo.
+
+## Calidad
+
+- **Integración continua** (`.github/workflows/ci.yml`): en cada push y pull request corren
+  las pruebas del backend (sin `contextLoads`, que necesita PostgreSQL), las del frontend y
+  su build, y las del modelo de IA.
+- **Cobertura** con JaCoCo: `.\mvnw.cmd test` deja el reporte en
+  `backend/target/site/jacoco/index.html` (63,9 % de líneas y 60,6 % de ramas al 24/11/2026;
+  90,5 % en el dominio y 88,5 % en los casos de uso).
 
 ---
 
