@@ -66,6 +66,7 @@ export class AdminLayout implements OnInit {
       opciones: [
         { etiqueta: 'Listas de dominios', ruta: '/admin/dominios', icono: 'lista', roles: ['ADMIN'] },
         { etiqueta: 'Registro de accesos', ruta: '/admin/auditoria', icono: 'registro', roles: ['ADMIN'] },
+        { etiqueta: 'Centro de Pruebas', ruta: '/admin/qa', icono: 'actividad', roles: ['ADMIN'] },
       ]
     },
   ];

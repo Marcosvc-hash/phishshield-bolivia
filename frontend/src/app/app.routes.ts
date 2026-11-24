@@ -70,6 +70,12 @@ export const routes: Routes = [
         canActivate: [rolGuard('ADMIN')],
         loadComponent: () => import('./paginas/admin/auditoria/auditoria').then((m) => m.Auditoria)
       },
+      {
+        path: 'qa',
+        title: 'Centro de Pruebas',
+        canActivate: [rolGuard('ADMIN')],
+        loadComponent: () => import('./paginas/admin/qa/qa').then((m) => m.Qa)
+      },
     ]
   },
   { path: '**', redirectTo: '' }

@@ -15,8 +15,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 |---|---|---|
 | 1 | Base `qa_*` (04_qa.sql / V12), dominio y puertos | Hecha (d60d8ba) |
 | 2 | Motor de ejecución y 14 casos de API | Hecha (5a67d2b) |
-| 3 | Reportes PDF y HTML | **Hecha** |
-| 4 | Pantalla "Centro de Pruebas" en Angular | Pendiente |
+| 3 | Reportes PDF y HTML | Hecha (c7736b7) |
+| 4 | Pantalla "Centro de Pruebas" en Angular | **Hecha** |
 | 5 | 7 casos de interfaz con Playwright | Pendiente |
 | 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Pendiente |
 | 7 | Correo y asistente de IA (opcionales) | Pendiente |
@@ -148,8 +148,44 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
   evidencia.
 - Al cerrar la fase: backend 332 pruebas en verde, frontend 94, IA 24; regla 4 sin coincidencias.
 
+## Fase 4 — Pantalla "Centro de Pruebas" en Angular (2026-11-24)
+
+**Qué se hizo**
+
+- Ruta `/admin/qa` (carga diferida, `rolGuard('ADMIN')`) y entrada "Centro de Pruebas" en el
+  grupo *Plataforma* del menú del AdminLayout (solo ADMIN).
+- `paginas/admin/qa/`: `qa.service.ts` (tipos de la API y llamadas), `qa.ts` + `qa.html` +
+  `qa.css` (página) y `detalle-caso.ts` (pasos, evidencia de API y métricas de un caso; se
+  separó para respetar el presupuesto de 4 kB de CSS por componente).
+- Catálogo agrupado por tipo (funcional / no funcional) y suite; cada suite plegable con su botón
+  "Ejecutar suite", cantidad de casos y de casos programados; los no programados llevan la marca
+  "Próxima fase". Selección de casos con casillas (solo de una misma suite: marcar uno de otra
+  suite empieza una selección nueva), correo opcional y parámetros `clave=valor`.
+- Panel de la ejecución: estado, resultado global, barra de avance, conteos PASS / FAIL /
+  SKIPPED / NOT_RUN, botón Detener (con confirmación) mientras está activa y descargas
+  "Reporte PDF" / "Resumen HTML" al terminar (con HttpClient y el token, como Blob). Cada caso se
+  despliega con su observación, tipo de fallo, pasos, evidencia de API y métricas.
+- Avance en vivo: mientras la ejecución está activa se consulta el detalle cada 2 s
+  (`interval` + `switchMap`); al terminar se deja de consultar, se refresca el historial y se
+  avisa el resultado. Al entrar, si hay una ejecución activa se abre sola.
+- Historial paginado (10 por página) con resultado y conteos; un clic abre el detalle.
+- Pruebas Vitest: `qa.spec.ts` (11: agrupación, plegado, POST de suite y polling con temporizador
+  simulado hasta que termina, selección de una sola suite, cuerpo con códigos/correo/parámetros,
+  error 409, apertura automática de la activa, despliegue de pasos y evidencia, detener,
+  descarga del PDF como Blob y lectura de parámetros) y una más en `admin-layout.spec.ts`.
+
+**Verificación real (2026-11-24)**
+
+- Frontend en el puerto 4200 (`$env:PORT = "4200"`), backend contra `phishshield_qa`.
+  Con Playwright (Chromium headless) se entró como `qa.admin@phishshield.bo`, se abrió
+  `/admin/qa`, se eligió la última ejecución del historial y se desplegó el FAIL de TC-SAN-003:
+  se ven el catálogo, el panel con conteos y pasos y el historial. También se revisó a 390 px de
+  ancho (sin desborde horizontal).
+- Frontend: 106 pruebas en verde y `npm run build` sin avisos.
+
 ## Cómo continuar
 
-Siguiente fase: **4 — Pantalla "Centro de Pruebas"** en Angular (`/admin/qa`, solo ADMIN, entrada
-en el menú del AdminLayout, polling cada 2 s mientras la ejecución está activa, descargas PDF/HTML,
-pruebas con Vitest).
+Siguiente fase: **5 — Casos de interfaz con Playwright** (TC-SMK-005, TC-SMK-006, TC-REG-001/002/004/007,
+TC-E2E-001) contra `QA_FRONTEND_URL`, con captura en cada paso importante y siempre en un FAIL.
+Playwright 1.65.1 ya está en el `pom.xml` (sin commitear todavía) y Chromium descargado en
+`%LOCALAPPDATA%\ms-playwright`.

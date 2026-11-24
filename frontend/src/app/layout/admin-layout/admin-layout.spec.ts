@@ -56,11 +56,20 @@ describe('AdminLayout', () => {
     await fixture.whenStable();
 
     expect(opcion('Registro de accesos')).toBeUndefined();
+    expect(opcion('Centro de Pruebas')).toBeUndefined();
     expect(opcion('Empresas')).toBeUndefined();
     expect(opcion('Historial de análisis')).toBeDefined();
     // El grupo "Plataforma" queda vacío y no se muestra
     const grupos = [...fixture.nativeElement.querySelectorAll('.grupo')].map((g: HTMLElement) => g.textContent?.trim());
     expect(grupos).toEqual(['Monitoreo', 'Gestión']);
+  });
+
+  it('el ADMIN ve el Centro de Pruebas en el grupo Plataforma', async () => {
+    await montarComo('ADMIN');
+    http.expectOne(PENDIENTES).flush({ cantidad: 0 });
+    await fixture.whenStable();
+
+    expect(opcion('Centro de Pruebas')?.getAttribute('href')).toBe('/admin/qa');
   });
 
   it.each(['ADMIN', 'ADMIN_EMPRESA'])('para %s, "Analizar URL" es la primera opción de Monitoreo', async (rol) => {
