@@ -4,6 +4,9 @@ import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosIntegrat
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosRegressionApi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosSanityApi;
 import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.api.CasosSmokeApi;
+import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosE2eUi;
+import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosRegressionUi;
+import bo.phishshield.backend.qa.infrastructure.ejecutor.casos.ui.CasosSmokeUi;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -27,7 +30,10 @@ public final class RegistroCasosQA {
             CasosSmokeApi.class,
             CasosSanityApi.class,
             CasosRegressionApi.class,
-            CasosIntegrationApi.class);
+            CasosIntegrationApi.class,
+            CasosSmokeUi.class,
+            CasosRegressionUi.class,
+            CasosE2eUi.class);
 
     private final Map<String, Method> metodos;
 

@@ -59,6 +59,11 @@ public final class BitacoraCaso {
         observado = texto;
     }
 
+    /** Suma una nota a lo observado en el paso actual, sin borrar lo que ya habia. */
+    public void agregarObservacion(String nota) {
+        observado = observado == null ? nota : observado + " " + nota;
+    }
+
     /** La peticion y la respuesta de API del paso actual (ya enmascaradas). */
     public void anotarDetalleApi(String detalle) {
         if (detalleApi.length() > 0) {

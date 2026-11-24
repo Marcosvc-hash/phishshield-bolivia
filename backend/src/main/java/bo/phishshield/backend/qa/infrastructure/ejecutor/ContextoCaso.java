@@ -71,6 +71,16 @@ public final class ContextoCaso {
         exigir(sesion.entorno().faltantes(true));
     }
 
+    /** Caso de interfaz: necesita QA_FRONTEND_URL y, si inicia sesion, el usuario de prueba. */
+    public void requiereFrontend(boolean necesitaSesion) {
+        List<String> faltan = new java.util.ArrayList<>(sesion.entorno().faltantes(necesitaSesion));
+        faltan.remove("QA_BASE_URL");
+        if (EntornoQA.vacio(sesion.entorno().frontendUrl())) {
+            faltan.addFirst("QA_FRONTEND_URL");
+        }
+        exigir(faltan);
+    }
+
     /** El caso necesita la URL del servicio de IA (IA_URL). */
     public void requiereServicioIa() {
         if (EntornoQA.vacio(sesion.entorno().iaUrl())) {
@@ -131,6 +141,48 @@ public final class ContextoCaso {
             accion.run();
             return null;
         });
+    }
+
+    // ------------------------------------------------------------------
+    // Casos de interfaz (Playwright)
+    // ------------------------------------------------------------------
+
+    /** La pestana de Chromium de este caso (headless). La primera llamada abre el navegador. */
+    public NavegadorQA navegador() {
+        return sesion.navegadorDelCaso();
+    }
+
+    /**
+     * Un paso de interfaz: al terminar se guarda una captura de la pantalla,
+     * tambien si el paso falla (asi todo FAIL de interfaz tiene su captura).
+     */
+    public <T> T pasoUi(String descripcion, Supplier<T> accion) {
+        return bitacora.paso(descripcion, () -> {
+            try {
+                T valor = accion.get();
+                capturar(descripcion);
+                return valor;
+            } catch (RuntimeException | Error ex) {
+                capturar(descripcion);
+                throw ex;
+            }
+        });
+    }
+
+    public void pasoUi(String descripcion, Runnable accion) {
+        pasoUi(descripcion, () -> {
+            accion.run();
+            return null;
+        });
+    }
+
+    /** Una captura que falla no debe tapar el resultado del paso: se anota y se sigue. */
+    private void capturar(String descripcion) {
+        try {
+            bitacora.anotarCaptura(navegador().capturar(descripcion));
+        } catch (RuntimeException ex) {
+            bitacora.agregarObservacion("(no se pudo guardar la captura: " + BitacoraCaso.resumen(ex) + ")");
+        }
     }
 
     /** Lo observado en el paso actual: "HTTP 200, resultado = seguro, riesgo = 0". */

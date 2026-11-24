@@ -16,8 +16,8 @@ debe poder continuar leyendo solo este archivo y `CLAUDE.md`.
 | 1 | Base `qa_*` (04_qa.sql / V12), dominio y puertos | Hecha (d60d8ba) |
 | 2 | Motor de ejecución y 14 casos de API | Hecha (5a67d2b) |
 | 3 | Reportes PDF y HTML | Hecha (c7736b7) |
-| 4 | Pantalla "Centro de Pruebas" en Angular | **Hecha** |
-| 5 | 7 casos de interfaz con Playwright | Pendiente |
+| 4 | Pantalla "Centro de Pruebas" en Angular | Hecha (f0b2001) |
+| 5 | 7 casos de interfaz con Playwright | **Hecha** |
 | 6 | Pruebas no funcionales (carga, estrés, soak, robustez IA) | Pendiente |
 | 7 | Correo y asistente de IA (opcionales) | Pendiente |
 | 8 | CI, JaCoCo y documentación TQA | Pendiente |
@@ -183,9 +183,57 @@ Variables del Centro de Pruebas (ver `backend\.env.example`):
   ancho (sin desborde horizontal).
 - Frontend: 106 pruebas en verde y `npm run build` sin avisos.
 
+## Fase 5 — Casos de interfaz con Playwright (2026-11-24)
+
+**Qué se hizo**
+
+- Dependencia aprobada: `playwright` 1.65.1 (Java). Chromium se descarga una vez, desde
+  `backend\`: `.\mvnw.cmd -q dependency:build-classpath "-Dmdep.outputFile=target\cp.txt"` y
+  `java -cp (Get-Content target\cp.txt) com.microsoft.playwright.CLI install chromium`.
+  Queda en `%LOCALAPPDATA%\ms-playwright`. El backend arranca Playwright con
+  `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` (no descarga nada al ejecutar); si falta Chromium, los
+  casos de interfaz quedan NOT_RUN con ese comando como motivo.
+- `NavegadorQA`: un Chromium headless por ejecución (se abre solo si un caso lo pide) y un
+  contexto aislado por caso (1366×860, es-BO, hora de La Paz), que se cierra al terminar el caso.
+  Si el frontend no responde (`net::ERR_...`), el caso queda FAIL de **infraestructura**.
+- `ContextoCaso.pasoUi(...)`: al terminar cada paso de interfaz guarda una captura de página
+  completa en `qa-evidencias/{uuid}/capturas/{codigo}-{nn}-{paso}.png`, **también cuando el paso
+  falla**. `requiereFrontend(...)` deja el caso NOT_RUN si falta `QA_FRONTEND_URL`.
+- Casos en `qa/infrastructure/ejecutor/casos/ui`: `CasosSmokeUi` (SMK-005, SMK-006),
+  `CasosRegressionUi` (REG-001, REG-002, REG-004, REG-007) y `CasosE2eUi` (E2E-001). Usan las
+  aserciones de Playwright (`assertThat(locator)`), que esperan solas; si no se cumplen dan FAIL
+  funcional. TC-REG-007 prepara por API un análisis de bnb.com.bo antes de buscar.
+- Endpoint `GET /api/admin/qa/ejecuciones/{id}/evidencias?ruta=...` (`ObtenerEvidenciaUseCase`):
+  solo entrega PNG de `{id}/capturas/` de esa ejecución (ni reportes, ni otras ejecuciones, ni
+  `..`). En la pantalla, cada paso con captura tiene el botón "Ver captura".
+- Pruebas: los 7 casos de interfaz deben estar programados (`RegistroCasosQATest`), protección del
+  endpoint de capturas (`ReportesQaTest`) y "Ver captura" en `qa.spec.ts`.
+
+**Verificación real (2026-11-24, backend contra `phishshield_qa`, frontend en el 4200, IA levantada)**
+
+| Suite | PASS | FAIL | NOT_RUN | Resultado global |
+|---|---|---|---|---|
+| Smoke | 6 | 0 | 0 | aprobada |
+| Regression | 8 | 0 | 0 | aprobada |
+| E2E | 1 | 0 | 0 | aprobada |
+
+- Se revisaron las capturas: TC-E2E-001 guardó 9 (una por paso); la del paso 5 muestra
+  "Phishing detectado" con 100 puntos y la del paso 9 la alerta pendiente de la URL marcada.
+- Camino del fallo: con el frontend apagado, TC-SMK-005 quedó **FAIL de infraestructura**
+  ("El frontend no responde en http://localhost:4200/login...") y con su captura.
+- Al cerrar la fase: backend 335 pruebas en verde, frontend 107, IA 24; regla 4 sin coincidencias.
+
+**Problemas encontrados**
+
+- `Playwright.create()` sin `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` descarga también Firefox y
+  WebKit (pasó una vez al probar a mano; el backend ya no lo hace).
+- Las capturas de página completa pesan (100-400 KB cada una): el PDF de una ejecución E2E ronda
+  1,3 MB. Es aceptable para la demo.
+
 ## Cómo continuar
 
-Siguiente fase: **5 — Casos de interfaz con Playwright** (TC-SMK-005, TC-SMK-006, TC-REG-001/002/004/007,
-TC-E2E-001) contra `QA_FRONTEND_URL`, con captura en cada paso importante y siempre en un FAIL.
-Playwright 1.65.1 ya está en el `pom.xml` (sin commitear todavía) y Chromium descargado en
-`%LOCALAPPDATA%\ms-playwright`.
+Siguiente fase: **6 — Pruebas no funcionales**: TC-PERF-001/002, TC-STR-001 y TC-SOAK-001 con un
+generador de carga propio (HttpClient + hilos virtuales; p50/p95/p99, throughput y tasa de error en
+`qa_metricas`), y TC-ROB-001/002 con el lote de `qa_lote_robustez` (precisión, recall, F1 y
+matriz de confusión). Nombres de parámetros ya anunciados en `qa.http`: `usuarios`,
+`peticionesPorUsuario`, `umbralP95Ms`.

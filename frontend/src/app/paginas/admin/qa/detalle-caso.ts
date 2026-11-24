@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Icono } from '../../../core/ui/icono';
-import { ResultadoQa } from './qa.service';
+import { QaService, ResultadoQa } from './qa.service';
 
 /**
  * Detalle de un caso dentro de una ejecucion: la observacion, el tipo de
@@ -36,8 +37,16 @@ import { ResultadoQa } from './qa.service';
                 <pre class="mono">{{ p.detalleApi }}</pre>
               </details>
             }
-            @if (p.rutaCaptura) {
-              <p class="texto-secundario paso-captura"><app-icono nombre="imagen" [tamano]="14" /> Captura guardada (en el reporte PDF)</p>
+            @if (p.rutaCaptura; as ruta) {
+              @if (imagenes()[ruta]; as src) {
+                <a class="captura" [href]="src" target="_blank" rel="noopener" title="Abrir la captura en otra pestaña">
+                  <img [src]="src" [alt]="'Captura del paso ' + p.numero + ': ' + p.descripcion" loading="lazy" />
+                </a>
+              } @else {
+                <button type="button" class="btn btn-fantasma btn-sm paso-captura" (click)="verCaptura(ruta)">
+                  <app-icono nombre="imagen" [tamano]="14" /> Ver captura
+                </button>
+              }
             }
           </li>
         }
@@ -78,7 +87,10 @@ import { ResultadoQa } from './qa.service';
     .paso-cabecera app-icono { color: var(--exito); margin-top: 2px; flex-shrink: 0; }
     .paso.fallo .paso-cabecera app-icono { color: var(--peligro); }
     .paso-observado { margin: 2px 0 0 24px; font-size: var(--t-xs); color: var(--texto-2); word-break: break-word; }
-    .paso-captura { display: flex; align-items: center; gap: 4px; margin-left: 24px; font-size: var(--t-xs); }
+    .paso-captura { margin: var(--esp-1) 0 0 18px; }
+    .captura { display: block; margin: var(--esp-2) 0 0 24px; }
+    .captura img { display: block; max-width: 100%; max-height: 320px; object-fit: cover; object-position: top;
+      border: 1px solid var(--borde); border-radius: var(--radio-sm); }
     .evidencia { margin: var(--esp-1) 0 0 24px; }
     .evidencia summary { cursor: pointer; font-size: var(--t-xs); color: var(--primario); font-weight: 600; }
     .evidencia pre {
@@ -90,4 +102,29 @@ import { ResultadoQa } from './qa.service';
 })
 export class DetalleCaso {
   readonly resultado = input.required<ResultadoQa>();
+  readonly idEjecucion = input.required<string>();
+
+  private servicio = inject(QaService);
+  private saneador = inject(DomSanitizer);
+  private urls: string[] = [];
+
+  /** ruta de la captura -> URL local (blob:) ya descargada con el token. */
+  protected imagenes = signal<Record<string, SafeUrl>>({});
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.urls.forEach((u) => URL.revokeObjectURL(u)));
+  }
+
+  verCaptura(ruta: string): void {
+    this.servicio.captura(this.idEjecucion(), ruta).subscribe({
+      next: (imagen) => {
+        if (typeof URL.createObjectURL !== 'function') {
+          return;
+        }
+        const url = URL.createObjectURL(imagen);
+        this.urls.push(url);
+        this.imagenes.update((actual) => ({ ...actual, [ruta]: this.saneador.bypassSecurityTrustUrl(url) }));
+      }
+    });
+  }
 }

@@ -75,5 +75,9 @@ Authorization: Bearer {{tokenAcceso}}
 GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/reporte.html
 Authorization: Bearer {{tokenAcceso}}
 
+### Captura de un paso de interfaz (la ruta sale de pasos[].rutaCaptura en el detalle)
+GET http://localhost:8080/api/admin/qa/ejecuciones/{{idEjecucion}}/evidencias?ruta={{idEjecucion}}/capturas/TC-SMK-005-01-abrir-la-pantalla-de-login.png
+Authorization: Bearer {{tokenAcceso}}
+
 ### Sin token: 401
 GET http://localhost:8080/api/admin/qa/casos

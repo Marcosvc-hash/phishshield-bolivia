@@ -100,6 +100,7 @@ public class JUnitEjecutorPruebasAdapter implements EjecutorPruebasPort {
             }
             return fin;
         } finally {
+            sesion.cerrarNavegador();
             SesionEjecucion.Registro.quitar(id);
             detenciones.remove(id);
             enCurso = null;
@@ -119,7 +120,11 @@ public class JUnitEjecutorPruebasAdapter implements EjecutorPruebasPort {
 
         OffsetDateTime antes = OffsetDateTime.now(reloj);
         log.info("QA {}: ejecutando {}", sesion.idEjecucion(), codigo);
-        launcher.execute(pedido, escucha);
+        try {
+            launcher.execute(pedido, escucha);
+        } finally {
+            sesion.cerrarNavegadorDelCaso();
+        }
 
         // El oyente del caso de uso se llama fuera de JUnit: un error al guardar no rompe el launcher
         OffsetDateTime inicio = escucha.inicio != null ? escucha.inicio : antes;

@@ -31,6 +31,7 @@
         <!-- Dependencias del Centro de Pruebas QA que Spring Boot no administra -->
         <rest-assured.version>6.3.0</rest-assured.version>
         <openpdf.version>3.0.6</openpdf.version>
+        <playwright.version>1.65.1</playwright.version>
     </properties>
     <dependencies>
         <dependency>
@@ -86,6 +87,12 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>${rest-assured.version}</version>
+        </dependency>
+        <!-- Casos de interfaz del Centro de Pruebas (Chromium en modo headless) -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
         </dependency>
         <!-- Reporte PDF detallado de cada ejecucion (licencia LGPL / MPL) -->
         <dependency>

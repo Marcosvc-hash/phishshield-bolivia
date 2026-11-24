@@ -7,6 +7,7 @@ import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
 import bo.phishshield.backend.qa.application.ListarEjecucionesUseCase;
 import bo.phishshield.backend.qa.application.MarcarInterrumpidasAlArrancarUseCase;
 import bo.phishshield.backend.qa.application.ObtenerDetalleEjecucionUseCase;
+import bo.phishshield.backend.qa.application.ObtenerEvidenciaUseCase;
 import bo.phishshield.backend.qa.application.ObtenerReporteUseCase;
 import bo.phishshield.backend.qa.application.PublicarResultadosUseCase;
 import bo.phishshield.backend.qa.application.TrasEjecucion;
@@ -95,6 +96,11 @@ public class QaConfig {
     @Bean
     public TrasEjecucion trasEjecucion(EjecucionRepositoryPort ejecuciones, GeneradorReportePort generador) {
         return new PublicarResultadosUseCase(ejecuciones, generador);
+    }
+
+    @Bean
+    public ObtenerEvidenciaUseCase obtenerEvidenciaUseCase(EvidenciasPort evidencias) {
+        return new ObtenerEvidenciaUseCase(evidencias);
     }
 
     @Bean

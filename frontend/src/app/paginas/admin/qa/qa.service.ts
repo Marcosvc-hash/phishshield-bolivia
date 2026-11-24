@@ -153,6 +153,11 @@ export class QaService {
     return this.http.post<EjecucionQa>(`${this.url}/ejecuciones/${id}/detener`, {});
   }
 
+  /** Captura de un paso (PNG), por su ruta relativa ({id}/capturas/...). */
+  captura(id: string, ruta: string): Observable<Blob> {
+    return this.http.get(`${this.url}/ejecuciones/${id}/evidencias`, { params: { ruta }, responseType: 'blob' });
+  }
+
   /** El reporte como archivo; se pide con HttpClient para que lleve el token. */
   reporte(id: string, formato: FormatoReporte): Observable<Blob> {
     return this.http.get(`${this.url}/ejecuciones/${id}/reporte.${formato}`, { responseType: 'blob' });

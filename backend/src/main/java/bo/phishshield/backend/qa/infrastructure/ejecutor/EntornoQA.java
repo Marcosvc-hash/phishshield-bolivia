@@ -38,7 +38,7 @@ public record EntornoQA(
         return faltan;
     }
 
-    static boolean vacio(String texto) {
+    public static boolean vacio(String texto) {
         return texto == null || texto.isBlank();
     }
 

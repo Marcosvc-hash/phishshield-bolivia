@@ -8,6 +8,7 @@ import bo.phishshield.backend.qa.domain.model.ArchivosReporte;
 import bo.phishshield.backend.qa.domain.model.CorreoDestino;
 import bo.phishshield.backend.qa.domain.model.DesenlaceCaso;
 import bo.phishshield.backend.qa.domain.model.Ejecucion;
+import bo.phishshield.backend.qa.domain.model.EvidenciaNoEncontradaException;
 import bo.phishshield.backend.qa.domain.model.FormatoReporte;
 import bo.phishshield.backend.qa.domain.model.ReporteNoDisponibleException;
 import bo.phishshield.backend.qa.domain.model.Suite;
@@ -124,6 +125,24 @@ class ReportesQaTest {
         assertThrows(ReporteNoDisponibleException.class,
                 () -> obtener.ejecutar(ADMIN, e.getUuidPublico(), FormatoReporte.PDF));
         assertEquals(0, generados);
+    }
+
+    @Test
+    void solo_se_entregan_capturas_png_de_la_misma_ejecucion() {
+        UUID id = UUID.randomUUID();
+        disco.put(id + "/capturas/TC-SMK-005-01-login.png", new byte[]{1});
+        disco.put(id + "/reporte-detallado.pdf", new byte[]{2});
+        ObtenerEvidenciaUseCase obtener = new ObtenerEvidenciaUseCase(evidencias);
+
+        assertEquals(1, obtener.ejecutar(ADMIN, id, id + "/capturas/TC-SMK-005-01-login.png").contenido().length);
+        assertThrows(EvidenciaNoEncontradaException.class,
+                () -> obtener.ejecutar(ADMIN, id, id + "/reporte-detallado.pdf"), "No es una captura");
+        assertThrows(EvidenciaNoEncontradaException.class,
+                () -> obtener.ejecutar(ADMIN, UUID.randomUUID(), id + "/capturas/TC-SMK-005-01-login.png"), "Otra ejecución");
+        assertThrows(EvidenciaNoEncontradaException.class,
+                () -> obtener.ejecutar(ADMIN, id, id + "/capturas/../../otra/x.png"), "Sale de la carpeta");
+        assertThrows(EvidenciaNoEncontradaException.class,
+                () -> obtener.ejecutar(ADMIN, id, id + "/capturas/no-existe.png"));
     }
 
     @Test

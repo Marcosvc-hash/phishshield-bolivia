@@ -6,6 +6,7 @@ import bo.phishshield.backend.qa.application.IniciarEjecucionUseCase;
 import bo.phishshield.backend.qa.application.ListarCatalogoUseCase;
 import bo.phishshield.backend.qa.application.ListarEjecucionesUseCase;
 import bo.phishshield.backend.qa.application.ObtenerDetalleEjecucionUseCase;
+import bo.phishshield.backend.qa.application.ObtenerEvidenciaUseCase;
 import bo.phishshield.backend.qa.application.ObtenerReporteUseCase;
 import bo.phishshield.backend.qa.domain.model.ArchivoEvidencia;
 import bo.phishshield.backend.qa.domain.model.FormatoReporte;
@@ -51,13 +52,16 @@ public class QaController {
     private final ObtenerDetalleEjecucionUseCase obtenerDetalle;
     private final DetenerEjecucionUseCase detenerEjecucion;
     private final ObtenerReporteUseCase obtenerReporte;
+    private final ObtenerEvidenciaUseCase obtenerEvidencia;
 
     public QaController(ListarCatalogoUseCase listarCatalogo,
                         IniciarEjecucionUseCase iniciarEjecucion,
                         ListarEjecucionesUseCase listarEjecuciones,
                         ObtenerDetalleEjecucionUseCase obtenerDetalle,
                         DetenerEjecucionUseCase detenerEjecucion,
-                        ObtenerReporteUseCase obtenerReporte) {
+                        ObtenerReporteUseCase obtenerReporte,
+                        ObtenerEvidenciaUseCase obtenerEvidencia) {
+        this.obtenerEvidencia = obtenerEvidencia;
         this.listarCatalogo = listarCatalogo;
         this.iniciarEjecucion = iniciarEjecucion;
         this.listarEjecuciones = listarEjecuciones;
@@ -111,6 +115,17 @@ public class QaController {
     @GetMapping("/ejecuciones/{id}/reporte.html")
     public ResponseEntity<byte[]> reporteHtml(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id) {
         return descarga(obtenerReporte.ejecutar(quien, id, FormatoReporte.HTML), id, "html");
+    }
+
+    /** Captura de un paso: GET .../evidencias?ruta={id}/capturas/TC-SMK-005-01-....png */
+    @GetMapping("/ejecuciones/{id}/evidencias")
+    public ResponseEntity<byte[]> evidencia(@AuthenticationPrincipal UsuarioActual quien, @PathVariable UUID id,
+                                            @RequestParam String ruta) {
+        ArchivoEvidencia archivo = obtenerEvidencia.ejecutar(quien, id, ruta);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(archivo.tipoMime()))
+                .header("X-Content-Type-Options", "nosniff")
+                .body(archivo.contenido());
     }
 
     private static ResponseEntity<byte[]> descarga(ArchivoEvidencia archivo, UUID id, String extension) {

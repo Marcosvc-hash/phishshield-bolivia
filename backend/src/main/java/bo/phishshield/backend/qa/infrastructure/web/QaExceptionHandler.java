@@ -3,6 +3,7 @@ package bo.phishshield.backend.qa.infrastructure.web;
 import bo.phishshield.backend.qa.domain.model.CorreoInvalidoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionEnCursoException;
 import bo.phishshield.backend.qa.domain.model.EjecucionNoEncontradaException;
+import bo.phishshield.backend.qa.domain.model.EvidenciaNoEncontradaException;
 import bo.phishshield.backend.qa.domain.model.ReporteNoDisponibleException;
 import bo.phishshield.backend.qa.domain.model.SeleccionInvalidaException;
 import bo.phishshield.backend.qa.domain.model.TransicionEjecucionInvalidaException;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class QaExceptionHandler {
 
-    @ExceptionHandler(EjecucionNoEncontradaException.class)
+    @ExceptionHandler({EjecucionNoEncontradaException.class, EvidenciaNoEncontradaException.class})
     public ResponseEntity<ErrorResponse> noEncontrada(RuntimeException ex, HttpServletRequest peticion) {
         return respuesta(HttpStatus.NOT_FOUND, ex, peticion);
     }

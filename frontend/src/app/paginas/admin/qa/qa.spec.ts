@@ -213,6 +213,29 @@ describe('Qa (Centro de Pruebas)', () => {
     expect(texto('.evidencia pre')).toContain('GET http://localhost:8080/api/auth/yo');
   });
 
+  it('"Ver captura" pide la imagen del paso con su ruta y la muestra', async () => {
+    await cargar([fila('finalizada')]);
+    fixture.componentInstance.abrir(fila('finalizada'));
+    const conCaptura = ejecucion('finalizada', 2);
+    conCaptura.resultados[0].pasos[0].rutaCaptura = 'e1/capturas/TC-SMK-001-01-login.png';
+    http.expectOne(`${URL}/ejecuciones/e1`).flush(conCaptura);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.resultado-fila') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const crear = vi.fn(() => 'blob:captura');
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: crear, revokeObjectURL: vi.fn() }));
+
+    (fixture.nativeElement.querySelector('.paso-captura') as HTMLButtonElement).click();
+    const peticion = http.expectOne((r) => r.url === `${URL}/ejecuciones/e1/evidencias`);
+    expect(peticion.request.params.get('ruta')).toBe('e1/capturas/TC-SMK-001-01-login.png');
+    peticion.flush(new Blob(['png']));
+    fixture.detectChanges();
+
+    expect(crear).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.captura img')).not.toBeNull();
+    vi.unstubAllGlobals();
+  });
+
   it('detener pide confirmación y manda el POST', async () => {
     await cargar([fila('en_curso')]);
     http.expectOne(`${URL}/ejecuciones/e1`).flush(ejecucion('en_curso', 1));

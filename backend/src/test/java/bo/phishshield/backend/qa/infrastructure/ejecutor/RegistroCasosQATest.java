@@ -55,6 +55,20 @@ class RegistroCasosQATest {
     }
 
     @Test
+    void los_siete_casos_de_interfaz_estan_programados() throws IOException {
+        RegistroCasosQA registro = new RegistroCasosQA();
+        long ui = catalogo().entrySet().stream().filter(e -> e.getValue().equals("ui")).peek(e ->
+                assertTrue(registro.metodo(e.getKey()).isPresent(), "Falta programar " + e.getKey())).count();
+        assertEquals(7, ui);
+    }
+
+    @Test
+    void el_nombre_de_las_capturas_es_corto_y_sin_tildes() {
+        assertEquals("pulsar-analizar-con-el-campo-vacio", NavegadorQA.nombreArchivo("Pulsar \"Analizar\" con el campo vacío"));
+        assertTrue(NavegadorQA.nombreArchivo("x".repeat(100)).length() <= 40);
+    }
+
+    @Test
     void un_codigo_programado_dos_veces_se_detecta() {
         class Duplicados {
             @org.junit.jupiter.api.Test

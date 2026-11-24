@@ -166,7 +166,7 @@
                 <app-icono nombre="chevron-abajo" [tamano]="16" class="flecha" />
               </button>
               @if (casoAbierto() === r.codigo) {
-                <app-qa-detalle-caso [resultado]="r" />
+                <app-qa-detalle-caso [resultado]="r" [idEjecucion]="e.id" />
               }
             </li>
           }
